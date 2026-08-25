@@ -1177,3 +1177,26 @@ Documents 从通用管理列表收敛为资料账本：导入默认折叠，搜�
 
 现有 API 没有归档、标签、Owner、状态筛选或稳定的整文 Reader，因此未虚构这些字段，也未用 Chunk 拼装 Reader；Retrieval Debug
 继续作为默认折叠的 L3 工具。未修改后端、上传业务、Home → Conversation → Documents `?import=1` 引导或 RAG 路径。
+
+# 2026-08-25 — UI Phase 2.3 Knowledge Workspace
+
+先以现有 API、schema、service、model、route 与测试审计 KnowledgeEntry：可维护字段为 question/background/root cause/
+solution/failed attempts/tags/validation status，原始 question/answer/sources 为不可变溯源快照；来源 Conversation 删除后
+外键置空但快照保留。Verified 会触发异步知识索引，只有已验证且拥有当前成功索引代次的条目进入 RAG；Unverified 与
+Outdated 不参与检索，验证状态和索引状态因此保持两套独立语义。
+
+Knowledge List 收敛为无卡片网格的 editorial ledger：问题与解决方案摘要为主，验证、标签、RAG 可用性、索引与更新时间依次
+降级，搜索/验证/标签继续复用真实服务端筛选。Detail 保留独立 route，以正文为阅读主体，并在同一记录页呈现 Knowledge
+Status、Evidence Snapshot、Conversation → Answer → Evidence → Knowledge 轻量来源链路及检索索引；索引失败只提供现有
+重试操作，不改变“已验证”状态。Evidence snapshot 模式不根据历史 ID 假设 live source 可用，来源 Conversation 则依据真实
+nullable 字段显示可打开或“来源会话已不可用、快照仍保留”。
+
+未采用永久 Inspector、CRUD table、独立 RAG toggle、AI 重写/自动整理、虚构 source availability 或 backend schema 扩展；
+Conversation 的 Promote to Knowledge、Knowledge Map 与 RAG 实现均保持不变。
+
+Knowledge/Evidence/Conversation 定向测试为 38 passed，前端全量为 128 passed；vue-tsc、ESLint 与 Vite production build
+通过。当前本地真实 API 没有 KnowledgeEntry，因此实际后端数据用于验证 empty state； populated 浏览器验收使用与当前
+KnowledgeEntryResponse 完全同形的临时网络 fixture，不写入本地数据库，覆盖 verified/unverified/outdated、index ready/
+failed、Evidence、多标签、长 solution 与 failed attempts。1440/1280/1024/900px 均无横向溢出；1024 保持正文 + Evidence
+双栏，900 收敛为纵向 Knowledge Record。Hallmark 额外检查 320/375/414/768px empty state 与 DOM scroll width，页面内容无
+横向滚动；现有 Global Shell 的窄屏导航压缩不属于本 Phase。

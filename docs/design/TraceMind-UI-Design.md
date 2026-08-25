@@ -284,9 +284,18 @@ Knowledge entries are durable engineering records saved from completed answers.
 - Background, root cause and failed attempts appear only when present.
 - The original conversation is linked when it still exists; immutable question, answer and source
   snapshots remain visible after it is deleted.
+- Evidence shown on a Knowledge detail is explicitly labelled as a saved snapshot. Snapshot IDs do
+  not imply that the original Document or Knowledge source is still live; the UI only offers a live
+  source action when the API provides a current availability signal.
 - Editing changes the maintained knowledge fields, never the provenance snapshots.
 - Validation status and retrieval-index status are separate L2 metadata. A verified entry can be
   waiting, processing, searchable or failed; failed indexing exposes one contextual retry action.
+- RAG availability is a read-only product interpretation of both states: only verified entries with
+  a current successful index are available to retrieval. Unverified and outdated entries are not
+  used in RAG, and the UI never introduces a separate “use in RAG” toggle.
+- The list is a Knowledge Ledger: question and solution lead, validation and tags follow, while
+  update time and derived indexing metadata remain visually quiet. Row-level edit/delete stay in an
+  overflow menu; the independent detail route remains the durable reading and maintenance surface.
 
 ---
 

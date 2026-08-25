@@ -6,6 +6,7 @@ defineProps<{
   sources: EvidenceSource[]
   identityPrefix?: string
   selectedSourceId?: string | null
+  snapshotMode?: boolean
 }>()
 
 const isCodeSource = (source: EvidenceSource) =>
@@ -98,7 +99,10 @@ function retrievalMetadata(source: EvidenceSource): { label: string; value: stri
         <div class="ev-src-id-row">
           <RouterLink
             v-if="
-              isKnowledgeSource(source) && source.knowledge_base_id && source.knowledge_entry_id
+              !snapshotMode &&
+              isKnowledgeSource(source) &&
+              source.knowledge_base_id &&
+              source.knowledge_entry_id
             "
             class="ev-src-path text-action"
             :to="`/knowledge-bases/${source.knowledge_base_id}/knowledge/${source.knowledge_entry_id}`"
@@ -122,7 +126,7 @@ function retrievalMetadata(source: EvidenceSource): { label: string; value: stri
       </div>
       <div class="ev-source-lineage">
         <span class="ev-field-label">LINEAGE</span>
-        <span>属于当前回答的证据集</span>
+        <span>{{ snapshotMode ? '已保存证据快照' : '属于当前回答的证据集' }}</span>
       </div>
       <details v-if="retrievalMetadata(source).length" class="ev-source-diagnostics">
         <summary>RETRIEVAL DETAIL</summary>

@@ -70,7 +70,10 @@ function submit(): void {
     @update:model-value="emit('update:modelValue', $event)"
   >
     <form class="knowledge-form" @submit.prevent="submit">
-      <label>
+      <p class="knowledge-form-note">
+        整理长期维护的知识内容；原始问答与证据快照不会在此表单中改写。
+      </p>
+      <label class="knowledge-form-question">
         <span>问题</span>
         <ElInput v-model="form.question" maxlength="4000" show-word-limit />
       </label>
@@ -82,7 +85,7 @@ function submit(): void {
         <span>根因</span>
         <ElInput v-model="form.rootCause" type="textarea" :rows="3" maxlength="20000" />
       </label>
-      <label>
+      <label class="knowledge-form-solution">
         <span>解决方案</span>
         <ElInput v-model="form.solution" type="textarea" :rows="7" maxlength="50000" />
       </label>
@@ -98,6 +101,7 @@ function submit(): void {
             <ElOption label="已验证" value="verified" />
             <ElOption label="已过期" value="outdated" />
           </ElSelect>
+          <small>只有已验证知识会进入问答检索。</small>
         </label>
         <label>
           <span>标签（逗号分隔）</span>

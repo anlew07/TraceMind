@@ -69,6 +69,27 @@ describe('EvidenceSourceList', () => {
     expect(wrapper.text()).toContain('事务为什么失败？')
   })
 
+  it('marks preserved evidence snapshots without implying the live source is available', () => {
+    const wrapper = mount(EvidenceSourceList, {
+      props: {
+        sources: [
+          {
+            ...source,
+            source_type: 'knowledge_entry',
+            knowledge_base_id: 'kb',
+            knowledge_entry_id: 'entry',
+            knowledge_question: '已保存的知识来源',
+          },
+        ],
+        snapshotMode: true,
+      },
+      global: { stubs: { RouterLink: { template: '<a><slot /></a>' } } },
+    })
+
+    expect(wrapper.text()).toContain('已保存证据快照')
+    expect(wrapper.find('a').exists()).toBe(false)
+  })
+
   it('renders only real retrieval metadata when present', () => {
     const rankedSource: RagSource = {
       ...source,
