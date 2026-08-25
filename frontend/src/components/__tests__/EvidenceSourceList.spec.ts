@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest'
 
 import EvidenceSourceList from '@/components/EvidenceSourceList.vue'
 import type { EvidenceSource } from '@/types/evidence'
+import type { RagSource } from '@/types/rag'
 
 const source: EvidenceSource = {
   source_id: 'S1',
@@ -26,13 +27,15 @@ const source: EvidenceSource = {
 describe('EvidenceSourceList', () => {
   it('renders shared code evidence with stable citation identity', () => {
     const wrapper = mount(EvidenceSourceList, {
-      props: { sources: [source], identityPrefix: 'answer' },
+      props: { sources: [source], identityPrefix: 'answer', selectedSourceId: 'S1' },
       global: { stubs: { RouterLink: { template: '<a><slot /></a>' } } },
     })
     const item = wrapper.get('[data-testid="evidence-source-answer-S1"]')
-    expect(item.text()).toContain('代码')
+    expect(item.text()).toContain('CODE')
+    expect(item.text()).toContain('[S1]')
     expect(item.text()).toContain('第 10–12 行')
     expect(item.text()).toContain('void run()')
+    expect(item.attributes('aria-current')).toBe('true')
   })
 
   it('renders verified knowledge as a distinct traceable source', () => {
@@ -61,8 +64,33 @@ describe('EvidenceSourceList', () => {
       },
       global: { stubs: { RouterLink: { template: '<a><slot /></a>' } } },
     })
-    expect(wrapper.text()).toContain('知识')
-    expect(wrapper.text()).toContain('已验证知识')
+    expect(wrapper.text()).toContain('KNOWLEDGE')
+    expect(wrapper.text()).toContain('知识条目')
     expect(wrapper.text()).toContain('事务为什么失败？')
+  })
+
+  it('renders only real retrieval metadata when present', () => {
+    const rankedSource: RagSource = {
+      ...source,
+      score: 0.9123,
+      knowledge_base_id: 'kb',
+      index_generation: 'generation',
+      retrieval_score: 0.7345,
+      rerank_score: 0.9123,
+      retrieval_rank: 2,
+      ranking_mode: 'hybrid_reranker',
+    }
+    const wrapper = mount(EvidenceSourceList, {
+      props: {
+        sources: [rankedSource],
+      },
+      global: { stubs: { RouterLink: { template: '<a><slot /></a>' } } },
+    })
+
+    expect(wrapper.text()).toContain('检索排名')
+    expect(wrapper.text()).toContain('0.735')
+    expect(wrapper.text()).toContain('0.912')
+    expect(wrapper.text()).toContain('hybrid_reranker')
+    expect(wrapper.get('.ev-source-diagnostics').attributes('open')).toBeUndefined()
   })
 })

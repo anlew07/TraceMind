@@ -23,8 +23,11 @@ describe('AppShell', () => {
     const wrapper = mount(AppShell, { slots: { default: '<p>Page content</p>' } })
 
     expect(wrapper.text()).toContain('TraceMind')
+    expect(wrapper.text()).toContain('Evidence · Knowledge · Trust')
+    expect(wrapper.text()).toContain('Local-first')
     expect(wrapper.text()).toContain('知识库')
     expect(wrapper.text()).toContain('Page content')
+    expect(wrapper.get('.brand-mark-placeholder').attributes('data-placeholder')).toBe('true')
     expect(wrapper.find('.kb-bar').exists()).toBe(false)
   })
 
@@ -34,9 +37,13 @@ describe('AppShell', () => {
       global: { provide: { shellKbName: ref('Project KB') } },
     })
 
-    expect(wrapper.get('.kb-name').text()).toBe('Project KB')
+    expect(wrapper.findAll('.shell-context-value')[0]?.text()).toBe('Project KB')
+    expect(wrapper.findAll('.shell-context-value')[1]?.text()).toBe('Hybrid + Rerank')
     expect(wrapper.get('.kb-tab[data-to="/knowledge-bases/kb-1/documents"]').text()).toBe('文档')
     expect(wrapper.get('.kb-tab[data-to="/knowledge-bases/kb-1/chat"]').text()).toBe('问答')
     expect(wrapper.get('.kb-tab[data-to="/knowledge-bases/kb-1/map"]').text()).toBe('知识图谱')
+    expect(wrapper.get('.map-link[data-to="/knowledge-bases/kb-1/map"]').text()).toContain(
+      '知识图谱',
+    )
   })
 })

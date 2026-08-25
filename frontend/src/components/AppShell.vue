@@ -19,17 +19,54 @@ watch(kbId, () => {
 <template>
   <div class="app-shell">
     <header class="global-header">
-      <RouterLink to="/" class="brand">TraceMind</RouterLink>
-      <nav class="global-nav">
+      <RouterLink to="/" class="brand" aria-label="TraceMind 首页">
+        <span
+          class="brand-mark-placeholder"
+          data-placeholder="true"
+          title="临时品牌标记，待批准的 Compass 资产替换"
+          aria-hidden="true"
+          >T</span
+        >
+        <span class="brand-copy">
+          <span class="brand-wordmark">TraceMind</span>
+          <span class="brand-descriptor">Evidence · Knowledge · Trust</span>
+        </span>
+      </RouterLink>
+
+      <div v-if="kbId" class="shell-context" aria-label="当前知识库上下文">
+        <span class="shell-context-group">
+          <span class="shell-context-label">Knowledge Base</span>
+          <strong class="shell-context-value">{{ shellKbName || '知识库' }}</strong>
+        </span>
+        <span class="shell-context-divider" aria-hidden="true"></span>
+        <span class="shell-context-group">
+          <span class="shell-context-label">Retrieval</span>
+          <strong class="shell-context-value">Hybrid + Rerank</strong>
+        </span>
+      </div>
+
+      <div class="shell-actions">
+        <span class="local-first-status" role="status" aria-label="本地优先运行方式">
+          <span class="status-dot" aria-hidden="true"></span>
+          Local-first
+        </span>
+        <RouterLink
+          v-if="kbId"
+          :to="`/knowledge-bases/${kbId}/map`"
+          class="global-nav-link map-link"
+          active-class="active"
+        >
+          <span aria-hidden="true">⌘</span>
+          知识图谱
+        </RouterLink>
         <RouterLink to="/knowledge-bases" class="global-nav-link" active-class="active"
           >知识库</RouterLink
         >
-      </nav>
+      </div>
     </header>
 
     <div v-if="kbId" class="kb-bar">
-      <span class="kb-name">{{ shellKbName || '知识库' }}</span>
-      <nav class="kb-tabs">
+      <nav class="kb-tabs" aria-label="知识库功能">
         <RouterLink :to="`/knowledge-bases/${kbId}/documents`" class="kb-tab" active-class="active"
           >文档</RouterLink
         >

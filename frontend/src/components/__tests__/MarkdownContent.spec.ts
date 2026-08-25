@@ -30,4 +30,25 @@ describe('MarkdownContent', () => {
     expect(wrapper.find('img').exists()).toBe(false)
     expect(wrapper.text()).toContain('<script>alert(1)</script>')
   })
+
+  it('renders validated citations as accessible buttons without changing parser semantics', async () => {
+    const wrapper = mount(MarkdownContent, {
+      props: {
+        content: '**Answer** [S1] [S999]',
+        sourceIds: ['S1'],
+        selectedSourceId: 'S1',
+        citationControlsId: 'evidence-inspector',
+      },
+    })
+
+    const citation = wrapper.get('button[data-citation-source-id="S1"]')
+    expect(citation.attributes('aria-label')).toBe('查看证据 S1')
+    expect(citation.attributes('aria-controls')).toBe('evidence-inspector')
+    expect(citation.attributes('aria-pressed')).toBe('true')
+    expect(wrapper.text()).toContain('[S999]')
+    expect(wrapper.find('button[data-citation-source-id="S999"]').exists()).toBe(false)
+
+    await citation.trigger('click')
+    expect(wrapper.emitted('citation')).toEqual([['S1']])
+  })
 })
