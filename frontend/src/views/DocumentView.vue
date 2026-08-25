@@ -193,6 +193,7 @@ async function loadPage(): Promise<void> {
   query.value = typeof route.query?.query === 'string' ? route.query.query : ''
   focusedDocumentId.value =
     typeof route.query?.focusDocument === 'string' ? route.query.focusDocument : ''
+  showUpload.value = route.query?.import === '1'
   try {
     knowledgeBaseName.value = (await getKnowledgeBase(knowledgeBaseId)).name
   } catch {

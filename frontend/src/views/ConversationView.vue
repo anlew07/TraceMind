@@ -19,7 +19,7 @@ import {
   watch,
   type Ref,
 } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
+import { RouterLink, useRoute, useRouter } from 'vue-router'
 
 import EvidenceSourceList from '@/components/EvidenceSourceList.vue'
 import KnowledgeEntryFormDialog from '@/components/KnowledgeEntryFormDialog.vue'
@@ -35,6 +35,7 @@ import {
 import { streamRagAnswer } from '@/services/rag'
 import { getKnowledgeBase } from '@/services/knowledgeBases'
 import { createKnowledgeEntry } from '@/services/knowledgeEntries'
+import { listDocuments } from '@/services/documents'
 import type {
   Conversation,
   ConversationMessage,
@@ -84,6 +85,9 @@ const knowledgeInitial = ref<KnowledgeEntryInput>({
   tags: [],
 })
 const messageViewport = ref<HTMLElement | null>(null)
+const composerInput = ref<HTMLInputElement | null>(null)
+const knowledgeBaseIsEmpty = ref<boolean | null>(null)
+const emptyOnboardingDismissed = ref(false)
 let controller: AbortController | null = null
 let streamVersion = 0
 let followStreaming = true
@@ -102,6 +106,12 @@ const evidenceMetadata = computed(() => evidenceMessage.value?.generation_metada
 const selectedEvidenceSource = computed(
   () =>
     evidenceSources.value.find(({ source_id }) => source_id === selectedSourceId.value) ?? null,
+)
+const showEmptyKnowledgeBaseOnboarding = computed(
+  () =>
+    knowledgeBaseIsEmpty.value === true &&
+    !emptyOnboardingDismissed.value &&
+    messages.value.length === 0,
 )
 
 type ConversationGroup = { label: string; items: Conversation[] }
@@ -322,6 +332,13 @@ async function addConversation(): Promise<void> {
   } catch {
     ElMessage.error('新建会话失败')
   }
+}
+
+async function continueWithoutDocuments(): Promise<void> {
+  emptyOnboardingDismissed.value = true
+  if (!selectedId.value) await addConversation()
+  await nextTick()
+  composerInput.value?.focus()
 }
 
 async function renameSelected(): Promise<void> {
@@ -711,10 +728,17 @@ function traceDetails(message: ConversationMessage): TraceDetail[] {
 }
 
 onMounted(async () => {
-  try {
-    knowledgeBaseName.value = (await getKnowledgeBase(knowledgeBaseId)).name
-  } catch {
+  const [knowledgeBaseResult, documentResult] = await Promise.allSettled([
+    getKnowledgeBase(knowledgeBaseId),
+    listDocuments(knowledgeBaseId, '', 0, 1),
+  ])
+  if (knowledgeBaseResult.status === 'fulfilled') {
+    knowledgeBaseName.value = knowledgeBaseResult.value.name
+  } else {
     pageError.value = '知识库不存在或加载失败'
+  }
+  if (documentResult.status === 'fulfilled') {
+    knowledgeBaseIsEmpty.value = documentResult.value.total === 0
   }
   await loadList()
 })
@@ -802,6 +826,29 @@ onBeforeUnmount(() => {
           @scroll="handleViewportScroll"
         >
           <div v-if="loadingMessages" class="loading-state">正在加载…</div>
+          <div
+            v-else-if="showEmptyKnowledgeBaseOnboarding"
+            class="conv-empty conv-empty-knowledge-base"
+            data-testid="empty-knowledge-base-onboarding"
+          >
+            <span class="conv-empty-kicker">NO MATERIALS YET</span>
+            <strong>这个知识空间还没有资料</strong>
+            <p>导入文档或代码后，TraceMind 才能用可检查的证据回答；也可以先使用 Direct 模式开始会话。</p>
+            <div class="conv-empty-actions">
+              <RouterLink
+                :to="{
+                  path: `/knowledge-bases/${knowledgeBaseId}/documents`,
+                  query: { import: '1' },
+                }"
+                class="conv-empty-import"
+              >
+                导入资料
+              </RouterLink>
+              <button class="conv-empty-direct" type="button" @click="continueWithoutDocuments">
+                仍然开始对话
+              </button>
+            </div>
+          </div>
           <div v-else-if="!selectedId" class="conv-empty">
             <span class="conv-empty-kicker">START INVESTIGATION</span>
             <strong>开始一次可追溯的研究会话</strong>
@@ -989,6 +1036,7 @@ onBeforeUnmount(() => {
             <label class="conv-composer-field">
               <span class="sr-only">你的问题</span>
               <input
+                ref="composerInput"
                 v-model="query"
                 maxlength="2000"
                 aria-label="你的问题"

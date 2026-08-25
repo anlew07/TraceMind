@@ -16,13 +16,21 @@ describe('Conversation responsive CSS contract', () => {
     expect(mediumRule).not.toContain('grid-row')
   })
 
-  it('uses an editorial right-rule query treatment without a filled chat bubble', () => {
-    const queryStart = mainCss.lastIndexOf('.msg.user {')
+  it('uses asymmetric user and answer surfaces without visible shadows', () => {
+    const messageStart = mainCss.lastIndexOf('.msg {', mainCss.indexOf('.msg.user {'))
+    const queryStart = mainCss.indexOf('.msg.user {', messageStart)
     const queryEnd = mainCss.indexOf('}', queryStart)
     const queryRule = mainCss.slice(queryStart, queryEnd)
+    const answerStart = mainCss.indexOf('.msg.assistant {', queryEnd)
+    const answerEnd = mainCss.indexOf('}', answerStart)
+    const answerRule = mainCss.slice(answerStart, answerEnd)
 
-    expect(queryRule).toContain('width: min(70%, 580px)')
-    expect(queryRule).toContain('border-right: 2px solid var(--color-accent)')
-    expect(queryRule).toContain('background: transparent')
+    expect(queryRule).toContain('max-width: min(70%, 620px)')
+    expect(queryRule).toContain('background: var(--color-accent-soft)')
+    expect(queryRule).toContain('border-radius: var(--radius-message)')
+    expect(queryRule).not.toContain('box-shadow')
+    expect(answerRule).toContain('background: var(--color-surface)')
+    expect(answerRule).toContain('border: 1px solid var(--color-border-light)')
+    expect(answerRule).not.toContain('box-shadow')
   })
 })

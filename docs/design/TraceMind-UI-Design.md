@@ -64,7 +64,7 @@ One compact semantic layer. No global sidebar.
 
 ### Compact App Bar (approximately 56–60px)
 ```
-TraceMind | 当前知识库 | 问答  文档  知识  图谱 | Local-first | 知识库
+TraceMind | 当前知识库 | 问答  文档  知识  图谱 | Local-first | Workspace
 ```
 - Brand, current KB context, KB navigation and local-first status share one bar.
 - KB name comes from page data (existing `knowledgeBaseName` ref).
@@ -80,16 +80,19 @@ TraceMind | 当前知识库 | 问答  文档  知识  图谱 | Local-first | 知
 
 ## Home
 
-Minimal product start screen. No marketing treatment.
+The root route is the daily **Research Desk**, not a second landing or selector step. It lists real
+Knowledge Bases and lets the user continue directly into Conversation.
 
 Structure:
-- "TraceMind" heading + product description
-- "Open Knowledge Bases →" CTA (primary button)
-- Recent KBs section (if backend returns data)
-- Compact backend status (only when unavailable)
+- Workspace heading with one "Create Knowledge Base" primary action
+- Knowledge Spaces grid using only `name`, optional `description`, and `updated_at`
+- Whole-space navigation to `/knowledge-bases/{id}/chat`
+- Existing edit/delete actions in a visible overflow menu
+- Empty state with one create action
+- Create success routes directly to the new Conversation workspace
 
 **Anti-patterns to avoid:**
-- Marketing hero cards
+- Dashboard metrics or invented document/conversation/activity counts
 - Large shadows
 - Gradients
 - Backend status as dominant content
@@ -97,18 +100,25 @@ Structure:
 
 **File:** `src/views/HomeView.vue`
 
+The product introduction remains available explicitly at `/landing`. It is a short editorial
+portal with one action back to `/`; it is not part of the daily entry flow.
+
 ---
 
 ## Knowledge Bases
 
 Knowledge Bases are workspaces, not database rows.
 
-### Visual Pattern: Editorial Resource Row
-- Each KB is a full-width clickable row
+### Visual Pattern: Editorial Workspace Tile
+- Each KB is a flat, thin-bordered workspace tile; it is not an elevated dashboard card
 - Name + description + updated date
-- Whole-row navigation to documents
+- Whole-tile navigation to Conversation
 - Contextual actions (Edit, Delete) in `···` overflow dropdown
-- "New" as the primary page action
+- "Create Knowledge Base" as the single primary page action
+- Three columns on wide desktop, two around 900–1280px, one on narrow/mobile screens
+
+An empty Knowledge Base presents focused Conversation onboarding. Import opens the existing
+Documents upload flow; Direct-mode chat remains available without inventing retrieval evidence.
 
 **Anti-patterns to avoid:**
 - CRUD tables with action columns
@@ -174,10 +184,13 @@ Conversations (200px) | Answer (flex) | Evidence (360px)
 - Rename/Delete in `···` overflow (not permanent buttons)
 
 ### Answer (center)
-- **No ChatGPT-style bubbles.**
-- User messages: right-aligned editorial block, maximum width around 65–72%, muted "You" label and
-  a thin deep-green right rule; transparent background and no card shadow
-- Assistant messages: "TraceMind" label + reading-body text
+- Use an **asymmetric conversation surface system**, not mirrored messenger bubbles.
+- User messages: compact right-aligned bubble, maximum width around 65–70%, muted sage/warm-green
+  surface, dark ink, restrained 10–14px radius, subtle border, and no visible shadow
+- Assistant messages: broad left-aligned warm-paper answer surface, maximum width around 88–94%,
+  subtle warm border, restrained radius, and reading-first Markdown width
+- Evidence, Execution Trace, Trace Detail and Promote to Knowledge remain inside the corresponding
+  Assistant answer surface as secondary sections separated by hairlines
 - Inline citation pills: `[S1]` — brick/vermilion Evidence accent, monospace, clickable
 - **Provenance row** below each answer: "Cited from N sources"
 - **No duplicate full sources below the answer.** Evidence lives in the Inspector.
@@ -229,7 +242,7 @@ excerpt…
 - Code evidence: relative path + line range + code block with left accent border
 
 **Anti-patterns to avoid:**
-- ChatGPT-style chat bubbles
+- Symmetric messenger bubbles or identical User/Assistant surfaces
 - Duplicated evidence (inline + inspector)
 - Hiding sources behind `<details>`
 - "GROUNDED" claims
@@ -354,7 +367,7 @@ Before completing any frontend UI work:
 - [ ] Execution/debug uses progressive disclosure
 - [ ] No CRUD tables for knowledge objects
 - [ ] No card-heavy SaaS layouts
-- [ ] No ChatGPT-style bubbles
+- [ ] User/Assistant use distinct asymmetric conversation surfaces
 - [ ] No duplicated navigation
 - [ ] Shell layers preserved
 - [ ] Element Plus visual defaults overridden where needed

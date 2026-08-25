@@ -59,7 +59,8 @@ The interface must make this loop visible through persistent source identity and
 
 - **Evidence:** citations and sources are primary navigation and inspection objects.
 - **Trace:** provenance remains visible across answer, retrieval, reader, knowledge, and graph views.
-- **Knowledge:** content is presented as durable editorial material, not disposable chat bubbles.
+- **Knowledge:** answers remain durable editorial surfaces; compact user bubbles are scanning aids,
+  not the dominant content model.
 - **Trust:** states, scores, paths, and source boundaries are explicit and restrained.
 - **Local-first:** status is calm and operational, never cloud-marketing language or artificial futurism.
 
@@ -89,7 +90,9 @@ Desktop application pages share this skeleton:
 - **Retrieval Workspace:** query/rewrite trace above a dense ranked result region; Retrieval Inspector exposes scores and provenance.
 - **Data Management:** settings navigation, dense configuration/status sections, operational Inspector.
 - **Documents / Knowledge:** editorial rows in the main plane; selected row drives Inspector content.
-- **Workspace Home:** slightly more open rhythm, but the same shell, rails, source identity, and restrained surfaces.
+- **Workspace Home:** slightly more open rhythm with flat editorial Knowledge Space tiles, one
+  create action, and no invented dashboard metrics. Tiles use real name, description, and update
+  time, and open the Conversation workspace directly.
 - **Knowledge Map:** spatial canvas replaces the central document plane; shell, rail, selection, and Inspector stay consistent.
 - **Document Reader:** document tree, readable source body, highlighted evidence chunk, Source Inspector.
 - **Landing:** a deliberate exception—a centered editorial portal with enlarged brand lockup, short product sequence, and one workspace-entry action.
@@ -129,7 +132,8 @@ The application shell is a persistent, full-width masthead, estimated at **64–
 - Page headers contain a title, concise context, and at most one visually dominant action.
 - Dense data and long-form reading can coexist, but each page should have one primary plane.
 - Section separation uses whitespace and rules before bounded containers.
-- Chat answers read like editorial content, not alternating message bubbles.
+- Conversation uses asymmetric surfaces: a compact right-aligned user bubble and a broad editorial
+  answer surface that owns its Evidence and Execution Trace.
 
 ### 6.4 Right Inspector
 

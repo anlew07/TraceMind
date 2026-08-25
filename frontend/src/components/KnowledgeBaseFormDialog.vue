@@ -12,7 +12,7 @@ const props = defineProps<{
 }>()
 const emit = defineEmits<{
   'update:modelValue': [value: boolean]
-  saved: []
+  saved: [knowledgeBase: KnowledgeBase, mode: 'created' | 'updated']
 }>()
 
 const form = reactive({ name: '', description: '' })
@@ -54,14 +54,21 @@ async function submit(): Promise<void> {
   errorMessage.value = ''
   const description = form.description.trim() || null
   try {
+    let savedKnowledgeBase: KnowledgeBase
+    let mode: 'created' | 'updated'
     if (props.knowledgeBase) {
-      await updateKnowledgeBase(props.knowledgeBase.id, { name: normalizedName, description })
+      savedKnowledgeBase = await updateKnowledgeBase(props.knowledgeBase.id, {
+        name: normalizedName,
+        description,
+      })
+      mode = 'updated'
       ElMessage.success('知识库修改成功')
     } else {
-      await createKnowledgeBase({ name: normalizedName, description })
+      savedKnowledgeBase = await createKnowledgeBase({ name: normalizedName, description })
+      mode = 'created'
       ElMessage.success('知识库创建成功')
     }
-    emit('saved')
+    emit('saved', savedKnowledgeBase, mode)
     visible.value = false
   } catch (error) {
     errorMessage.value =

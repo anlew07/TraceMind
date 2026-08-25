@@ -10,6 +10,7 @@ import {
   renameConversation,
 } from '@/services/conversations'
 import { getKnowledgeBase } from '@/services/knowledgeBases'
+import { listDocuments } from '@/services/documents'
 import { createKnowledgeEntry } from '@/services/knowledgeEntries'
 import { streamRagAnswer } from '@/services/rag'
 import type { RagStreamHandlers } from '@/services/rag'
@@ -21,6 +22,7 @@ const routerPush = vi.fn()
 vi.mock('vue-router', () => ({
   useRoute: () => ({ params: { knowledgeBaseId: 'kb' } }),
   useRouter: () => ({ push: routerPush }),
+  RouterLink: { props: ['to'], template: '<a :data-to="JSON.stringify(to)"><slot /></a>' },
 }))
 vi.mock('@/services/conversations', () => ({
   listConversations: vi.fn(),
@@ -31,6 +33,7 @@ vi.mock('@/services/conversations', () => ({
 }))
 vi.mock('@/services/rag', () => ({ streamRagAnswer: vi.fn() }))
 vi.mock('@/services/knowledgeBases', () => ({ getKnowledgeBase: vi.fn() }))
+vi.mock('@/services/documents', () => ({ listDocuments: vi.fn() }))
 vi.mock('@/services/knowledgeEntries', () => ({ createKnowledgeEntry: vi.fn() }))
 
 const mockedList = vi.mocked(listConversations)
@@ -40,6 +43,7 @@ const mockedGet = vi.mocked(getConversation)
 const mockedRename = vi.mocked(renameConversation)
 const mockedStream = vi.mocked(streamRagAnswer)
 const mockedCreateKnowledge = vi.mocked(createKnowledgeEntry)
+const mockedListDocuments = vi.mocked(listDocuments)
 const wrappers: VueWrapper[] = []
 
 const conv: Conversation = {
@@ -161,6 +165,8 @@ describe('ConversationView', () => {
     mockedRename.mockReset()
     mockedStream.mockReset()
     mockedCreateKnowledge.mockReset()
+    mockedListDocuments.mockReset()
+    mockedListDocuments.mockResolvedValue({ items: [], total: 1, offset: 0, limit: 1 })
     vi.mocked(getKnowledgeBase).mockResolvedValue({
       id: 'kb',
       name: 'KB',
@@ -208,6 +214,43 @@ describe('ConversationView', () => {
     expect(wrapper.get('[data-testid="evidence-source-a1-S1"]').text()).toContain(
       'first source excerpt',
     )
+  })
+
+  it('offers the existing import flow when the knowledge base has no documents', async () => {
+    mockedListDocuments.mockResolvedValue({ items: [], total: 0, offset: 0, limit: 1 })
+    const wrapper = mountView()
+    await flushPromises()
+
+    const onboarding = wrapper.get('[data-testid="empty-knowledge-base-onboarding"]')
+    expect(onboarding.text()).toContain('这个知识空间还没有资料')
+    expect(onboarding.get('.conv-empty-import').attributes('data-to')).toContain(
+      '/knowledge-bases/kb/documents',
+    )
+    expect(onboarding.get('.conv-empty-import').attributes('data-to')).toContain('import')
+  })
+
+  it('allows Direct-mode conversation without documents', async () => {
+    mockedListDocuments.mockResolvedValue({ items: [], total: 0, offset: 0, limit: 1 })
+    mockedList.mockResolvedValue({ items: [], total: 0, offset: 0, limit: 100 })
+    mockedCreate.mockResolvedValue(conv)
+    const wrapper = mountView()
+    await flushPromises()
+
+    await wrapper.get('.conv-empty-direct').trigger('click')
+    await flushPromises()
+
+    expect(mockedCreate).toHaveBeenCalledWith('kb')
+    expect(wrapper.find('[data-testid="empty-knowledge-base-onboarding"]').exists()).toBe(false)
+    expect(wrapper.find('[data-testid="conversation-composer"]').exists()).toBe(true)
+  })
+
+  it('does not block conversation when the document probe fails', async () => {
+    mockedListDocuments.mockRejectedValue(new Error('offline'))
+    const wrapper = mountView()
+    await flushPromises()
+
+    expect(wrapper.find('[data-testid="empty-knowledge-base-onboarding"]').exists()).toBe(false)
+    expect(wrapper.find('[data-testid="conversation-composer"]').exists()).toBe(true)
   })
 
   it('opens evidence only from a citation and hides it again on close', async () => {
@@ -623,6 +666,37 @@ describe('ConversationView', () => {
     expect(lineageIndex).toBeLessThan(detailIndex)
     expect(answer.get('.msg-lineage').attributes('open')).toBeUndefined()
     expect(answer.get('.exec-details').attributes('open')).toBeUndefined()
+  })
+
+  it('keeps consecutive user queries distinct from their wider answer surfaces', async () => {
+    mockedGet.mockResolvedValue(
+      detail(conv, [
+        message('u1', 'First question', null, 'completed', 'c1', 'user'),
+        message('a1', 'First answer [S1]', [src], 'completed', 'c1', 'assistant', doneEvent()),
+        message('u2', 'Second question', null, 'completed', 'c1', 'user'),
+        message('a2', 'Second answer [S1]', [src], 'completed', 'c1', 'assistant', doneEvent()),
+        message('u3', 'Third question', null, 'completed', 'c1', 'user'),
+        message('a3', 'Third answer [S1]', [src], 'completed', 'c1', 'assistant', doneEvent()),
+      ]),
+    )
+
+    const wrapper = mountView()
+    await flushPromises()
+
+    const queries = wrapper.findAll('.msg.user')
+    const answers = wrapper.findAll('.msg.assistant')
+    expect(queries).toHaveLength(3)
+    expect(answers).toHaveLength(3)
+    expect(queries.every((query) => !query.find('.msg-evidence-strip').exists())).toBe(true)
+    expect(
+      answers.every(
+        (answer) =>
+          answer.find('.assistant-body').exists() &&
+          answer.find('.msg-evidence-strip').exists() &&
+          answer.find('.msg-lineage').exists() &&
+          answer.find('.msg-knowledge-action').exists(),
+      ),
+    ).toBe(true)
   })
 
   it('allows a terminal trace to be expanded manually', async () => {

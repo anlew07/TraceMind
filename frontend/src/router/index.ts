@@ -1,16 +1,17 @@
 import { createRouter, createWebHistory } from 'vue-router'
 
 import HomeView from '@/views/HomeView.vue'
+import LandingView from '@/views/LandingView.vue'
 import ConversationView from '@/views/ConversationView.vue'
 import DocumentView from '@/views/DocumentView.vue'
-import KnowledgeBaseView from '@/views/KnowledgeBaseView.vue'
 import KnowledgeView from '@/views/KnowledgeView.vue'
 
 export default createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
     { path: '/', name: 'home', component: HomeView },
-    { path: '/knowledge-bases', name: 'knowledge-bases', component: KnowledgeBaseView },
+    { path: '/landing', name: 'landing', component: LandingView },
+    { path: '/knowledge-bases', name: 'knowledge-bases', component: HomeView },
     {
       path: '/knowledge-bases/:knowledgeBaseId/documents',
       name: 'documents',

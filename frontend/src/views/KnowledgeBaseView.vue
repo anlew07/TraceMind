@@ -5,18 +5,18 @@ import {
   ElDropdown,
   ElDropdownItem,
   ElDropdownMenu,
-  ElEmpty,
   ElMessage,
   ElMessageBox,
 } from 'element-plus'
 import { onMounted, ref } from 'vue'
-import { RouterLink } from 'vue-router'
+import { RouterLink, useRouter } from 'vue-router'
 
 import KnowledgeBaseFormDialog from '@/components/KnowledgeBaseFormDialog.vue'
 import { ApiError } from '@/services/api'
 import { deleteKnowledgeBase, listKnowledgeBases } from '@/services/knowledgeBases'
 import type { KnowledgeBase } from '@/types/knowledgeBase'
 
+const router = useRouter()
 const items = ref<KnowledgeBase[]>([])
 const loading = ref(false)
 const errorMessage = ref('')
@@ -40,7 +40,7 @@ async function loadKnowledgeBases(): Promise<void> {
     const response = await listKnowledgeBases()
     items.value = response.items
   } catch {
-    errorMessage.value = '知识库列表加载失败，请检查后端服务后重试'
+    errorMessage.value = '知识空间加载失败，请检查后端服务后重试'
   } finally {
     loading.value = false
   }
@@ -56,14 +56,18 @@ function openEditDialog(knowledgeBase: KnowledgeBase): void {
   dialogVisible.value = true
 }
 
-async function handleSaved(): Promise<void> {
+async function handleSaved(knowledgeBase: KnowledgeBase, mode: 'created' | 'updated'): Promise<void> {
+  if (mode === 'created') {
+    await router.push(`/knowledge-bases/${knowledgeBase.id}/chat`)
+    return
+  }
   await loadKnowledgeBases()
 }
 
 async function confirmDelete(knowledgeBase: KnowledgeBase): Promise<void> {
   try {
     await ElMessageBox.confirm(
-      `确定删除知识库"${knowledgeBase.name}"吗？此操作无法撤销。`,
+      `确定删除知识库“${knowledgeBase.name}”吗？此操作无法撤销。`,
       '删除确认',
       { confirmButtonText: '删除', cancelButtonText: '取消', type: 'warning' },
     )
@@ -91,77 +95,91 @@ onMounted(loadKnowledgeBases)
 </script>
 
 <template>
-  <main class="management-page">
-    <header class="management-header">
-      <div>
-        <h1>知识库</h1>
-        <p>用于整理文档、检索知识并生成可追溯回答的本地空间。</p>
-      </div>
-      <div class="header-actions">
-        <ElButton
-          v-if="errorMessage"
-          :loading="loading"
-          size="small"
-          text
-          @click="loadKnowledgeBases"
-          >重试</ElButton
-        >
-        <ElButton type="primary" @click="openCreateDialog">新建</ElButton>
-      </div>
-    </header>
-
-    <ElAlert
-      v-if="errorMessage"
-      :title="errorMessage"
-      type="error"
-      show-icon
-      :closable="false"
-      style="max-width: 1160px; margin: 0 auto var(--space-lg)"
-    />
-
-    <section :aria-busy="loading">
-      <div v-if="loading && items.length === 0" class="loading-state">正在加载…</div>
-      <ElEmpty v-else-if="items.length === 0 && !errorMessage" description="暂无知识库" />
-
-      <div v-else class="doc-list" style="max-width: 1160px; margin: 0 auto">
-        <div v-for="kb in items" :key="kb.id" class="doc-item kb-item">
-          <RouterLink :to="`/knowledge-bases/${kb.id}/documents`" class="doc-main kb-item-link">
-            <div class="doc-name-row">
-              <span class="doc-name">{{ kb.name }}</span>
-            </div>
-            <div
-              v-if="kb.description"
-              class="doc-path"
-              style="
-                font-family: var(--font-sans);
-                font-size: var(--font-size-base);
-                color: var(--color-text-secondary);
-              "
-            >
-              {{ kb.description }}
-            </div>
-            <div class="doc-meta-row">
-              <span class="doc-meta">更新于 {{ formatDate(kb.updated_at) }}</span>
-            </div>
-          </RouterLink>
-          <ElDropdown trigger="click" :hide-on-click="true">
-            <button class="doc-more" aria-label="知识库操作">···</button>
-            <template #dropdown>
-              <ElDropdownMenu>
-                <ElDropdownItem @click="openEditDialog(kb)">编辑</ElDropdownItem>
-                <ElDropdownItem
-                  :data-testid="`delete-${kb.id}`"
-                  divided
-                  style="color: var(--color-error)"
-                  @click="confirmDelete(kb)"
-                  >删除</ElDropdownItem
-                >
-              </ElDropdownMenu>
-            </template>
-          </ElDropdown>
+  <main class="workspace-home">
+    <div class="workspace-home-inner">
+      <header class="workspace-home-header">
+        <div class="workspace-home-heading">
+          <span class="workspace-home-kicker">RESEARCH DESK</span>
+          <h1>Workspace</h1>
+          <p>选择一个知识空间，继续检索、验证证据与沉淀结论。</p>
         </div>
-      </div>
-    </section>
+        <ElButton type="primary" data-testid="create-knowledge-base" @click="openCreateDialog">
+          创建 Knowledge Base
+        </ElButton>
+      </header>
+
+      <ElAlert
+        v-if="errorMessage"
+        :title="errorMessage"
+        type="error"
+        show-icon
+        :closable="false"
+        class="workspace-alert"
+      >
+        <button class="workspace-inline-action" type="button" @click="loadKnowledgeBases">
+          重试
+        </button>
+      </ElAlert>
+
+      <section class="workspace-spaces" :aria-busy="loading" aria-labelledby="spaces-heading">
+        <div class="workspace-section-heading">
+          <h2 id="spaces-heading">Knowledge Spaces</h2>
+          <span v-if="items.length">{{ items.length }} 个空间</span>
+        </div>
+
+        <div v-if="loading && items.length === 0" class="workspace-loading" role="status">
+          正在整理你的知识空间…
+        </div>
+
+        <div v-else-if="items.length === 0 && !errorMessage" class="workspace-empty">
+          <span class="workspace-empty-mark" aria-hidden="true">T</span>
+          <h2>建立第一个知识空间</h2>
+          <p>为项目、主题或长期研究创建独立空间，再导入真实资料开始追溯。</p>
+          <ElButton type="primary" @click="openCreateDialog">创建 Knowledge Base</ElButton>
+        </div>
+
+        <div v-else class="workspace-kb-grid">
+          <article v-for="kb in items" :key="kb.id" class="workspace-kb-card">
+            <RouterLink
+              :to="`/knowledge-bases/${kb.id}/chat`"
+              class="workspace-kb-link"
+              :aria-label="`进入 ${kb.name} 的研究会话`"
+            >
+              <div class="workspace-kb-copy">
+                <h3>{{ kb.name }}</h3>
+                <p v-if="kb.description">{{ kb.description }}</p>
+                <p v-else class="workspace-kb-description-empty">尚未添加空间说明</p>
+              </div>
+              <div class="workspace-kb-meta">
+                <time :datetime="kb.updated_at">更新于 {{ formatDate(kb.updated_at) }}</time>
+                <span>Continue Research →</span>
+              </div>
+            </RouterLink>
+
+            <div class="workspace-kb-actions">
+              <ElDropdown trigger="click" :hide-on-click="true">
+                <button class="workspace-kb-more" type="button" :aria-label="`${kb.name} 操作`">
+                  ···
+                </button>
+                <template #dropdown>
+                  <ElDropdownMenu>
+                    <ElDropdownItem @click="openEditDialog(kb)">编辑</ElDropdownItem>
+                    <ElDropdownItem
+                      :data-testid="`delete-${kb.id}`"
+                      divided
+                      style="color: var(--color-error)"
+                      @click="confirmDelete(kb)"
+                    >
+                      删除
+                    </ElDropdownItem>
+                  </ElDropdownMenu>
+                </template>
+              </ElDropdown>
+            </div>
+          </article>
+        </div>
+      </section>
+    </div>
 
     <KnowledgeBaseFormDialog
       v-model="dialogVisible"

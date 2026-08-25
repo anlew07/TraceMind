@@ -63,8 +63,8 @@ watch(kbId, () => {
           <span class="status-dot" aria-hidden="true"></span>
           Local-first
         </span>
-        <RouterLink to="/knowledge-bases" class="global-nav-link" active-class="active"
-          >知识库</RouterLink
+        <RouterLink to="/" class="global-nav-link" exact-active-class="active"
+          >Workspace</RouterLink
         >
       </div>
     </header>

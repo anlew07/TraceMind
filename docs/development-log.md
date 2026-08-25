@@ -1150,3 +1150,21 @@ Header、64px Session Header 与历史 Trace 手动展开；1024/900px Inspector
 坐标打开前后不变。真实 RAG 流观察到 Retrieval/Rerank/Evidence/Generation 实时状态且 live Trace 始终展开，终态自动
 折叠为 5-stage summary。此次真实请求未触发 reranker fallback；fallback ViewModel/文案由组件测试覆盖，浏览器 computed
 style 验证 warning 与 error 颜色不同。
+
+# 2026-08-25 — UI Phase 2.1 Workspace Home & Entry Flow
+
+根路由从二次 Landing/selector 改为日常 Research Desk：Workspace 只使用 Knowledge Base 真实的 name、description 与
+updated_at，以无阴影、薄边框的 editorial tiles 展示，并直接进入 Conversation。创建成功同样直接进入新知识库的
+Conversation；重命名、删除和 `/documents`、`/knowledge`、`/map` 既有路由保持。产品介绍页独立为 `/landing`，唯一入口
+动作返回 `/`，不再阻断日常工作流。
+
+空知识库 Conversation 通过现有 Documents list API 做一次轻量探测：确认 total=0 时提供“导入资料”与“仍然开始对话”，
+前者通过 `?import=1` 打开既有 DocumentUploadPanel，后者保留当前 Direct route；探测失败不阻断会话。本轮未修改后端 API、
+SSE、RAG、LangGraph、上传逻辑或数据模型，也未引入虚构的文档数、会话数、Owner 或 Activity 字段。
+
+# 2026-08-25 — Conversation Asymmetric Message Surfaces
+
+在不修改 Conversation 数据、Citation、Inspector、Execution Trace 或 streaming 状态的前提下，将透明右规则 Query 调整为
+紧凑的 muted-sage 右对齐气泡，并将 TraceMind Answer 调整为更宽的 warm-paper 阅读 surface。Evidence、Execution Trace、
+Trace Detail 与 Promote to Knowledge 继续位于对应 Answer article 内，通过细分隔线形成同一回答的次级区域；未采用对称聊天
+气泡、重阴影或独立 dashboard 卡片。

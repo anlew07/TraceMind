@@ -205,6 +205,16 @@ describe('DocumentView', () => {
     expect(mockedList).toHaveBeenCalledTimes(2)
   })
 
+  it('opens the existing import panel from the onboarding query', async () => {
+    routeState.query = { import: '1' }
+    mockedList.mockResolvedValue(response([]))
+    const wrapper = mountView()
+    await flushPromises()
+
+    expect(wrapper.find('[data-testid="upload-completed"]').exists()).toBe(true)
+    expect(wrapper.text()).toContain('收起')
+  })
+
   it('keeps heading, import, search, rows, and retrieval tools on one content track', async () => {
     mockedList.mockResolvedValue(response([document]))
     const wrapper = mountView()

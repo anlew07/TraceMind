@@ -6,6 +6,15 @@ import { deleteKnowledgeBase, listKnowledgeBases } from '@/services/knowledgeBas
 import type { KnowledgeBase, KnowledgeBaseListResponse } from '@/types/knowledgeBase'
 import KnowledgeBaseView from '@/views/KnowledgeBaseView.vue'
 
+const routerPush = vi.fn()
+vi.mock('vue-router', () => ({
+  useRouter: () => ({ push: routerPush }),
+  RouterLink: {
+    props: ['to'],
+    template: '<a :data-to="to"><slot /></a>',
+  },
+}))
+
 vi.mock('@/services/knowledgeBases', () => ({
   listKnowledgeBases: vi.fn(),
   deleteKnowledgeBase: vi.fn(),
@@ -30,7 +39,6 @@ function mountView() {
   return mount(KnowledgeBaseView, {
     global: {
       stubs: {
-        RouterLink: { template: '<a><slot /></a>' },
         KnowledgeBaseFormDialog: true,
         ElDropdown: {
           props: ['trigger'],
@@ -52,24 +60,31 @@ describe('KnowledgeBaseView', () => {
     vi.restoreAllMocks()
     mockedList.mockReset()
     mockedDelete.mockReset()
+    routerPush.mockReset()
     vi.spyOn(ElMessage, 'success').mockImplementation(() => ({ close: vi.fn() }))
     vi.spyOn(ElMessage, 'error').mockImplementation(() => ({ close: vi.fn() }))
   })
 
-  it('loads and displays KB list with editorial rows', async () => {
+  it('loads real KB fields into editorial workspace tiles', async () => {
     mockedList.mockResolvedValue(resp([kb]))
     const wrapper = mountView()
     await flushPromises()
     expect(wrapper.text()).toContain('Backend Notes')
     expect(wrapper.text()).toContain('Architecture records')
-    expect(wrapper.text()).toContain('知识库')
+    expect(wrapper.text()).toContain('Workspace')
+    expect(wrapper.text()).toContain('更新于')
+    expect(wrapper.text()).not.toContain('文档数量')
+    expect(wrapper.get('.workspace-kb-link').attributes('data-to')).toBe(
+      '/knowledge-bases/8eaa2608/chat',
+    )
   })
 
   it('shows empty state', async () => {
     mockedList.mockResolvedValue(resp([]))
     const wrapper = mountView()
     await flushPromises()
-    expect(wrapper.text()).toContain('暂无知识库')
+    expect(wrapper.text()).toContain('建立第一个知识空间')
+    expect(wrapper.text()).toContain('创建 Knowledge Base')
   })
 
   it('shows error state', async () => {
@@ -83,8 +98,7 @@ describe('KnowledgeBaseView', () => {
     mockedList.mockResolvedValue(resp([]))
     const wrapper = mountView()
     await flushPromises()
-    const btn = wrapper.findAll('button').find((b) => b.text() === 'New')
-    await btn?.trigger('click')
+    await wrapper.get('[data-testid="create-knowledge-base"]').trigger('click')
     expect(wrapper.findComponent({ name: 'KnowledgeBaseFormDialog' }).exists()).toBe(true)
   })
 
@@ -92,9 +106,11 @@ describe('KnowledgeBaseView', () => {
     mockedList.mockResolvedValue(resp([kb]))
     const wrapper = mountView()
     await flushPromises()
-    expect(wrapper.get('.kb-item').element.tagName).toBe('DIV')
-    expect(wrapper.find('.kb-item > a.kb-item-link').exists()).toBe(true)
-    expect(wrapper.find('.kb-item > .el-dropdown').exists()).toBe(true)
+    expect(wrapper.get('.workspace-kb-card').element.tagName).toBe('ARTICLE')
+    expect(wrapper.find('.workspace-kb-card > a.workspace-kb-link').exists()).toBe(true)
+    expect(wrapper.find('.workspace-kb-card > .workspace-kb-actions .el-dropdown').exists()).toBe(
+      true,
+    )
     expect(wrapper.find('.el-dropdown').exists()).toBe(true)
     expect(wrapper.find('.el-dropdown-menu').exists()).toBe(true)
     const editBtn = wrapper.findAll('.el-dropdown-item').find((b) => b.text() === '编辑')
@@ -113,5 +129,32 @@ describe('KnowledgeBaseView', () => {
     await flushPromises()
     expect(confirmSpy).toHaveBeenCalled()
     expect(mockedDelete).toHaveBeenCalledWith('8eaa2608')
+  })
+
+  it('routes a newly created knowledge base directly into chat', async () => {
+    mockedList.mockResolvedValue(resp([]))
+    const wrapper = mountView()
+    await flushPromises()
+
+    await wrapper
+      .getComponent({ name: 'KnowledgeBaseFormDialog' })
+      .vm.$emit('saved', kb, 'created')
+    await flushPromises()
+
+    expect(routerPush).toHaveBeenCalledWith('/knowledge-bases/8eaa2608/chat')
+  })
+
+  it('refreshes in place after a rename', async () => {
+    mockedList.mockResolvedValue(resp([kb]))
+    const wrapper = mountView()
+    await flushPromises()
+
+    await wrapper
+      .getComponent({ name: 'KnowledgeBaseFormDialog' })
+      .vm.$emit('saved', { ...kb, name: 'Renamed' }, 'updated')
+    await flushPromises()
+
+    expect(mockedList).toHaveBeenCalledTimes(2)
+    expect(routerPush).not.toHaveBeenCalled()
   })
 })
