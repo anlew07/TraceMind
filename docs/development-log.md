@@ -1168,3 +1168,12 @@ SSE、RAG、LangGraph、上传逻辑或数据模型，也未引入虚构的文�
 紧凑的 muted-sage 右对齐气泡，并将 TraceMind Answer 调整为更宽的 warm-paper 阅读 surface。Evidence、Execution Trace、
 Trace Detail 与 Promote to Knowledge 继续位于对应 Answer article 内，通过细分隔线形成同一回答的次级区域；未采用对称聊天
 气泡、重阴影或独立 dashboard 卡片。
+
+# 2026-08-25 — UI Phase 2.2 Documents Research Ledger
+
+Documents 从通用管理列表收敛为资料账本：导入默认折叠，搜索继续只使用现有文件名/路径查询，资源行以版本、大小、Chunk、更新时间
+和由 parse/index 真实状态推导的单一产品状态呈现。选中行后才打开 Document Inspector；Inspector 仅展示当前 API 已有的路径、
+来源、MIME、版本、解析/索引信息，并复用 Chunk、版本、下载与失败阶段重试。中宽屏使用 overlay，窄屏使用全宽 sheet。
+
+现有 API 没有归档、标签、Owner、状态筛选或稳定的整文 Reader，因此未虚构这些字段，也未用 Chunk 拼装 Reader；Retrieval Debug
+继续作为默认折叠的 L3 工具。未修改后端、上传业务、Home → Conversation → Documents `?import=1` 引导或 RAG 路径。

@@ -137,6 +137,7 @@ Documents are knowledge sources for search, answers, and citations.
 Page Header: "Documents" + description + [Import]
 Search: [Filter by name or path…]
 Document List: editorial resource rows
+Document Inspector: opens only after row selection
 Retrieval Tools: collapsible at bottom
 ```
 
@@ -144,17 +145,29 @@ Retrieval Tools: collapsible at bottom
 Each document row shows:
 - **Filename** (without extension) + **extension** in mono
 - **Relative path** in mono, secondary color
-- **Metadata row**: version · size · chunks · date
-- **Status pills**: parsed/indexed with colored dot indicators
+- **Metadata row**: version · size · chunks · updated date
+- **Product status**: one truthful status derived from current parse/index state: Ready, waiting,
+  processing, or failed. Do not invent ingestion substages or archived state.
 - **Overflow** `···`: Chunks, Re-parse, Re-index, Download, Versions, Delete
+- Selecting the row opens the contextual Inspector; the overflow remains reserved for real actions
+
+### Document Inspector
+- Closed by default and driven by the selected resource row
+- Uses only current API fields: identity/path, source, MIME/extension, size, version, chunks,
+  parse/index state and timestamps
+- Parser, embedding, content hash and index generation are technical detail and collapsed by default
+- Contextual actions reuse the existing Chunk preview, version history, download and failed-stage retry
+- No full document reader is implied until a stable parsed-document/page API exists
+- Wide desktop uses a side pane; medium widths use an overlay; narrow screens use a full-width sheet
 
 ### Import
 - Compact "Import" button in page header
-- Opens existing `DocumentUploadPanel` inline (collapsible)
-- Preserves file import + code directory import
+- Opens existing `DocumentUploadPanel` inline (collapsible and closed by default)
+- `?import=1` opens the same panel for the empty-KB onboarding path
+- Preserves the existing file picker, upload progress and cancellation behavior
 
 ### Retrieval Tools
-- "▸ Retrieval tools" toggle at page bottom
+- "▸ Advanced · Retrieval debug" toggle at page bottom
 - Expands `SemanticSearchPanel` (Dense/Hybrid/Reranker)
 - Collapsed by default
 
@@ -162,6 +175,8 @@ Each document row shows:
 - CRUD tables
 - Permanent upload panel
 - Action button rows
+- Invented Owner, tags, archive, saved searches or storage metrics
+- A fabricated Reader assembled from chunk previews
 
 **File:** `src/views/DocumentView.vue`
 

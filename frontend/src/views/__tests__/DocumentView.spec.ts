@@ -1,5 +1,6 @@
 import { flushPromises, mount } from '@vue/test-utils'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import { readFileSync } from 'node:fs'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import {
@@ -13,6 +14,8 @@ import { getKnowledgeBase } from '@/services/knowledgeBases'
 import type { DocumentItem, DocumentListResponse } from '@/types/document'
 import DocumentView from '@/views/DocumentView.vue'
 import { ApiError } from '@/services/api'
+
+const mainCss = readFileSync('src/assets/main.css', 'utf8')
 
 const routeState = {
   params: { knowledgeBaseId: 'kb-id' },
@@ -101,6 +104,9 @@ function mountView() {
           props: ['modelValue'],
           template: '<div v-if="modelValue" data-testid="chunk-dialog" />',
         },
+        SemanticSearchPanel: {
+          template: '<div data-testid="retrieval-debug-panel" />',
+        },
         ElDropdown: {
           props: ['trigger'],
           template: '<div class="el-dropdown"><slot /><slot name="dropdown" /></div>',
@@ -151,15 +157,19 @@ describe('DocumentView', () => {
     expect(wrapper.text()).toContain('V2')
     expect(wrapper.text()).toContain('2.0 KB')
     expect(wrapper.text()).toContain('Ready')
-    expect(wrapper.text()).toContain('2 个 Chunk')
-    expect(wrapper.text()).toContain('检索调试')
+    expect(wrapper.text()).toContain('2 Chunks')
+    expect(wrapper.text()).toContain('Advanced · 检索调试')
+    expect(wrapper.text()).toContain('1 份资料')
   })
 
-  it('shows an empty state', async () => {
+  it('shows a product-specific empty state with the real import action', async () => {
     mockedList.mockResolvedValue(response([]))
     const wrapper = mountView()
     await flushPromises()
-    expect(wrapper.text()).toContain('暂无文档')
+    expect(wrapper.get('[data-testid="document-empty-state"]').text()).toContain(
+      '你的知识空间还没有资料',
+    )
+    expect(wrapper.text()).toContain('导入第一份资料')
   })
 
   it('shows a list failure', async () => {
@@ -173,10 +183,9 @@ describe('DocumentView', () => {
     mockedList.mockResolvedValue(response([document]))
     const wrapper = mountView()
     await flushPromises()
-    const input = wrapper.get('input[aria-label="按名称或路径筛选文档"]')
+    const input = wrapper.get('#document-filter')
     await input.setValue('sample')
-    const searchBtns = wrapper.findAll('button').filter((b) => b.text() === '搜索')
-    await searchBtns[0]?.trigger('click')
+    await wrapper.get('form.doc-search-bar').trigger('submit')
     await flushPromises()
     expect(mockedList).toHaveBeenLastCalledWith('kb-id', 'sample')
   })
@@ -196,7 +205,8 @@ describe('DocumentView', () => {
     const wrapper = mountView()
     await flushPromises()
     // Open upload panel
-    const importBtn = wrapper.findAll('button').find((b) => b.text() === '导入文件')
+    expect(wrapper.find('[data-testid="upload-completed"]').exists()).toBe(false)
+    const importBtn = wrapper.findAll('button').find((b) => b.text() === '导入资料')
     await importBtn?.trigger('click')
     await flushPromises()
     // Trigger upload completion
@@ -212,14 +222,14 @@ describe('DocumentView', () => {
     await flushPromises()
 
     expect(wrapper.find('[data-testid="upload-completed"]').exists()).toBe(true)
-    expect(wrapper.text()).toContain('收起')
+    expect(wrapper.text()).toContain('收起导入')
   })
 
   it('keeps heading, import, search, rows, and retrieval tools on one content track', async () => {
     mockedList.mockResolvedValue(response([document]))
     const wrapper = mountView()
     await flushPromises()
-    const importBtn = wrapper.findAll('button').find((button) => button.text() === '导入文件')
+    const importBtn = wrapper.findAll('button').find((button) => button.text() === '导入资料')
     await importBtn?.trigger('click')
     await flushPromises()
 
@@ -256,10 +266,10 @@ describe('DocumentView', () => {
   })
 
   it.each([
-    ['pending', '等待处理'],
+    ['pending', '等待解析'],
     ['processing', '解析中'],
     ['succeeded', 'Ready'],
-    ['failed', '处理失败'],
+    ['failed', '解析失败'],
   ] as const)('shows the %s parse state', async (parseStatus, label) => {
     mockedList.mockResolvedValue(
       response([
@@ -269,6 +279,93 @@ describe('DocumentView', () => {
     const wrapper = mountView()
     await flushPromises()
     expect(wrapper.text()).toContain(label)
+  })
+
+  it.each([
+    ['pending', '等待索引'],
+    ['processing', '索引中'],
+    ['succeeded', 'Ready'],
+    ['failed', '索引失败'],
+  ] as const)('maps the %s index state to a truthful product status', async (indexStatus, label) => {
+    mockedList.mockResolvedValue(
+      response([
+        { ...document, latest_version: { ...document.latest_version, index_status: indexStatus } },
+      ]),
+    )
+    const wrapper = mountView()
+    await flushPromises()
+    expect(wrapper.text()).toContain(label)
+  })
+
+  it('keeps the inspector closed until a row is selected and exposes only real metadata', async () => {
+    mockedList.mockResolvedValue(response([document]))
+    const wrapper = mountView()
+    await flushPromises()
+
+    expect(wrapper.find('#document-inspector').exists()).toBe(false)
+    await wrapper.get('.doc-select').trigger('click')
+
+    const inspector = wrapper.get('#document-inspector')
+    expect(inspector.text()).toContain('DOCUMENT INSPECTOR')
+    expect(inspector.text()).toContain('src/sample.md')
+    expect(inspector.text()).toContain('本地导入')
+    expect(inspector.text()).toContain('text/markdown')
+    expect(inspector.text()).toContain('V2 / 2')
+    expect(inspector.text()).toContain('markdown 1')
+    expect(inspector.text()).toContain('fake')
+    expect(inspector.text()).not.toContain('Owner')
+    expect(inspector.text()).not.toContain('归档')
+
+    await inspector.get('button[aria-label="关闭文档详情"]').trigger('click')
+    expect(wrapper.find('#document-inspector').exists()).toBe(false)
+  })
+
+  it('keeps the document inspector out of normal flow at medium widths', () => {
+    expect(mainCss).toMatch(
+      /@media \(max-width: 70rem\)[\s\S]*?\.document-inspector\s*\{[\s\S]*?position:\s*fixed/,
+    )
+    expect(mainCss).toMatch(
+      /@media \(max-width: 48rem\)[\s\S]*?\.document-inspector\s*\{[\s\S]*?width:\s*100%/,
+    )
+  })
+
+  it('retries the failed real ingestion stage from the inspector', async () => {
+    const failedDocument = {
+      ...document,
+      latest_version: {
+        ...document.latest_version,
+        parse_status: 'failed' as const,
+        parse_error_message: 'parser unavailable',
+      },
+    }
+    mockedList.mockResolvedValue(response([failedDocument]))
+    mockedParse.mockResolvedValue({
+      queued: true,
+      version: { version_id: document.latest_version.id, ...failedDocument.latest_version },
+    })
+    const wrapper = mountView()
+    await flushPromises()
+    await wrapper.get('.doc-select').trigger('click')
+
+    const retry = wrapper
+      .get('#document-inspector')
+      .findAll('button')
+      .find((button) => button.text() === '重试解析')
+    await retry?.trigger('click')
+    await flushPromises()
+
+    expect(mockedParse).toHaveBeenCalledWith('kb-id', 'document-id', 'version-id', false)
+  })
+
+  it('keeps retrieval debug collapsed until explicitly requested', async () => {
+    mockedList.mockResolvedValue(response([document]))
+    const wrapper = mountView()
+    await flushPromises()
+
+    expect(wrapper.find('[data-testid="retrieval-debug-panel"]').exists()).toBe(false)
+    const toggle = wrapper.findAll('button').find((button) => button.text().includes('检索调试'))
+    await toggle?.trigger('click')
+    expect(wrapper.find('[data-testid="retrieval-debug-panel"]').exists()).toBe(true)
   })
 
   it('starts polling for pending documents and stops after a terminal state', async () => {
