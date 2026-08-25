@@ -1000,3 +1000,112 @@ lifespan 和冻结 24 Case 契约。最终结论为 APPROVE；该批准只覆盖
 reference 再次确认 `astream(stream_mode="custom", version="v2")`、runtime `context` 与 custom writer 是可用能力；
 但最终精确版本仍由未来 `uv.lock` 决定。遗留风险集中在 custom provider 的 token 参数/非标准能力、消息 content
 shape、取消传播、事件顺序和 graph overhead，均已纳入 Phase gates；文档评审通过后才建议进入独立的代码迁移任务。
+
+# 2026-08-17 — RAG V2 Step 1 LangChain ChatModel Foundation
+
+在不切换现有生产 RAG 路径的前提下，新增 `langchain-core>=1.5.5,<1.6`、
+`langchain-openai>=1.5.1,<1.6` 和 `langgraph>=1.2.11,<1.3`。`uv.lock` 实际解析为
+langchain-core 1.5.5、langchain-openai 1.5.1、langgraph 1.2.11；langgraph 自身带入核心传递依赖
+langgraph-checkpoint 4.2.0，但本项目没有直接声明、配置或使用 checkpointer/store。
+
+新增单函数 `create_chat_model(settings)`，直接把现有 Settings 映射为官方 `ChatOpenAI`：固定
+`use_responses_api=False`，并仅在 `llm_enable_thinking` 非空时通过 `extra_body` 传递。没有新增 Provider hierarchy、
+wrapper class、adapter 或 message 类型；`main.py` 和旧 `OpenAICompatibleLLMProvider` 生产路径保持不变。
+
+离线 factory 专项为 5 passed。`ruff check app tests`、`ruff format --check app tests`（195 files）和
+`mypy app`（126 source files）通过；默认全量 pytest 为 544 passed、40 skipped，skip 为现有外部集成门禁，保留
+既有 Starlette TestClient deprecation warning。真实 provider 的 `ainvoke`/`astream` 能力不属于本 Step，仍待后续
+显式 smoke test，不能仅凭参数可构造推断 endpoint 支持。
+
+# 2026-08-17 — RAG V2 Step 2 Minimal StateGraph
+
+新增隔离的 `app.rag.graph` package，使用官方 `StateGraph`、`START`、`END` 和 conditional edges 建立最小 V2
+流程。`RagState` 只包含请求 workflow data、route、answer 和 terminal status；`RagRuntimeContext` 本轮只注入实际
+使用的 `BaseChatModel`，没有把 Settings、Session、Repository、client 或 service 放入 State。
+
+图复用现有 deterministic `route_query()`。direct 路径使用 LangChain `SystemMessage`/`HumanMessage` 调用
+`BaseChatModel.ainvoke()`，并通过公开 `AIMessage.text` 提取文本；RAG 路径暂时进入明确的
+`rag_not_implemented` terminal placeholder，不调用模型或 Retrieval。`finalize` 只写 graph terminal state，不处理
+HTTP、SSE、Conversation persistence、checkpointer 或 store。生产 `main.py`、RagService 与 `/rag/stream` 未接线。
+
+新增离线 graph tests，覆盖 compile、direct/rag conditional path、LangChain messages、terminal state、State 依赖
+边界、router 复用以及无 checkpointer/store。targeted tests 为 21 passed；`ruff check app tests`、
+`ruff format --check app tests` 和 `mypy app`（130 source files）通过；默认全量 pytest 为 548 passed、40 skipped，
+保留既有 Starlette TestClient deprecation warning。
+
+# 2026-08-17 — RAG V2 Step 3 Query Rewrite
+
+在隔离的 LangGraph RAG 路径加入 `resolve_scope` 与 `rewrite` node，使流程变为
+`route -> resolve_scope -> rewrite -> rag_not_implemented`；未接入真正 Retrieval 或生产路径。`resolve_scope` 直接复用
+`RagRetrievalServiceProtocol.prepare_retrieval_query()` 保存现有 `PreparedRetrievalQuery`，确保 explicit document path
+先转换为 semantic query，同时保留用户原始 query。无 conversation history 时不调用模型并使用 semantic query，存在 history 时由
+`ChatPromptTemplate -> BaseChatModel.ainvoke -> PydanticOutputParser` 决定 `keep` 或 `rewrite`。解析结构使用
+extra-forbid Pydantic model，保留 timeout、最大 query 长度与原 query fallback；fallback 原因为 `timeout`、
+`model_error` 或 `invalid_response`，`asyncio.CancelledError` 继续传播。
+
+V2 有意不复用旧 context-dependent regex classifier、自研 LLM message/stream collector 或 `json.loads` 模型输出解析，
+也未使用尚无真实 provider 能力证据的 `with_structured_output`。该取舍简化了架构，但 conversational RAG 可能多一次
+模型调用。定向测试为 35 passed；`ruff check app tests`、`ruff format --check app tests` 和 `mypy app`（130 source
+files）通过；默认全量 pytest 为 561 passed、40 skipped，并保留既有 Starlette TestClient deprecation warning。
+
+# 2026-08-20 — RAG V2 Step 4 Retrieve + Rerank
+
+LangGraph RAG 路径扩展为 `route -> resolve_scope -> rewrite -> retrieve -> rerank -> rag_not_implemented`。`retrieve`
+直接复用 `RagRetrievalServiceProtocol.prepare_hybrid_search()` 与 `execute_hybrid_search()`，以
+`rag_rerank_candidate_limit` 获取候选并保存完整 Hybrid diagnostics；`rerank` 直接复用现有
+`DocumentRerankingService`，disabled 时取 Hybrid top N，`RerankerUnavailableError`/`RerankerError` 时按既有产品规则
+安全回退，取消继续传播。未新增 Retriever/Reranker wrapper、协议或 orchestration DTO，也未接入生产路径。
+
+Graph 定向测试为 26 passed；`ruff check app tests`、`ruff format --check app tests` 和 `mypy app`（130 source files）
+通过；默认全量 pytest 为 570 passed、40 skipped，并保留既有 Starlette TestClient deprecation warning。
+
+# 2026-08-20 — RAG V2 Step 5 Context + Citation + Grounded Generation
+
+移除 `rag_not_implemented`，RAG 路径在 rerank 后直接复用 `build_rag_context()` 构造现有 `RagContext/RagSource`，空
+Sources 进入 no-answer 且不调用模型；非空 Sources 使用 LangChain `SystemMessage/HumanMessage` 与
+`BaseChatModel.ainvoke()` 完整生成答案。`build_rag_messages()` 的既有产品数据逻辑仅抽取为共享纯函数
+`build_rag_payload()`，旧生产消息行为保持不变；Graph 继续传递原始问题、受规则约束的 conversation history 与
+`scoped_relative_path`。
+
+完整答案直接经过现有 `StreamingCitationGuard.push() + finish()`，保留合法 Citation、删除非法 Citation，并记录
+grounded/valid/invalid 指标；模型错误与取消继续向外传播。Graph + 旧 RAG 定向测试为 57 passed；`ruff check app
+tests`、`ruff format --check app tests` 和 `mypy app`（130 source files）通过；默认全量 pytest 为 581 passed、40
+skipped，并保留既有 Starlette TestClient deprecation warning。
+
+# 2026-08-20 — CitationGuard Incomplete Citation Safety Fix
+
+`StreamingCitationGuard.finish()` 现在丢弃并单次计数未闭合的 Citation-like tail，避免未经验证的 `[S`/`[S1` 泄露；
+普通 bracket、完整 Citation 与跨 chunk 验证行为保持不变。Citation 专项为 7 passed，全量为 586 passed、40 skipped。
+
+# 2026-08-21 — RAG V2 Step 6 LangGraph Custom Streaming
+
+Direct 与 grounded generation 改用 `BaseChatModel.astream()`，节点通过 `get_stream_writer()` 发送最小
+token/sources/no_answer/done 产品事件；grounded raw chunk 必须先经过 `StreamingCitationGuard`，完整与未闭合非法
+Citation 均不会进入 outward token。当前 LangGraph 1.2.11 的稳定 consumer 使用
+`graph.astream(..., stream_mode="custom")`，默认 v1 返回值直接是 TraceMind product event payload，不引入额外消费适配层。
+
+Graph + RAG/Citation 定向测试为 72 passed；`ruff check app tests`、`ruff format --check app tests` 和 `mypy app`（130
+source files）通过；默认全量 pytest 为 596 passed、40 skipped，并保留既有 Starlette TestClient deprecation warning。
+
+# 2026-08-21 — RAG V2 Step 7 Production Wiring
+
+生产 `/rag/stream` 已从旧 `RagService/LLMProvider` 切换为应用启动时单次 compile 的 LangGraph；FastAPI 通过
+`RagRuntimeContext` 注入 ChatModel、Settings、现有 Retrieval 与 Reranking service，直接消费
+`graph.astream(..., stream_mode="custom")`。Conversation begin/finish、sources snapshot、outward token、no-answer、安全错误映射与
+disconnect/cancellation shield 语义保留；未引入 Graph runner、event adapter 或双协议兼容层，legacy 源码留待 Step 8。
+
+前端只保留 sources/token/no_answer/done/error V2 SSE contract，ConversationView 以 sources、首 token 与 done 驱动既有
+progress，Citation/Evidence/Save as Knowledge 路径不变。后端定向测试 58 passed，全量 597 passed、40 skipped；
+Ruff、format、mypy 通过。前端定向 19 passed，全量 91 passed；type-check、lint 与 production build 通过。
+
+# 2026-08-21 — RAG V2 Step 8 Legacy RAG / LLM Cleanup
+
+删除已退出 production path 的 `RagService`、旧 Query Rewrite service、自研 LLM provider/message/delta/error 抽象与
+OpenAI-compatible implementation；`app.llm.factory` 继续直接提供 LangChain `BaseChatModel/ChatOpenAI`。旧
+`build_rag_messages()` 已删除，现有 SYSTEM_PROMPT、payload/location/source identity、Context、CitationGuard、Retrieval、
+Reranking、path scope、Conversation 与 LangGraph production coverage 保留。
+
+删除三个纯 legacy 测试文件，混合 `test_rag.py` 只保留产品能力回归。直接 OpenAI SDK 使用已为 0，
+因此移除显式 `openai` dependency；它仍由 `langchain-openai` 作为 transitive dependency 锁定，未升级
+LangChain/LangGraph。受影响定向测试 83 passed，全量 567 passed、40 skipped；Ruff、format、mypy 与
+`uv sync --frozen --offline` 通过。

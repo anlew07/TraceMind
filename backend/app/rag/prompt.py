@@ -1,6 +1,3 @@
-import json
-
-from app.llm import LLMMessage
 from app.rag.context import RagContext
 from app.schemas.rag import RagSource
 from app.services.conversation import ConversationTurn
@@ -39,14 +36,14 @@ def _location(source: RagSource) -> str:
     return f"Chunk {source.chunk_index}"
 
 
-def build_rag_messages(
+def build_rag_payload(
     query: str,
     context: RagContext,
     history: tuple[ConversationTurn, ...] = (),
     *,
     scoped_relative_path: str | None = None,
-) -> list[LLMMessage]:
-    payload = {
+) -> dict[str, object]:
+    return {
         "question": query,
         "conversation_history": [
             {"user": turn.user, "assistant": turn.assistant} for turn in history
@@ -54,13 +51,6 @@ def build_rag_messages(
         "scoped_relative_path": scoped_relative_path,
         "sources": [_source_payload(source) for source in context.sources],
     }
-    return [
-        LLMMessage(role="system", content=SYSTEM_PROMPT),
-        LLMMessage(
-            role="user",
-            content=json.dumps(payload, ensure_ascii=False, separators=(",", ":")),
-        ),
-    ]
 
 
 def _source_payload(source: RagSource) -> dict[str, object]:
