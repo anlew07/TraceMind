@@ -31,7 +31,7 @@ describe('MarkdownContent', () => {
     expect(wrapper.text()).toContain('<script>alert(1)</script>')
   })
 
-  it('renders validated citations as accessible buttons without changing parser semantics', async () => {
+  it('renders only validated citations as accessible evidence controls', async () => {
     const wrapper = mount(MarkdownContent, {
       props: {
         content: '**Answer** [S1] [S999]',

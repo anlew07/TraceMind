@@ -266,161 +266,157 @@ onBeforeUnmount(() => {
 
 <template>
   <main class="management-page document-page">
-    <!-- Page Header -->
-    <header class="management-header">
-      <div>
-        <h1>文档</h1>
-        <p>可用于检索、问答与可追溯引用的文档和代码资料</p>
-      </div>
-      <div class="header-actions">
-        <ElButton type="primary" @click="showUpload = !showUpload">
-          {{ showUpload ? '收起' : '导入文件' }}
-        </ElButton>
-      </div>
-    </header>
-
-    <!-- Upload Panel (collapsible) -->
-    <DocumentUploadPanel
-      v-if="showUpload"
-      :knowledge-base-id="knowledgeBaseId"
-      @completed="handleUploadCompleted"
-    />
-
-    <!-- Search -->
-    <div class="doc-search-bar">
-      <input
-        v-model="query"
-        aria-label="按名称或路径筛选文档"
-        placeholder="按名称或路径筛选…"
-        @keyup.enter="loadDocuments"
-      />
-      <ElButton :loading="loading" @click="loadDocuments" size="small">搜索</ElButton>
-    </div>
-
-    <ElAlert
-      v-if="errorMessage"
-      :title="errorMessage"
-      type="error"
-      show-icon
-      :closable="false"
-      style="max-width: 1160px; margin: 0 auto var(--space-lg)"
-    />
-
-    <!-- Document List -->
-    <section :aria-busy="loading">
-      <div v-if="loading && items.length === 0" class="loading-state">正在加载文档…</div>
-      <ElEmpty v-else-if="items.length === 0 && !errorMessage" description="暂无文档" />
-
-      <div v-else class="doc-list">
-        <div
-          v-for="document in items"
-          :key="document.id"
-          :id="`document-${document.id}`"
-          class="doc-item"
-          :class="{ 'doc-item-focused': document.id === focusedDocumentId }"
-        >
-          <div class="doc-main">
-            <div class="doc-name-row">
-              <span class="doc-name">{{ baseNameWithoutExt(document) }}</span>
-              <span class="doc-ext">{{ fileExtension(document) }}</span>
-            </div>
-            <div class="doc-path">{{ document.relative_path || document.name }}</div>
-            <div class="doc-meta-row">
-              <span class="doc-meta">V{{ document.latest_version.version_number }}</span>
-              <span class="doc-meta-sep">·</span>
-              <span class="doc-meta">{{ formatSize(document.latest_version.file_size) }}</span>
-              <span class="doc-meta-sep">·</span>
-              <span class="doc-meta">{{ document.latest_version.chunk_count }} 个 Chunk</span>
-              <span class="doc-meta-sep">·</span>
-              <span class="doc-meta">{{
-                document.latest_version.parsed_at
-                  ? formatDate(document.latest_version.parsed_at)
-                  : '—'
-              }}</span>
-              <span class="doc-statuses">
-                <span
-                  :class="
-                    statusPillClass(
-                      document.latest_version.parse_status === 'failed' ||
-                        document.latest_version.index_status === 'failed'
-                        ? 'failed'
-                        : document.latest_version.parse_status === 'succeeded' &&
-                            document.latest_version.index_status === 'succeeded'
-                          ? 'succeeded'
-                          : 'processing',
-                    )
-                  "
-                  >{{ processingSummary(document) }}</span
-                >
-              </span>
-            </div>
-          </div>
-
-          <!-- Overflow actions -->
-          <ElDropdown trigger="click" :hide-on-click="true">
-            <button class="doc-more" aria-label="文档操作">···</button>
-            <template #dropdown>
-              <ElDropdownMenu>
-                <ElDropdownItem
-                  :disabled="document.latest_version.chunk_count === 0"
-                  @click="showChunks(document)"
-                  >查看 Chunk</ElDropdownItem
-                >
-                <ElDropdownItem
-                  :disabled="
-                    parsingId !== null || document.latest_version.parse_status === 'processing'
-                  "
-                  @click="
-                    requestParse(document, document.latest_version.parse_status === 'succeeded')
-                  "
-                  >{{
-                    document.latest_version.parse_status === 'succeeded' ? '重新解析' : '重试解析'
-                  }}</ElDropdownItem
-                >
-                <ElDropdownItem
-                  :disabled="
-                    indexingId !== null ||
-                    document.latest_version.parse_status !== 'succeeded' ||
-                    document.latest_version.index_status === 'processing'
-                  "
-                  @click="
-                    requestIndex(document, document.latest_version.index_status === 'succeeded')
-                  "
-                  >{{
-                    document.latest_version.index_status === 'succeeded' ? '重建索引' : '建立索引'
-                  }}</ElDropdownItem
-                >
-                <ElDropdownItem @click="downloadCurrentDocument(knowledgeBaseId, document.id)"
-                  >下载</ElDropdownItem
-                >
-                <ElDropdownItem @click="showVersions(document)">历史版本</ElDropdownItem>
-                <ElDropdownItem
-                  :data-testid="`delete-document-${document.id}`"
-                  divided
-                  style="color: var(--color-error)"
-                  @click="confirmDelete(document)"
-                  >删除</ElDropdownItem
-                >
-              </ElDropdownMenu>
-            </template>
-          </ElDropdown>
+    <div class="document-content-grid">
+      <!-- Page Header -->
+      <header class="management-header">
+        <div>
+          <h1>文档</h1>
+          <p>可用于检索、问答与可追溯引用的文档和代码资料</p>
         </div>
-      </div>
-    </section>
+        <div class="header-actions">
+          <ElButton type="primary" @click="showUpload = !showUpload">
+            {{ showUpload ? '收起' : '导入文件' }}
+          </ElButton>
+        </div>
+      </header>
 
-    <!-- Retrieval Tools -->
-    <div
-      style="
-        max-width: 1160px;
-        margin: var(--space-2xl) auto 0;
-        padding-top: var(--space-lg);
-        border-top: 1px solid var(--color-border-light);
-      "
-    >
-      <ElButton size="small" text @click="showRetrievalDebug = !showRetrievalDebug">
-        {{ showRetrievalDebug ? '▾' : '▸' }} 检索调试
-      </ElButton>
-      <SemanticSearchPanel v-if="showRetrievalDebug" :knowledge-base-id="knowledgeBaseId" />
+      <!-- Upload Panel (collapsible) -->
+      <div v-if="showUpload" class="document-import-region">
+        <DocumentUploadPanel
+          :knowledge-base-id="knowledgeBaseId"
+          @completed="handleUploadCompleted"
+        />
+      </div>
+
+      <!-- Search -->
+      <div class="doc-search-bar">
+        <input
+          v-model="query"
+          aria-label="按名称或路径筛选文档"
+          placeholder="按名称或路径筛选…"
+          @keyup.enter="loadDocuments"
+        />
+        <ElButton :loading="loading" @click="loadDocuments" size="small">搜索</ElButton>
+      </div>
+
+      <ElAlert
+        v-if="errorMessage"
+        class="document-alert"
+        :title="errorMessage"
+        type="error"
+        show-icon
+        :closable="false"
+      />
+
+      <!-- Document List -->
+      <section class="document-list-region" :aria-busy="loading">
+        <div v-if="loading && items.length === 0" class="loading-state">正在加载文档…</div>
+        <ElEmpty v-else-if="items.length === 0 && !errorMessage" description="暂无文档" />
+
+        <div v-else class="doc-list">
+          <div
+            v-for="document in items"
+            :key="document.id"
+            :id="`document-${document.id}`"
+            class="doc-item"
+            :class="{ 'doc-item-focused': document.id === focusedDocumentId }"
+          >
+            <div class="doc-main">
+              <div class="doc-name-row">
+                <span class="doc-name">{{ baseNameWithoutExt(document) }}</span>
+                <span class="doc-ext">{{ fileExtension(document) }}</span>
+              </div>
+              <div class="doc-path">{{ document.relative_path || document.name }}</div>
+              <div class="doc-meta-row">
+                <span class="doc-meta">V{{ document.latest_version.version_number }}</span>
+                <span class="doc-meta-sep">·</span>
+                <span class="doc-meta">{{ formatSize(document.latest_version.file_size) }}</span>
+                <span class="doc-meta-sep">·</span>
+                <span class="doc-meta">{{ document.latest_version.chunk_count }} 个 Chunk</span>
+                <span class="doc-meta-sep">·</span>
+                <span class="doc-meta">{{
+                  document.latest_version.parsed_at
+                    ? formatDate(document.latest_version.parsed_at)
+                    : '—'
+                }}</span>
+                <span class="doc-statuses">
+                  <span
+                    :class="
+                      statusPillClass(
+                        document.latest_version.parse_status === 'failed' ||
+                          document.latest_version.index_status === 'failed'
+                          ? 'failed'
+                          : document.latest_version.parse_status === 'succeeded' &&
+                              document.latest_version.index_status === 'succeeded'
+                            ? 'succeeded'
+                            : 'processing',
+                      )
+                    "
+                    >{{ processingSummary(document) }}</span
+                  >
+                </span>
+              </div>
+            </div>
+
+            <!-- Overflow actions -->
+            <ElDropdown trigger="click" :hide-on-click="true">
+              <button class="doc-more" aria-label="文档操作">···</button>
+              <template #dropdown>
+                <ElDropdownMenu>
+                  <ElDropdownItem
+                    :disabled="document.latest_version.chunk_count === 0"
+                    @click="showChunks(document)"
+                    >查看 Chunk</ElDropdownItem
+                  >
+                  <ElDropdownItem
+                    :disabled="
+                      parsingId !== null || document.latest_version.parse_status === 'processing'
+                    "
+                    @click="
+                      requestParse(document, document.latest_version.parse_status === 'succeeded')
+                    "
+                    >{{
+                      document.latest_version.parse_status === 'succeeded' ? '重新解析' : '重试解析'
+                    }}</ElDropdownItem
+                  >
+                  <ElDropdownItem
+                    :disabled="
+                      indexingId !== null ||
+                      document.latest_version.parse_status !== 'succeeded' ||
+                      document.latest_version.index_status === 'processing'
+                    "
+                    @click="
+                      requestIndex(document, document.latest_version.index_status === 'succeeded')
+                    "
+                    >{{
+                      document.latest_version.index_status === 'succeeded' ? '重建索引' : '建立索引'
+                    }}</ElDropdownItem
+                  >
+                  <ElDropdownItem @click="downloadCurrentDocument(knowledgeBaseId, document.id)"
+                    >下载</ElDropdownItem
+                  >
+                  <ElDropdownItem @click="showVersions(document)">历史版本</ElDropdownItem>
+                  <ElDropdownItem
+                    :data-testid="`delete-document-${document.id}`"
+                    divided
+                    style="color: var(--color-error)"
+                    @click="confirmDelete(document)"
+                    >删除</ElDropdownItem
+                  >
+                </ElDropdownMenu>
+              </template>
+            </ElDropdown>
+          </div>
+        </div>
+      </section>
+
+      <!-- Retrieval Tools -->
+      <div class="document-retrieval-region">
+        <ElButton size="small" text @click="showRetrievalDebug = !showRetrievalDebug">
+          {{ showRetrievalDebug ? '▾' : '▸' }} 检索调试
+        </ElButton>
+        <SemanticSearchPanel v-if="showRetrievalDebug" :knowledge-base-id="knowledgeBaseId" />
+      </div>
     </div>
 
     <!-- Dialogs -->

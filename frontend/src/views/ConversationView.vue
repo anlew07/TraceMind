@@ -40,7 +40,13 @@ import type {
   ConversationMessage,
   ConversationMessageStatus,
 } from '@/types/conversation'
-import type { RagDoneEvent } from '@/types/rag'
+import type {
+  RagDoneEvent,
+  RagPipelineEvent,
+  RagPipelineMetadata,
+  RagPipelinePhase,
+  RagPipelineStatus,
+} from '@/types/rag'
 import type { KnowledgeEntryInput } from '@/types/knowledgeEntry'
 
 const route = useRoute()
@@ -61,17 +67,6 @@ const loadingList = ref(false)
 const loadingMessages = ref(false)
 const generating = ref(false)
 const pageError = ref('')
-type ProgressState =
-  | 'preparing'
-  | 'retrieved'
-  | 'generating'
-  | 'finalizing'
-  | 'completed'
-  | 'failed'
-  | 'cancelled'
-const progressState = ref<ProgressState | null>(null)
-const elapsedSeconds = ref(0)
-const activeSourceCount = ref(0)
 const evidenceVisible = ref(
   typeof window === 'undefined' ||
     typeof window.matchMedia !== 'function' ||
@@ -94,8 +89,6 @@ const knowledgeInitial = ref<KnowledgeEntryInput>({
 const messageViewport = ref<HTMLElement | null>(null)
 let controller: AbortController | null = null
 let streamVersion = 0
-let elapsedTimer: number | null = null
-let progressStartedAt = 0
 let followStreaming = true
 let scrollFrame: number | null = null
 
@@ -136,41 +129,30 @@ const conversationGroups = computed<ConversationGroup[]>(() => {
   return groups.filter(({ items }) => items.length)
 })
 
-const progressMessage = computed(() => {
-  switch (progressState.value) {
-    case 'preparing':
-      return '正在检索与分析…'
-    case 'retrieved':
-      return activeSourceCount.value
-        ? `找到 ${activeSourceCount.value} 条来源`
-        : '已完成检索'
-    case 'generating':
-      return '正在生成回答…'
-    case 'finalizing':
-      return '正在保存回答…'
-    case 'completed':
-      return '已完成'
-    case 'failed':
-      return '生成失败'
-    case 'cancelled':
-      return '已取消'
-    default:
-      return ''
-  }
-})
+type VisibleTracePhase = Exclude<RagPipelinePhase, 'routing'>
+type TraceVisualStatus = 'pending' | 'running' | 'complete' | 'skipped' | 'fallback' | 'failed'
+type TracePhaseState = {
+  status: RagPipelineStatus | 'pending'
+  metadata?: RagPipelineMetadata
+}
+type ExecutionTraceSnapshot = {
+  routeMode?: 'direct' | 'rag'
+  phases: Partial<Record<VisibleTracePhase, TracePhaseState>>
+}
+type LiveExecutionTrace = {
+  message: ConversationMessage
+  snapshot: ExecutionTraceSnapshot
+}
 
-const progressTitle = computed(() => {
-  switch (progressState.value) {
-    case 'completed':
-      return 'COMPLETED'
-    case 'failed':
-      return 'FAILED'
-    case 'cancelled':
-      return 'CANCELLED'
-    default:
-      return 'GENERATING'
-  }
-})
+const liveExecutionTrace = ref<LiveExecutionTrace | null>(null)
+
+const TRACE_PHASES: ReadonlyArray<{ phase: VisibleTracePhase; label: string }> = [
+  { phase: 'query_rewrite', label: 'Query Rewrite' },
+  { phase: 'retrieval', label: 'Retrieval' },
+  { phase: 'rerank', label: 'Rerank' },
+  { phase: 'evidence', label: 'Evidence' },
+  { phase: 'generation', label: 'Generation' },
+]
 
 function isViewportNearBottom(): boolean {
   const viewport = messageViewport.value
@@ -195,33 +177,6 @@ function scheduleScrollToLatest(force = false): void {
 async function scrollToLatest(force = false): Promise<void> {
   await nextTick()
   scheduleScrollToLatest(force)
-}
-
-function clearElapsedTimer() {
-  if (elapsedTimer !== null) {
-    window.clearInterval(elapsedTimer)
-    elapsedTimer = null
-  }
-}
-function startProgress() {
-  clearElapsedTimer()
-  progressState.value = 'preparing'
-  activeSourceCount.value = 0
-  elapsedSeconds.value = 0
-  progressStartedAt = Date.now()
-  elapsedTimer = window.setInterval(() => {
-    elapsedSeconds.value = Math.floor((Date.now() - progressStartedAt) / 1000)
-  }, 250)
-}
-function finishProgress(state: Extract<ProgressState, 'completed' | 'failed' | 'cancelled'>) {
-  progressState.value = state
-  clearElapsedTimer()
-}
-function resetProgress() {
-  progressState.value = null
-  activeSourceCount.value = 0
-  elapsedSeconds.value = 0
-  clearElapsedTimer()
 }
 
 function selectDefaultEvidenceMessage(): void {
@@ -348,6 +303,7 @@ async function loadMessages(conversationId: string): Promise<void> {
     if (selectedId.value === conversationId && rv === streamVersion) {
       messages.value = d.messages
       selectDefaultEvidenceMessage()
+      liveExecutionTrace.value = null
       followStreaming = true
       await scrollToLatest(true)
     }
@@ -360,7 +316,6 @@ async function loadMessages(conversationId: string): Promise<void> {
 
 async function selectConversation(cid: string): Promise<void> {
   stopGeneration(false)
-  resetProgress()
   generating.value = false
   controller = null
   streamVersion += 1
@@ -368,6 +323,7 @@ async function selectConversation(cid: string): Promise<void> {
   messages.value = []
   evidenceMessageId.value = null
   selectedSourceId.value = null
+  liveExecutionTrace.value = null
   evidenceVisible.value =
     typeof window.matchMedia !== 'function' || window.matchMedia('(min-width: 681px)').matches
   followStreaming = true
@@ -420,6 +376,45 @@ async function removeSelected(): Promise<void> {
   }
 }
 
+function bindStreamIdentity(
+  assistant: ConversationMessage,
+  event: { trace_id: string; message_id?: string },
+): void {
+  const previousMessageId = assistant.id
+  assistant.trace_id = event.trace_id
+  if (event.message_id) assistant.id = event.message_id
+  if (evidenceMessageId.value === previousMessageId) evidenceMessageId.value = assistant.id
+}
+
+function initializeRagTrace(snapshot: ExecutionTraceSnapshot): void {
+  for (const phase of ['query_rewrite', 'retrieval', 'rerank', 'evidence'] as const) {
+    snapshot.phases[phase] ??= { status: 'pending' }
+  }
+}
+
+function applyPipelineEvent(snapshot: ExecutionTraceSnapshot, event: RagPipelineEvent): void {
+  if (event.phase === 'routing') {
+    if (event.status === 'completed' && event.metadata?.route_mode) {
+      snapshot.routeMode = event.metadata.route_mode
+      if (snapshot.routeMode === 'rag') initializeRagTrace(snapshot)
+    }
+    return
+  }
+  snapshot.phases[event.phase] = {
+    status: event.status,
+    metadata: event.metadata,
+  }
+}
+
+function failRunningTrace(snapshot: ExecutionTraceSnapshot): void {
+  for (const phase of TRACE_PHASES) {
+    if (snapshot.phases[phase.phase]?.status === 'started') {
+      snapshot.phases[phase.phase] = { status: 'failed' }
+      return
+    }
+  }
+}
+
 async function generate(): Promise<void> {
   const prompt = query.value.trim()
   if (!prompt || generating.value) return
@@ -439,7 +434,8 @@ async function generate(): Promise<void> {
   query.value = ''
   generating.value = true
   followStreaming = true
-  startProgress()
+  const liveSnapshot = reactive<ExecutionTraceSnapshot>({ phases: {} })
+  liveExecutionTrace.value = { message: assistant, snapshot: liveSnapshot }
   await scrollToLatest(true)
   controller = new AbortController()
   try {
@@ -447,52 +443,54 @@ async function generate(): Promise<void> {
       knowledgeBaseId,
       { query: prompt, language: language.value.trim() || null, conversation_id: cid },
       {
+        onPipeline(event) {
+          if (selectedId.value !== cid || cv !== streamVersion) return
+          bindStreamIdentity(assistant, event)
+          applyPipelineEvent(liveSnapshot, event)
+          void nextTick(() => scheduleScrollToLatest())
+        },
         onSources(event) {
           if (selectedId.value !== cid || cv !== streamVersion) return
-          const previousMessageId = assistant.id
-          assistant.trace_id = event.trace_id
+          bindStreamIdentity(assistant, event)
           assistant.sources = event.sources
-          activeSourceCount.value = event.source_count
-          progressState.value = 'retrieved'
-          if (event.message_id) assistant.id = event.message_id
-          if (evidenceMessageId.value === previousMessageId) evidenceMessageId.value = assistant.id
           if (evidenceMessageId.value === assistant.id && !selectedSourceId.value) {
             selectedSourceId.value = event.sources[0]?.source_id ?? null
           }
         },
         onToken(event) {
           if (selectedId.value !== cid || cv !== streamVersion) return
-          progressState.value = 'generating'
+          bindStreamIdentity(assistant, event)
           assistant.content += event.text
           void nextTick(() => scheduleScrollToLatest())
         },
         onNoAnswer(event) {
           if (selectedId.value !== cid || cv !== streamVersion) return
+          bindStreamIdentity(assistant, event)
           assistant.status = 'no_answer'
           assistant.content = event.message
         },
         onDone(event) {
           if (selectedId.value !== cid || cv !== streamVersion) return
+          bindStreamIdentity(assistant, event)
           receivedDone = true
-          progressState.value = 'finalizing'
           assistant.status = event.terminal_status
           assistant.generation_metadata = event
         },
         onError(event) {
           if (selectedId.value !== cid || cv !== streamVersion) return
+          bindStreamIdentity(assistant, event)
           assistant.status = 'failed'
           assistant.content = event.message
-          finishProgress('failed')
+          failRunningTrace(liveSnapshot)
         },
       },
       controller.signal,
     )
     if (selectedId.value === cid && cv === streamVersion) {
-      if (receivedDone) finishProgress('completed')
-      else if (!['failed', 'cancelled'].includes(progressState.value ?? '')) {
+      if (!receivedDone && !['failed', 'cancelled'].includes(assistant.status)) {
         assistant.status = 'failed'
         assistant.content = '回答生成服务暂时不可用，请稍后重试。'
-        finishProgress('failed')
+        failRunningTrace(liveSnapshot)
       }
       await loadMessages(cid)
       await loadList(cid)
@@ -501,11 +499,11 @@ async function generate(): Promise<void> {
     if (selectedId.value === cid && cv === streamVersion) {
       if (error instanceof DOMException && error.name === 'AbortError') {
         assistant.status = 'cancelled'
-        finishProgress('cancelled')
+        failRunningTrace(liveSnapshot)
       } else {
         assistant.status = 'failed'
         assistant.content = '回答生成服务暂时不可用，请稍后重试。'
-        finishProgress('failed')
+        failRunningTrace(liveSnapshot)
       }
     }
   } finally {
@@ -517,33 +515,27 @@ async function generate(): Promise<void> {
 }
 
 function stopGeneration(sc = true) {
-  if (sc && generating.value) finishProgress('cancelled')
+  if (sc && generating.value && liveExecutionTrace.value) {
+    failRunningTrace(liveExecutionTrace.value.snapshot)
+  }
   controller?.abort()
 }
-
 function doneMetadata(message: ConversationMessage): Partial<RagDoneEvent> | null {
   return message.generation_metadata
-}
-function formatLatency(v: number | undefined): string {
-  return v === undefined ? '—' : `${v} ms`
 }
 
 function messageStatusLabel(message: ConversationMessage): string {
   if (message.status === 'no_answer') return '无充分证据'
   if (message.status === 'cancelled') return '已取消'
   if (message.status === 'failed') return '失败'
-  if (generating.value && messages.value[messages.value.length - 1]?.id === message.id) {
-    return '生成中'
-  }
+  if (generating.value && liveExecutionTrace.value?.message === message) return '生成中'
   return '已完成'
 }
 
 function messageVisualStatus(
   message: ConversationMessage,
 ): ConversationMessageStatus | 'generating' {
-  return generating.value &&
-    message.status === 'completed' &&
-    messages.value[messages.value.length - 1]?.id === message.id
+  return generating.value && liveExecutionTrace.value?.message === message
     ? 'generating'
     : message.status
 }
@@ -557,51 +549,120 @@ function formatMessageTime(value: string): string {
   })
 }
 
-type TraceStep = { label: string; detail: string; state: 'complete' | 'fallback' | 'terminal' }
+function historyTraceSnapshot(message: ConversationMessage): ExecutionTraceSnapshot {
+  const metadata = doneMetadata(message)
+  const snapshot: ExecutionTraceSnapshot = {
+    routeMode: metadata?.route_mode,
+    phases: {},
+  }
+  if (!metadata) return snapshot
+  if (metadata.route_mode === 'direct') {
+    if (message.status === 'completed') snapshot.phases.generation = { status: 'completed' }
+    return snapshot
+  }
+
+  snapshot.phases.query_rewrite = {
+    status:
+      metadata.query_rewrite_mode === 'fallback'
+        ? 'fallback'
+        : metadata.query_rewrite_mode === 'rewritten'
+          ? 'completed'
+          : 'skipped',
+  }
+  snapshot.phases.retrieval = { status: 'completed' }
+  snapshot.phases.rerank = {
+    status: metadata.reranker_fallback
+      ? 'fallback'
+      : metadata.retrieval_mode === 'hybrid'
+        ? 'skipped'
+        : 'completed',
+  }
+  const sourceCount = message.sources?.length ?? metadata.source_count ?? 0
+  snapshot.phases.evidence = {
+    status: 'completed',
+    metadata: { source_count: sourceCount },
+  }
+  if (message.status === 'completed' && sourceCount > 0) {
+    snapshot.phases.generation = { status: 'completed' }
+  }
+  return snapshot
+}
+
+function traceSnapshot(message: ConversationMessage): ExecutionTraceSnapshot {
+  return liveExecutionTrace.value?.message === message
+    ? liveExecutionTrace.value.snapshot
+    : historyTraceSnapshot(message)
+}
+
+function visualTraceStatus(status: TracePhaseState['status']): TraceVisualStatus {
+  if (status === 'started') return 'running'
+  if (status === 'completed') return 'complete'
+  return status
+}
+
+function traceStepDetail(
+  phase: VisibleTracePhase,
+  state: TracePhaseState,
+  message: ConversationMessage,
+): string {
+  const visualStatus = visualTraceStatus(state.status)
+  if (visualStatus === 'pending') return '等待执行'
+  if (visualStatus === 'running') {
+    return {
+      query_rewrite: '正在理解上下文',
+      retrieval: '正在检索知识库',
+      rerank: '正在重排候选',
+      evidence: '正在构建证据集',
+      generation: '正在生成回答',
+    }[phase]
+  }
+  if (visualStatus === 'failed') return '执行失败'
+  if (visualStatus === 'fallback') return phase === 'rerank' ? '使用检索排序' : '使用原始查询'
+  if (visualStatus === 'skipped') {
+    if (phase === 'query_rewrite') return '无需改写'
+    if (phase === 'rerank') return '未启用重排'
+    return '无需执行'
+  }
+  if (phase === 'retrieval') {
+    const count = state.metadata?.candidate_count
+    return count === undefined
+      ? (doneMetadata(message)?.retrieval_mode ?? '已完成')
+      : `${count} 条候选`
+  }
+  if (phase === 'rerank') {
+    const count = state.metadata?.candidate_count
+    return count === undefined ? '已完成' : `${count} 条结果`
+  }
+  if (phase === 'evidence') {
+    const count = state.metadata?.source_count ?? message.sources?.length ?? 0
+    return `${count} 条来源`
+  }
+  if (phase === 'query_rewrite') return '已改写'
+  return '已完成'
+}
+
+type TraceStep = {
+  phase: VisibleTracePhase
+  label: string
+  detail: string
+  state: TraceVisualStatus
+}
 type TraceDetail = { label: string; value: string }
 
 function traceSummary(message: ConversationMessage): TraceStep[] {
-  const metadata = doneMetadata(message)
-  if (!metadata) return []
-  const steps: TraceStep[] = []
-  if (metadata.route_mode === 'direct') {
-    steps.push({ label: '直接回答', detail: '无需检索', state: 'complete' })
-  } else {
-    if (metadata.query_rewrite_mode) {
-      steps.push({
-        label: '查询理解',
-        detail: metadata.query_rewrite_mode,
-        state: metadata.query_rewrite_mode === 'fallback' ? 'fallback' : 'complete',
-      })
-    }
-    if (metadata.retrieval_mode || metadata.retrieval_latency_ms !== undefined) {
-      steps.push({
-        label: '检索',
-        detail: metadata.retrieval_mode ?? formatLatency(metadata.retrieval_latency_ms),
-        state: 'complete',
-      })
-    }
-    if (metadata.rerank_latency_ms !== undefined || metadata.reranker_fallback !== undefined) {
-      steps.push({
-        label: '重排',
-        detail: metadata.reranker_fallback ? '已降级' : '已完成',
-        state: metadata.reranker_fallback ? 'fallback' : 'complete',
-      })
-    }
-    if (message.sources?.length || metadata.source_count !== undefined) {
-      steps.push({
-        label: '证据',
-        detail: `${message.sources?.length ?? metadata.source_count ?? 0} 条来源`,
-        state: 'complete',
-      })
-    }
-  }
-  steps.push({
-    label: message.status === 'no_answer' ? '无充分证据' : '回答完成',
-    detail: formatLatency(metadata.response_total_latency_ms ?? metadata.total_latency_ms),
-    state: 'terminal',
+  const snapshot = traceSnapshot(message)
+  return TRACE_PHASES.flatMap(({ phase, label }) => {
+    const state = snapshot.phases[phase]
+    if (!state) return []
+    return [
+      {
+        phase,
+        label,
+        detail: traceStepDetail(phase, state, message),
+        state: visualTraceStatus(state.status),
+      },
+    ]
   })
-  return steps
 }
 
 function traceDetails(message: ConversationMessage): TraceDetail[] {
@@ -617,8 +678,7 @@ function traceDetails(message: ConversationMessage): TraceDetail[] {
   }
   add('终态', message.status)
   add('路由', metadata.route_mode)
-  add('完成原因', metadata.finish_reason)
-  add('总响应延迟', metadata.response_total_latency_ms ?? metadata.total_latency_ms, ' ms')
+  add('总响应延迟', metadata.response_total_latency_ms, ' ms')
   add('会话持久化', metadata.conversation_persistence_latency_ms, ' ms')
   if (metadata.route_mode !== 'direct') {
     add('查询改写', metadata.query_rewrite_mode)
@@ -626,7 +686,6 @@ function traceDetails(message: ConversationMessage): TraceDetail[] {
     add('历史轮数', metadata.history_turn_count)
     add('实际检索查询', metadata.retrieval_query)
     add('检索方式', metadata.retrieval_mode)
-    add('检索延迟', metadata.retrieval_latency_ms, ' ms')
     add('Embedding', metadata.embedding_latency_ms, ' ms')
     add('Qdrant', metadata.qdrant_latency_ms, ' ms')
     add('融合', metadata.fusion_latency_ms, ' ms')
@@ -640,9 +699,6 @@ function traceDetails(message: ConversationMessage): TraceDetail[] {
   }
   add('有效引用', metadata.valid_citation_count)
   add('无效引用', metadata.invalid_citation_count)
-  add('首字延迟', metadata.llm_first_token_latency_ms, ' ms')
-  add('生成延迟', metadata.llm_generation_latency_ms ?? metadata.llm_latency_ms, ' ms')
-  add('本地预处理', metadata.local_pre_llm_latency_ms, ' ms')
   return rows
 }
 
@@ -656,7 +712,6 @@ onMounted(async () => {
 })
 onBeforeUnmount(() => {
   stopGeneration(false)
-  clearElapsedTimer()
   if (scrollFrame !== null) window.cancelAnimationFrame(scrollFrame)
   streamVersion += 1
 })
@@ -666,7 +721,6 @@ onBeforeUnmount(() => {
   <main class="conv-page">
     <div v-if="pageError" class="conv-error" role="alert">{{ pageError }}</div>
     <div class="conv-layout">
-      <!-- Sidebar -->
       <aside class="conv-sidebar" aria-label="会话列表">
         <header class="conv-sidebar-head">
           <div class="conv-sidebar-workspace">
@@ -708,7 +762,6 @@ onBeforeUnmount(() => {
         </nav>
       </aside>
 
-      <!-- Thread -->
       <section class="conv-thread" data-testid="conversation-thread" aria-label="会话内容">
         <header v-if="selectedConversation" class="conv-thread-header">
           <div class="conv-thread-heading">
@@ -732,6 +785,7 @@ onBeforeUnmount(() => {
             </template>
           </ElDropdown>
         </header>
+
         <div
           ref="messageViewport"
           class="conv-message-viewport"
@@ -836,14 +890,16 @@ onBeforeUnmount(() => {
               <section
                 v-if="msg.role === 'assistant' && traceSummary(msg).length"
                 class="msg-lineage"
-                aria-label="证据链路"
+                aria-label="Execution Trace"
+                :role="liveExecutionTrace?.message === msg ? 'status' : undefined"
+                :aria-live="liveExecutionTrace?.message === msg ? 'polite' : undefined"
               >
                 <header class="msg-lineage-head">
-                  <strong>Evidence Lineage</strong>
-                  <span>证据链路</span>
+                  <strong>Execution Trace</strong>
+                  <span>执行链路</span>
                 </header>
                 <ol class="msg-lineage-steps">
-                  <li v-for="step in traceSummary(msg)" :key="step.label" :data-state="step.state">
+                  <li v-for="step in traceSummary(msg)" :key="step.phase" :data-state="step.state">
                     <span class="lineage-marker" aria-hidden="true"></span>
                     <span class="lineage-copy">
                       <strong>{{ step.label }}</strong>
@@ -893,18 +949,6 @@ onBeforeUnmount(() => {
                 </button>
               </div>
             </article>
-
-            <div
-              v-if="selectedId && progressState"
-              class="conv-progress"
-              :data-state="progressState"
-              role="status"
-              aria-live="polite"
-            >
-              <span class="conv-progress-title">{{ progressTitle }}</span>
-              <strong>{{ progressMessage }}</strong>
-              <span>{{ elapsedSeconds }}s</span>
-            </div>
           </template>
         </div>
 
@@ -940,7 +984,6 @@ onBeforeUnmount(() => {
         </form>
       </section>
 
-      <!-- Evidence Inspector -->
       <aside
         id="evidence-inspector"
         class="conv-evidence"

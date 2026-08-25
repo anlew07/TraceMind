@@ -197,13 +197,12 @@ describe('ConversationView', () => {
     expect(mockedList).toHaveBeenCalledWith('kb')
     expect(wrapper.get('[data-testid="conversation-c1"]').text()).toContain('First')
     expect(wrapper.get('[data-message-id="a1"]').text()).toContain('Answer with evidence')
+    expect(wrapper.get('[data-message-id="a1"] .msg-who').text()).toBe('TRACEMIND ANSWER')
+    expect(wrapper.get('[data-message-id="a1"] .msg-evidence-strip').text()).toContain('[S1]')
+    expect(wrapper.get('.ev-head').text()).toContain('SOURCE INSPECTOR')
     expect(wrapper.get('[data-testid="evidence-source-a1-S1"]').text()).toContain(
       'first source excerpt',
     )
-    const answer = wrapper.get('[data-message-id="a1"]')
-    expect(answer.get('.msg-who').text()).toBe('TRACEMIND ANSWER')
-    expect(answer.get('.msg-evidence-strip').text()).toContain('[S1]')
-    expect(wrapper.get('.ev-head').text()).toContain('SOURCE INSPECTOR')
   })
 
   it('keeps the message viewport as the only scrolling region around the fixed composer', async () => {
@@ -246,6 +245,21 @@ describe('ConversationView', () => {
     )
     mockedGet.mockResolvedValueOnce(detail(conv)).mockResolvedValue(detail(conv, [persisted]))
     mockedStream.mockImplementation(async (_knowledgeBaseId, _request, handlers) => {
+      handlers.onPipeline({
+        trace_id: 'trace-1',
+        message_id: 'assistant-stream',
+        phase: 'routing',
+        status: 'completed',
+        metadata: { route_mode: 'rag' },
+      })
+      for (const phase of ['query_rewrite', 'retrieval', 'rerank', 'evidence'] as const) {
+        handlers.onPipeline({
+          trace_id: 'trace-1',
+          message_id: 'assistant-stream',
+          phase,
+          status: 'completed',
+        })
+      }
       handlers.onSources({
         trace_id: 'trace-1',
         message_id: 'assistant-stream',
@@ -256,6 +270,12 @@ describe('ConversationView', () => {
         trace_id: 'trace-1',
         message_id: 'assistant-stream',
         text: 'Streamed answer [S1]',
+      })
+      handlers.onPipeline({
+        trace_id: 'trace-1',
+        message_id: 'assistant-stream',
+        phase: 'generation',
+        status: 'completed',
       })
       handlers.onDone(doneEvent({ message_id: 'assistant-stream' }))
     })
@@ -280,7 +300,23 @@ describe('ConversationView', () => {
   })
 
   it('keeps no-answer terminal status from the V2 done event', async () => {
-    const persisted = message('assistant-no-answer', 'No relevant information', null, 'no_answer')
+    const noAnswerDone = doneEvent({
+      terminal_status: 'no_answer',
+      grounded: false,
+      valid_citation_count: 0,
+      source_count: 0,
+      route_mode: 'rag',
+      retrieval_mode: 'hybrid',
+    })
+    const persisted = message(
+      'assistant-no-answer',
+      'No relevant information',
+      null,
+      'no_answer',
+      'c1',
+      'assistant',
+      noAnswerDone,
+    )
     mockedGet.mockResolvedValueOnce(detail(conv)).mockResolvedValue(detail(conv, [persisted]))
     mockedStream.mockImplementation(async (_knowledgeBaseId, _request, handlers) => {
       handlers.onNoAnswer({
@@ -288,14 +324,7 @@ describe('ConversationView', () => {
         message_id: 'assistant-no-answer',
         message: 'No relevant information',
       })
-      handlers.onDone(
-        doneEvent({
-          message_id: 'assistant-no-answer',
-          terminal_status: 'no_answer',
-          grounded: false,
-          valid_citation_count: 0,
-        }),
-      )
+      handlers.onDone({ ...noAnswerDone, message_id: 'assistant-no-answer' })
     })
 
     const wrapper = mountView()
@@ -305,7 +334,12 @@ describe('ConversationView', () => {
     await flushPromises()
 
     expect(wrapper.text()).toContain('No relevant information')
-    expect(wrapper.text()).toContain('已完成')
+    const trace = wrapper.get('[data-message-id="assistant-no-answer"] .msg-lineage')
+    expect(trace.text()).toContain('Query Rewrite')
+    expect(trace.text()).toContain('Retrieval')
+    expect(trace.text()).toContain('Rerank')
+    expect(trace.text()).toContain('Evidence')
+    expect(trace.text()).not.toContain('Generation')
   })
 
   it('shows the safe message from a V2 error event', async () => {
@@ -323,7 +357,7 @@ describe('ConversationView', () => {
     await wrapper.get('[data-testid="conversation-composer"]').trigger('submit')
     await flushPromises()
 
-    expect(wrapper.text()).toContain('生成失败')
+    expect(wrapper.text()).toContain('失败')
   })
 
   it('cancels an active stream', async () => {
@@ -356,7 +390,7 @@ describe('ConversationView', () => {
     await wrapper.get('[data-testid="conversation-composer"]').trigger('submit')
     await flushPromises()
 
-    expect(wrapper.text()).toContain('生成失败')
+    expect(wrapper.text()).toContain('失败')
     expect(wrapper.find('[data-message-id^="temporary-"].assistant').exists()).toBe(true)
   })
 
@@ -422,7 +456,53 @@ describe('ConversationView', () => {
     expect(scrollIntoView).toHaveBeenCalledOnce()
   })
 
-  it('shows only real direct-route lineage without retrieval or rerank steps', async () => {
+  it('shows live pipeline updates inside the assistant trace without a progress card', async () => {
+    let streamHandlers: RagStreamHandlers | undefined
+    let finishStream: (() => void) | undefined
+    mockedStream.mockImplementation((_knowledgeBaseId, _request, handlers) => {
+      streamHandlers = handlers
+      return new Promise<void>((resolve) => {
+        finishStream = resolve
+      })
+    })
+
+    const wrapper = mountView()
+    await flushPromises()
+    await wrapper.get('input[aria-label="你的问题"]').setValue('Trace this')
+    await wrapper.get('[data-testid="conversation-composer"]').trigger('submit')
+    await flushPromises()
+
+    streamHandlers?.onPipeline({
+      trace_id: 'trace-live',
+      message_id: 'assistant-live',
+      phase: 'routing',
+      status: 'completed',
+      metadata: { route_mode: 'rag' },
+    })
+    streamHandlers?.onPipeline({
+      trace_id: 'trace-live',
+      message_id: 'assistant-live',
+      phase: 'query_rewrite',
+      status: 'started',
+    })
+    await flushPromises()
+
+    const trace = wrapper.get('[data-message-id="assistant-live"] .msg-lineage')
+    expect(trace.text()).toContain('正在理解上下文')
+    expect(trace.text()).toContain('等待执行')
+    expect(wrapper.find('.conv-progress').exists()).toBe(false)
+
+    streamHandlers?.onError({
+      trace_id: 'trace-live',
+      message_id: 'assistant-live',
+      code: 'generation_failed',
+      message: 'Safe public error',
+    })
+    finishStream?.()
+    await flushPromises()
+  })
+
+  it('shows only real generation for a historical direct route', async () => {
     mockedGet.mockResolvedValue(
       detail(conv, [
         message(
@@ -445,12 +525,11 @@ describe('ConversationView', () => {
     const wrapper = mountView()
     await flushPromises()
 
-    const answer = wrapper.get('[data-message-id="direct-answer"]')
-    const lineageLabels = answer.findAll('.lineage-copy strong').map((item) => item.text())
-    expect(answer.text()).toContain('直接回答')
-    expect(lineageLabels).not.toContain('检索')
-    expect(lineageLabels).not.toContain('重排')
-    expect(answer.text()).not.toContain('条真实来源')
+    const lineageLabels = wrapper
+      .get('[data-message-id="direct-answer"]')
+      .findAll('.lineage-copy strong')
+      .map((item) => item.text())
+    expect(lineageLabels).toEqual(['Generation'])
   })
 
   it('orders answer evidence before lineage and collapsed trace detail', async () => {
@@ -586,7 +665,7 @@ describe('ConversationView', () => {
     const wrapper = mountView()
     await flushPromises()
 
-    expect(wrapper.text()).toContain('Code')
+    expect(wrapper.text()).toContain('CODE')
     expect(wrapper.text()).toContain('void run()')
     expect(wrapper.get('.msg-evidence-strip').text()).toContain('2 sources')
   })

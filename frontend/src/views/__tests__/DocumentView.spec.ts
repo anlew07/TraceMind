@@ -205,6 +205,22 @@ describe('DocumentView', () => {
     expect(mockedList).toHaveBeenCalledTimes(2)
   })
 
+  it('keeps heading, import, search, rows, and retrieval tools on one content track', async () => {
+    mockedList.mockResolvedValue(response([document]))
+    const wrapper = mountView()
+    await flushPromises()
+    const importBtn = wrapper.findAll('button').find((button) => button.text() === '导入文件')
+    await importBtn?.trigger('click')
+    await flushPromises()
+
+    const grid = wrapper.get('.document-content-grid')
+    expect(grid.get('.management-header').exists()).toBe(true)
+    expect(grid.get('.document-import-region').exists()).toBe(true)
+    expect(grid.get('.doc-search-bar').exists()).toBe(true)
+    expect(grid.get('.document-list-region .doc-list').exists()).toBe(true)
+    expect(grid.get('.document-retrieval-region').exists()).toBe(true)
+  })
+
   it('triggers current version download via dropdown', async () => {
     mockedList.mockResolvedValue(response([document]))
     const wrapper = mountView()

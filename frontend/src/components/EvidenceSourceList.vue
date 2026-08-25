@@ -15,8 +15,8 @@ const isCodeSource = (source: EvidenceSource) =>
 const isKnowledgeSource = (source: EvidenceSource) => source.source_type === 'knowledge_entry'
 
 function sourceType(source: EvidenceSource): string {
-  if (isKnowledgeSource(source)) return 'KNOWLEDGE'
-  return isCodeSource(source) ? 'CODE' : 'DOCUMENT'
+  if (isKnowledgeSource(source)) return 'KNOWLEDGE · 知识'
+  return isCodeSource(source) ? 'CODE · 代码' : 'DOCUMENT · 文档'
 }
 
 function sourceTitle(source: EvidenceSource): string {
@@ -111,7 +111,7 @@ function retrievalMetadata(source: EvidenceSource): { label: string; value: stri
       <div class="ev-source-location">
         <span class="ev-field-label">LOCATION</span>
         <div class="ev-src-loc">
-          <template v-if="isKnowledgeSource(source)">知识条目 · </template>
+          <template v-if="isKnowledgeSource(source)">已验证知识 · 知识条目 · </template>
           <template v-else-if="source.section_title">{{ source.section_title }} · </template>
           {{ sourceLocationWithPath(source) }}
         </div>
