@@ -84,6 +84,12 @@ async def test_rag_api_returns_503_when_chat_model_is_disabled() -> None:
 async def test_rag_api_streams_v2_native_sse_events_and_validates_request() -> None:
     graph = FakeGraph(
         [
+            {
+                "type": "pipeline",
+                "phase": "retrieval",
+                "status": "completed",
+                "metadata": {"candidate_count": 0},
+            },
             {"type": "sources", "source_count": 0, "sources": []},
             {"type": "token", "text": "answer"},
             {
@@ -104,11 +110,15 @@ async def test_rag_api_streams_v2_native_sse_events_and_validates_request() -> N
 
     assert response.status_code == 200
     assert response.headers["content-type"].startswith("text/event-stream")
+    assert "event: pipeline" in response.text
     assert "event: sources" in response.text
     assert "event: token" in response.text
     assert "event: done" in response.text
-    assert "event: pipeline" not in response.text
     assert "event: retrieval" not in response.text
+    pipeline = event_data(response.text, "pipeline")
+    assert pipeline["phase"] == "retrieval"
+    assert pipeline["status"] == "completed"
+    assert pipeline["metadata"] == {"candidate_count": 0}
     done = event_data(response.text, "done")
     assert done["terminal_status"] == "completed"
     assert isinstance(done["conversation_persistence_latency_ms"], int)
@@ -131,3 +141,27 @@ async def test_rag_api_maps_retrieval_failure_to_safe_error_event() -> None:
     assert "retrieval_unavailable" in response.text
     assert event_data(response.text, "error")["message"] == "回答生成服务暂时不可用，请稍后重试。"
     assert "private retrieval detail" not in response.text
+
+
+async def test_rag_api_rejects_pipeline_internal_state_without_exposing_it() -> None:
+    graph = FakeGraph(
+        [
+            {
+                "type": "pipeline",
+                "phase": "retrieval",
+                "status": "completed",
+                "state": {"prompt": "private graph state"},
+            }
+        ]
+    )
+    app = app_with_graph()
+
+    async for client in client_for(app, graph):
+        response = await client.post(
+            f"/api/v1/knowledge-bases/{uuid4()}/rag/stream",
+            json={"query": "配置是什么？"},
+        )
+
+    assert "event: pipeline" not in response.text
+    assert "event: error" in response.text
+    assert "private graph state" not in response.text

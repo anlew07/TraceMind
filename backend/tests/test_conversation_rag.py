@@ -133,6 +133,7 @@ async def test_completed_answer_uses_custom_graph_and_persists_sources_and_token
     }
     stream, persistence, exchange, graph = prepared_stream(
         [
+            {"type": "pipeline", "phase": "evidence", "status": "started"},
             {"type": "sources", "source_count": 1, "sources": [source]},
             {"type": "token", "text": "安全"},
             {"type": "token", "text": "回答 [S1]"},
@@ -169,7 +170,14 @@ async def test_completed_answer_uses_custom_graph_and_persists_sources_and_token
     source["content"] = "后来改变"
     assert kwargs["sources"][0]["content"] == "生成时正文"
 
-    assert [event.event for event in events] == ["sources", "token", "token", "done"]
+    assert [event.event for event in events] == [
+        "pipeline",
+        "sources",
+        "token",
+        "token",
+        "done",
+    ]
+    assert events[0].data["phase"] == "evidence"
     assert all(event.data["trace_id"] == str(stream.trace_id) for event in events)
     assert all(event.data["conversation_id"] == str(exchange.conversation_id) for event in events)
     assert all(event.data["message_id"] == str(exchange.assistant_message_id) for event in events)

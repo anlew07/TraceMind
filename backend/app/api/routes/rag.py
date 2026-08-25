@@ -36,7 +36,12 @@ router = APIRouter(prefix="/knowledge-bases/{knowledge_base_id}/rag", tags=["rag
 logger = logging.getLogger(__name__)
 
 SAFE_GENERATION_ERROR_MESSAGE = "回答生成服务暂时不可用，请稍后重试。"
-PRODUCT_EVENT_TYPES = frozenset({"sources", "token", "no_answer", "done"})
+PRODUCT_EVENT_TYPES = frozenset({"pipeline", "sources", "token", "no_answer", "done"})
+PIPELINE_PHASES = frozenset(
+    {"routing", "query_rewrite", "retrieval", "rerank", "evidence", "generation"}
+)
+PIPELINE_STATUSES = frozenset({"started", "completed", "skipped", "fallback", "failed"})
+PIPELINE_METADATA_FIELDS = frozenset({"route_mode", "candidate_count", "source_count"})
 
 RagGraph = CompiledStateGraph[
     RagState,
@@ -230,6 +235,8 @@ async def stream_rag_answer(
                 event_type = product_event.get("type")
                 if event_type not in PRODUCT_EVENT_TYPES:
                     raise ValueError("LangGraph custom stream returned an unsupported event")
+                if event_type == "pipeline":
+                    _validate_pipeline_event(product_event)
 
                 if event_type == "sources":
                     raw_sources = product_event.get("sources")
@@ -364,3 +371,21 @@ async def stream_rag_answer(
                 )
             except SQLAlchemyError:
                 logger.exception("Conversation response finalization failed")
+
+
+def _validate_pipeline_event(event: dict[str, Any]) -> None:
+    if set(event) - {"type", "phase", "status", "metadata"}:
+        raise ValueError("Pipeline event contains unsupported fields")
+    if event.get("phase") not in PIPELINE_PHASES:
+        raise ValueError("Pipeline event contains an unsupported phase")
+    if event.get("status") not in PIPELINE_STATUSES:
+        raise ValueError("Pipeline event contains an unsupported status")
+    metadata = event.get("metadata", {})
+    if not isinstance(metadata, dict) or set(metadata) - PIPELINE_METADATA_FIELDS:
+        raise ValueError("Pipeline event contains unsupported metadata")
+    if "route_mode" in metadata and metadata["route_mode"] not in {"direct", "rag"}:
+        raise ValueError("Pipeline event contains an unsupported route mode")
+    for field_name in ("candidate_count", "source_count"):
+        value = metadata.get(field_name)
+        if value is not None and (not isinstance(value, int) or value < 0):
+            raise ValueError("Pipeline event contains an invalid count")

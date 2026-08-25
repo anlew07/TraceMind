@@ -1109,3 +1109,22 @@ Reranking、path scope、Conversation 与 LangGraph production coverage 保留�
 因此移除显式 `openai` dependency；它仍由 `langchain-openai` 作为 transitive dependency 锁定，未升级
 LangChain/LangGraph。受影响定向测试 83 passed，全量 567 passed、40 skipped；Ruff、format、mypy 与
 `uv sync --frozen --offline` 通过。
+
+# 2026-08-25 — UI Phase 1.1.1 Production Streaming Integration
+
+为消除 RAG 执行期间的静默等待，现有 LangGraph nodes 通过 `get_stream_writer()` 增量发送受白名单约束的
+`pipeline` 产品事件；phase 固定为 routing/query_rewrite/retrieval/rerank/evidence/generation，status 固定为
+started/completed/skipped/fallback/failed，metadata 只允许 route_mode/candidate_count/source_count。FastAPI 继续消费
+`graph.astream(stream_mode="custom")`，保留 sources/token/no_answer/done/terminal_status，并在 SSE 边界拒绝 Graph state、
+prompt、raw output 或内部字段。未采用新的 EventBus、Queue、callback bridge，也未恢复旧 retrieval/finish_reason/latency
+contract。
+
+Conversation 将实时事件与历史 done metadata 归一为同一 Execution Trace ViewModel：Direct 主链只展示真实 Generation，
+RAG no-answer 展示实际执行的改写、检索、重排与 Evidence，且 source_count=0 时不伪造 Generation。独立 GENERATING card
+已删除；Citation 仍复用既有解析与 showEvidence，Evidence Inspector 保持一等信息。Documents 的 Heading、Import、Search、
+Alert、Rows 与 Retrieval Debug 统一进入同一 content grid，上传业务逻辑未变。
+
+后端 Ruff/format/mypy 通过，全量为 568 passed、40 skipped；前端 vue-tsc、ESLint、Vite build 通过，全量 Vitest 为
+96 passed。浏览器在 1024/1280/1440px 验证了 Conversation 与 Documents：1280/1440 保持三栏 Workbench，1024 使用
+可达的 Inspector 分区，Documents 水平轨道保持一致。检索算法、Prompt、CitationGuard、来源集合与模型调用均未改变，
+因此未重跑 retrieval quality corpus；新增 custom event 的延迟开销尚未单独量化，是后续性能观测项。

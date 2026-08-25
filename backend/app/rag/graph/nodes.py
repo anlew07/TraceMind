@@ -16,6 +16,10 @@ from app.rag import StreamingCitationGuard, build_rag_context, build_rag_payload
 from app.rag.graph.state import QueryRewriteFallbackReason, RagRuntimeContext, RagState
 from app.rag.prompt import SYSTEM_PROMPT
 from app.reranker import RerankerError, RerankerUnavailableError
+from app.services.exceptions import (
+    HybridSearchUnavailableError,
+    SemanticSearchUnavailableError,
+)
 from app.services.query_router import RouteMode, route_query
 
 DIRECT_SYSTEM_PROMPT = """你是 TraceMind，一个本地优先的个人工程知识助手。
@@ -60,7 +64,10 @@ REWRITE_PROMPT = ChatPromptTemplate.from_messages(
 
 
 def route_node(state: RagState) -> dict[str, RouteMode]:
-    return {"route_mode": route_query(state["query"])}
+    _write_pipeline("routing", "started")
+    route_mode = route_query(state["query"])
+    _write_pipeline("routing", "completed", route_mode=route_mode)
+    return {"route_mode": route_mode}
 
 
 def select_route(state: RagState) -> RouteMode:
@@ -83,9 +90,11 @@ async def rewrite_node(
     state: RagState,
     runtime: Runtime[RagRuntimeContext],
 ) -> dict[str, object]:
+    _write_pipeline("query_rewrite", "started")
     semantic_query = state["prepared_retrieval_query"].semantic_query
     history = state.get("conversation_history", ())
     if not history:
+        _write_pipeline("query_rewrite", "skipped")
         return {
             "retrieval_query": semantic_query,
             "query_rewrite_mode": "not_applicable",
@@ -115,17 +124,25 @@ async def rewrite_node(
         async with asyncio.timeout(runtime.context.settings.query_rewrite_timeout_seconds):
             response = await runtime.context.model.ainvoke(prompt)
     except TimeoutError:
+        _write_pipeline("query_rewrite", "fallback")
         return _rewrite_fallback(semantic_query, started_at, "timeout")
     except Exception:
+        _write_pipeline("query_rewrite", "fallback")
         return _rewrite_fallback(semantic_query, started_at, "model_error")
 
     try:
         decision = REWRITE_PARSER.parse(response.text)
     except OutputParserException:
+        _write_pipeline("query_rewrite", "fallback")
         return _rewrite_fallback(semantic_query, started_at, "invalid_response")
 
     if len(decision.query) > runtime.context.settings.query_rewrite_max_query_chars:
+        _write_pipeline("query_rewrite", "fallback")
         return _rewrite_fallback(semantic_query, started_at, "invalid_response")
+    _write_pipeline(
+        "query_rewrite",
+        "skipped" if decision.action == "keep" else "completed",
+    )
     return {
         "retrieval_query": semantic_query if decision.action == "keep" else decision.query,
         "query_rewrite_mode": "skipped" if decision.action == "keep" else "rewritten",
@@ -138,19 +155,25 @@ async def retrieve_node(
     state: RagState,
     runtime: Runtime[RagRuntimeContext],
 ) -> dict[str, object]:
+    _write_pipeline("retrieval", "started")
     retrieval_scope = replace(
         state["prepared_retrieval_query"],
         semantic_query=state["retrieval_query"],
     )
-    prepared = await runtime.context.retrieval_service.prepare_hybrid_search(
-        state["knowledge_base_id"],
-        query=state["retrieval_query"],
-        limit=runtime.context.settings.rag_rerank_candidate_limit,
-        language=state["language"],
-        document_id=state["document_id"],
-        prepared_query=retrieval_scope,
-    )
-    result = await runtime.context.retrieval_service.execute_hybrid_search(prepared)
+    try:
+        prepared = await runtime.context.retrieval_service.prepare_hybrid_search(
+            state["knowledge_base_id"],
+            query=state["retrieval_query"],
+            limit=runtime.context.settings.rag_rerank_candidate_limit,
+            language=state["language"],
+            document_id=state["document_id"],
+            prepared_query=retrieval_scope,
+        )
+        result = await runtime.context.retrieval_service.execute_hybrid_search(prepared)
+    except (SemanticSearchUnavailableError, HybridSearchUnavailableError):
+        _write_pipeline("retrieval", "failed")
+        raise
+    _write_pipeline("retrieval", "completed", candidate_count=len(result.items))
     return {
         "retrieval_candidates": result.items,
         "embedding_latency_ms": result.embedding_latency_ms,
@@ -165,10 +188,12 @@ async def rerank_node(
     state: RagState,
     runtime: Runtime[RagRuntimeContext],
 ) -> dict[str, object]:
+    _write_pipeline("rerank", "started")
     candidates = state["retrieval_candidates"]
     settings = runtime.context.settings
     hybrid_results = candidates[: settings.rag_retrieval_limit]
     if not candidates or not settings.reranker_enabled:
+        _write_pipeline("rerank", "skipped", candidate_count=len(hybrid_results))
         return {
             "ranked_results": hybrid_results,
             "retrieval_mode": "hybrid",
@@ -186,6 +211,7 @@ async def rerank_node(
             candidates,
             limit=min(settings.rag_retrieval_limit, len(candidates)),
         )
+        _write_pipeline("rerank", "completed", candidate_count=len(results))
         return {
             "ranked_results": results,
             "retrieval_mode": "hybrid_reranker",
@@ -197,6 +223,7 @@ async def rerank_node(
         fallback_reason = exc.reason
     except RerankerError:
         fallback_reason = "internal_error"
+    _write_pipeline("rerank", "fallback", candidate_count=len(hybrid_results))
     return {
         "ranked_results": hybrid_results,
         "retrieval_mode": "hybrid_fallback",
@@ -210,6 +237,7 @@ def prepare_context_node(
     state: RagState,
     runtime: Runtime[RagRuntimeContext],
 ) -> dict[str, object]:
+    _write_pipeline("evidence", "started")
     context = build_rag_context(
         state["ranked_results"],
         runtime.context.settings.rag_max_context_chars,
@@ -222,6 +250,7 @@ def prepare_context_node(
                 "sources": [source.model_dump(mode="json") for source in context.sources],
             }
         )
+    _write_pipeline("evidence", "completed", source_count=len(context.sources))
     return {"rag_context": context}
 
 
@@ -244,6 +273,7 @@ async def generate_grounded_node(
     state: RagState,
     runtime: Runtime[RagRuntimeContext],
 ) -> dict[str, object]:
+    _write_pipeline("generation", "started")
     history = (
         state.get("conversation_history", ())
         if state["query_rewrite_mode"] in {"rewritten", "fallback"}
@@ -272,6 +302,7 @@ async def generate_grounded_node(
     if tail:
         parts.append(tail)
         writer({"type": "token", "text": tail})
+    _write_pipeline("generation", "completed")
     return {
         "answer": "".join(parts),
         "grounded": guard.grounded,
@@ -284,6 +315,7 @@ async def generate_direct_node(
     state: RagState,
     runtime: Runtime[RagRuntimeContext],
 ) -> dict[str, str]:
+    _write_pipeline("generation", "started")
     messages = [
         SystemMessage(content=DIRECT_SYSTEM_PROMPT),
         HumanMessage(content=state["query"]),
@@ -295,6 +327,7 @@ async def generate_direct_node(
         if text:
             parts.append(text)
             writer({"type": "token", "text": text})
+    _write_pipeline("generation", "completed")
     return {"answer": "".join(parts)}
 
 
@@ -351,3 +384,29 @@ def _rewrite_fallback(
 
 def _elapsed_ms(started_at: float) -> int:
     return round((perf_counter() - started_at) * 1_000)
+
+
+PipelinePhase = Literal[
+    "routing",
+    "query_rewrite",
+    "retrieval",
+    "rerank",
+    "evidence",
+    "generation",
+]
+PipelineStatus = Literal["started", "completed", "skipped", "fallback", "failed"]
+
+
+def _write_pipeline(
+    phase: PipelinePhase,
+    status: PipelineStatus,
+    **metadata: str | int,
+) -> None:
+    event: dict[str, object] = {
+        "type": "pipeline",
+        "phase": phase,
+        "status": status,
+    }
+    if metadata:
+        event["metadata"] = metadata
+    get_stream_writer()(event)

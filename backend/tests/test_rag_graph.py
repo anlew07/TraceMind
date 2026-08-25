@@ -305,6 +305,18 @@ async def collect_custom_stream(
     return product_events
 
 
+def pipeline_steps(events: list[dict[str, Any]]) -> list[tuple[str, str]]:
+    pipeline_events = [event for event in events if event["type"] == "pipeline"]
+    for event in pipeline_events:
+        assert set(event) <= {"type", "phase", "status", "metadata"}
+        assert set(event.get("metadata", {})) <= {
+            "route_mode",
+            "candidate_count",
+            "source_count",
+        }
+    return [(event["phase"], event["status"]) for event in pipeline_events]
+
+
 def test_graph_compiles_without_checkpointer_or_store() -> None:
     graph = build_rag_graph()
 
@@ -350,9 +362,26 @@ async def test_direct_event_stream_emits_tokens_then_completed_done() -> None:
         context=context,
     )
 
-    assert [event["type"] for event in product_events] == ["token", "token", "token", "done"]
-    assert [event["text"] for event in product_events[:-1]] == ["你", "好", "！"]
-    assert "".join(event["text"] for event in product_events[:-1]) == output["answer"]
+    assert [event["type"] for event in product_events] == [
+        "pipeline",
+        "pipeline",
+        "pipeline",
+        "token",
+        "token",
+        "token",
+        "pipeline",
+        "done",
+    ]
+    assert pipeline_steps(product_events) == [
+        ("routing", "started"),
+        ("routing", "completed"),
+        ("generation", "started"),
+        ("generation", "completed"),
+    ]
+    assert product_events[1]["metadata"] == {"route_mode": "direct"}
+    token_events = [event for event in product_events if event["type"] == "token"]
+    assert [event["text"] for event in token_events] == ["你", "好", "！"]
+    assert "".join(event["text"] for event in token_events) == output["answer"]
     assert output["answer"] == "你好！"
     assert output["terminal_status"] == "completed"
     assert all(event["type"] != "sources" for event in product_events)
@@ -1065,12 +1094,27 @@ async def test_grounded_event_stream_is_citation_safe_across_chunks_and_eof(
         context=context,
     )
 
-    assert [event["type"] for event in product_events] == [
+    non_pipeline_events = [event for event in product_events if event["type"] != "pipeline"]
+    assert [event["type"] for event in non_pipeline_events] == [
         "sources",
         *("token" for _ in token_texts),
         "done",
     ]
-    source_event = product_events[0]
+    assert pipeline_steps(product_events) == [
+        ("routing", "started"),
+        ("routing", "completed"),
+        ("query_rewrite", "started"),
+        ("query_rewrite", "skipped"),
+        ("retrieval", "started"),
+        ("retrieval", "completed"),
+        ("rerank", "started"),
+        ("rerank", "skipped"),
+        ("evidence", "started"),
+        ("evidence", "completed"),
+        ("generation", "started"),
+        ("generation", "completed"),
+    ]
+    source_event = non_pipeline_events[0]
     assert source_event["source_count"] == 1
     assert source_event["sources"][0]["source_id"] == "S1"
     streamed_texts = [event["text"] for event in product_events if event["type"] == "token"]
@@ -1082,7 +1126,7 @@ async def test_grounded_event_stream_is_citation_safe_across_chunks_and_eof(
     assert output["grounded"] is grounded
     assert output["valid_citation_count"] == valid_count
     assert output["invalid_citation_count"] == invalid_count
-    done = product_events[-1]
+    done = non_pipeline_events[-1]
     assert done["terminal_status"] == "completed"
     assert done["grounded"] is grounded
     assert done["valid_citation_count"] == valid_count
@@ -1111,11 +1155,24 @@ async def test_no_answer_event_stream_emits_no_answer_then_done_without_model() 
         context=context,
     )
 
-    assert product_events[0] == {
+    assert pipeline_steps(product_events) == [
+        ("routing", "started"),
+        ("routing", "completed"),
+        ("query_rewrite", "started"),
+        ("query_rewrite", "skipped"),
+        ("retrieval", "started"),
+        ("retrieval", "completed"),
+        ("rerank", "started"),
+        ("rerank", "skipped"),
+        ("evidence", "started"),
+        ("evidence", "completed"),
+    ]
+    non_pipeline_events = [event for event in product_events if event["type"] != "pipeline"]
+    assert non_pipeline_events[0] == {
         "type": "no_answer",
         "message": "知识库中未找到足够相关的信息。",
     }
-    done = product_events[1]
+    done = non_pipeline_events[1]
     assert done["type"] == "done"
     assert done["terminal_status"] == "no_answer"
     assert done["route_mode"] == "rag"
