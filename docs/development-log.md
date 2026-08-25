@@ -1200,3 +1200,20 @@ KnowledgeEntryResponse 完全同形的临时网络 fixture，不写入本地数�
 failed、Evidence、多标签、长 solution 与 failed attempts。1440/1280/1024/900px 均无横向溢出；1024 保持正文 + Evidence
 双栏，900 收敛为纵向 Knowledge Record。Hallmark 额外检查 320/375/414/768px empty state 与 DOM scroll width，页面内容无
 横向滚动；现有 Global Shell 的窄屏导航压缩不属于本 Phase。
+
+# 2026-08-25 — UI Phase 2.3.1 Global Shell Mobile Responsive
+
+真实浏览器审计确认原 Global Shell 在 820px 以下启用 Header 横向滚动，并在 680px 以下隐藏 KB 名称却继续并排展示四个
+业务 tab 与 Local-first；375px 的 Header 已出现 1px 内部溢出，320px 达到 20px，且 KB identity 在移动端完全丢失。
+
+保持 681px 以上已通过验收的 58px 单层桌面 Header；680px 以下收敛为 `TraceMind | 当前页 · KB | 菜单`。业务导航、返回
+Workspace 与完整 Local-first 说明进入 Element Plus light-dismiss dropdown，Header 上保留 Local-first 状态点；KB 长名称使用
+ellipsis。Workspace Home 与 Landing 不渲染 KB 菜单，Inspector/Drawer z-index 与业务页面布局不变。未采用横向滚动导航、
+多行 Header、Bottom Navigation 或新的 navigation framework。
+
+前端 AppShell 定向测试为 5 passed，全量为 23 files / 131 passed；vue-tsc、ESLint 与 Vite production build 通过。
+真实浏览器在 Workspace、Conversation、Documents、Knowledge 与 Knowledge Detail 上逐项检查
+1440/1280/1024/900/768/414/375/320px：所有宽度的 document 与 Header scrollWidth 均未超过 viewport，Header 始终为
+58px，768px 保持完整桌面导航，414/375/320px 使用 44px 高菜单触控区。长 KB 名称的 scrollWidth 大于 clientWidth 且被
+ellipsis；ESC 与选择导航均关闭菜单。Conversation 和 Documents Inspector 打开时，菜单 z-index 32 高于 Inspector 31 与
+backdrop 30，未产生第二个 backdrop。当前实现仍使用临时品牌字母标记，正式 Compass 资产继续作为既有后续事项。

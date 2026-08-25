@@ -73,6 +73,13 @@ TraceMind | 当前知识库 | 问答  文档  知识  图谱 | Local-first | Wor
   Settings or Retrieval Workspace.
 - No global KB selector dropdown at current stage.
 - `1px solid` bottom border. No shadow, gradient or second navigation row.
+- At 680px and below, the same 58px bar becomes one mobile layer: `TraceMind | current
+  page · current KB | Menu`. The KB name truncates with ellipsis; the four KB destinations and
+  “Return to Workspace” move into one light-dismiss dropdown. Local-first remains visible as a
+  compact status dot and is named in the menu.
+- At 768px, retain the complete desktop navigation rather than creating a mixed tablet state.
+- Workspace Home and Landing do not expose empty KB navigation; they keep only their current page
+  identity and the compact Local-first status on narrow screens.
 
 **Implementation:** `AppShell.vue` with `provide/inject` for KB name.
 
