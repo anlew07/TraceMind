@@ -199,10 +199,34 @@ describe('ConversationView', () => {
     expect(wrapper.get('[data-message-id="a1"]').text()).toContain('Answer with evidence')
     expect(wrapper.get('[data-message-id="a1"] .msg-who').text()).toBe('TRACEMIND ANSWER')
     expect(wrapper.get('[data-message-id="a1"] .msg-evidence-strip').text()).toContain('[S1]')
+    expect(wrapper.find('#evidence-inspector').exists()).toBe(false)
+
+    await wrapper.get('[data-message-id="a1"] .cite-btn').trigger('click')
+    await flushPromises()
+
     expect(wrapper.get('.ev-head').text()).toContain('SOURCE INSPECTOR')
     expect(wrapper.get('[data-testid="evidence-source-a1-S1"]').text()).toContain(
       'first source excerpt',
     )
+  })
+
+  it('opens evidence only from a citation and hides it again on close', async () => {
+    mockedGet.mockResolvedValue(detail(conv, [message('a1', 'Answer [S1]', [src])]))
+
+    const wrapper = mountView()
+    await flushPromises()
+    expect(wrapper.find('#evidence-inspector').exists()).toBe(false)
+
+    await wrapper.get('[data-message-id="a1"] .cite-btn').trigger('click')
+    await flushPromises()
+    expect(wrapper.get('#evidence-inspector').isVisible()).toBe(true)
+    expect(wrapper.get('[data-testid="evidence-source-a1-S1"]').attributes('aria-current')).toBe(
+      'true',
+    )
+
+    await wrapper.get('button[aria-label="关闭证据"]').trigger('click')
+    await flushPromises()
+    expect(wrapper.find('#evidence-inspector').exists()).toBe(false)
   })
 
   it('keeps the message viewport as the only scrolling region around the fixed composer', async () => {
@@ -294,6 +318,10 @@ describe('ConversationView', () => {
     )
     expect(wrapper.text()).toContain('Streamed answer')
     expect(wrapper.text()).toContain('已完成')
+    expect(wrapper.find('#evidence-inspector').exists()).toBe(false)
+
+    await wrapper.get('[data-message-id="assistant-stream"] .cite-btn').trigger('click')
+    await flushPromises()
     expect(wrapper.get('[data-testid="evidence-source-assistant-stream-S1"]').text()).toContain(
       'first source excerpt',
     )
@@ -335,6 +363,7 @@ describe('ConversationView', () => {
 
     expect(wrapper.text()).toContain('No relevant information')
     const trace = wrapper.get('[data-message-id="assistant-no-answer"] .msg-lineage')
+    expect(trace.attributes('open')).toBeUndefined()
     expect(trace.text()).toContain('Query Rewrite')
     expect(trace.text()).toContain('Retrieval')
     expect(trace.text()).toContain('Rerank')
@@ -439,9 +468,7 @@ describe('ConversationView', () => {
 
     const wrapper = mountView({ attachTo: document.body })
     await flushPromises()
-    expect(wrapper.get('[data-testid="evidence-source-a2-S1"]').text()).toContain(
-      'second source excerpt',
-    )
+    expect(wrapper.find('#evidence-inspector').exists()).toBe(false)
 
     const citation = wrapper.get('[data-message-id="a1"] .cite-btn')
     expect(citation.attributes('aria-label')).toBe('查看证据 S1')
@@ -488,6 +515,7 @@ describe('ConversationView', () => {
     await flushPromises()
 
     const trace = wrapper.get('[data-message-id="assistant-live"] .msg-lineage')
+    expect(trace.attributes('open')).toBeDefined()
     expect(trace.text()).toContain('正在理解上下文')
     expect(trace.text()).toContain('等待执行')
     expect(wrapper.find('.conv-progress').exists()).toBe(false)
@@ -495,6 +523,45 @@ describe('ConversationView', () => {
     streamHandlers?.onError({
       trace_id: 'trace-live',
       message_id: 'assistant-live',
+      code: 'generation_failed',
+      message: 'Safe public error',
+    })
+    finishStream?.()
+    await flushPromises()
+  })
+
+  it('does not open or select evidence when sources arrive during streaming', async () => {
+    let streamHandlers: RagStreamHandlers | undefined
+    let finishStream: (() => void) | undefined
+    mockedStream.mockImplementation((_knowledgeBaseId, _request, handlers) => {
+      streamHandlers = handlers
+      return new Promise<void>((resolve) => {
+        finishStream = resolve
+      })
+    })
+
+    const wrapper = mountView()
+    await flushPromises()
+    await wrapper.get('input[aria-label="你的问题"]').setValue('Find evidence')
+    await wrapper.get('[data-testid="conversation-composer"]').trigger('submit')
+    await flushPromises()
+
+    streamHandlers?.onSources({
+      trace_id: 'trace-sources',
+      message_id: 'assistant-sources',
+      source_count: 1,
+      sources: [src],
+    })
+    await flushPromises()
+
+    expect(wrapper.find('#evidence-inspector').exists()).toBe(false)
+    expect(wrapper.get('[data-message-id="assistant-sources"] .cite-btn').attributes('aria-pressed')).toBe(
+      'false',
+    )
+
+    streamHandlers?.onError({
+      trace_id: 'trace-sources',
+      message_id: 'assistant-sources',
       code: 'generation_failed',
       message: 'Safe public error',
     })
@@ -530,6 +597,9 @@ describe('ConversationView', () => {
       .findAll('.lineage-copy strong')
       .map((item) => item.text())
     expect(lineageLabels).toEqual(['Generation'])
+    expect(wrapper.get('[data-message-id="direct-answer"] .msg-lineage').attributes('open')).toBe(
+      undefined,
+    )
   })
 
   it('orders answer evidence before lineage and collapsed trace detail', async () => {
@@ -551,7 +621,54 @@ describe('ConversationView', () => {
     expect(evidenceIndex).toBeGreaterThan(-1)
     expect(evidenceIndex).toBeLessThan(lineageIndex)
     expect(lineageIndex).toBeLessThan(detailIndex)
+    expect(answer.get('.msg-lineage').attributes('open')).toBeUndefined()
     expect(answer.get('.exec-details').attributes('open')).toBeUndefined()
+  })
+
+  it('allows a terminal trace to be expanded manually', async () => {
+    mockedGet.mockResolvedValue(
+      detail(conv, [message('a1', 'Answer [S1]', [src], 'completed', 'c1', 'assistant', doneEvent())]),
+    )
+
+    const wrapper = mountView()
+    await flushPromises()
+    const trace = wrapper.get('[data-message-id="a1"] .msg-lineage')
+    expect(trace.attributes('open')).toBeUndefined()
+    expect(trace.get('summary').text()).toContain('5 stages')
+
+    await trace.get('summary').trigger('click')
+    await flushPromises()
+    expect(trace.attributes('open')).toBeDefined()
+    expect(trace.text()).toContain('Query Rewrite')
+    expect(trace.text()).toContain('Generation')
+  })
+
+  it('renders rerank fallback with warning semantics instead of failure semantics', async () => {
+    mockedGet.mockResolvedValue(
+      detail(conv, [
+        message(
+          'fallback-answer',
+          'Answer [S1]',
+          [src],
+          'completed',
+          'c1',
+          'assistant',
+          doneEvent({ reranker_fallback: true }),
+        ),
+      ]),
+    )
+
+    const wrapper = mountView()
+    await flushPromises()
+    const trace = wrapper.get('[data-message-id="fallback-answer"] .msg-lineage')
+    expect(trace.get('summary').text()).toContain('Rerank fallback')
+    await trace.get('summary').trigger('click')
+    await flushPromises()
+
+    const rerank = trace.get('.trace-fallback')
+    expect(rerank.attributes('data-state')).toBe('fallback')
+    expect(rerank.text()).toContain('已降级 · 保留检索排序')
+    expect(rerank.classes()).not.toContain('trace-failed')
   })
 
   it('renders a knowledge entry as a distinct evidence source in the inspector', async () => {
@@ -579,6 +696,8 @@ describe('ConversationView', () => {
     const wrapper = mountView()
     await flushPromises()
 
+    await wrapper.get('[data-message-id="knowledge-answer"] .cite-btn').trigger('click')
+    await flushPromises()
     const sourceItem = wrapper.get('[data-testid="evidence-source-knowledge-answer-S2"]')
     expect(sourceItem.text()).toContain('KNOWLEDGE')
     expect(sourceItem.text()).toContain('事务为什么失败？')
@@ -640,11 +759,18 @@ describe('ConversationView', () => {
 
     const wrapper = mountView()
     await flushPromises()
+    expect(wrapper.find('#evidence-inspector').exists()).toBe(false)
+
+    await wrapper.get('[data-message-id="a1"] .cite-btn').trigger('click')
+    await flushPromises()
     expect(wrapper.find('[data-testid="evidence-source-a1-S1"]').exists()).toBe(true)
 
     await wrapper.get('[data-testid="conversation-c2"]').trigger('click')
     await flushPromises()
 
+    expect(wrapper.find('#evidence-inspector').exists()).toBe(false)
+    await wrapper.get('[data-message-id="b1"] .cite-btn').trigger('click')
+    await flushPromises()
     expect(wrapper.get('[data-testid="evidence-source-b1-S1"]').text()).toContain(
       'conversation two source',
     )
@@ -665,6 +791,8 @@ describe('ConversationView', () => {
     const wrapper = mountView()
     await flushPromises()
 
+    await wrapper.get('[data-message-id="a1"] .msg-evidence-strip .cite-btn').trigger('click')
+    await flushPromises()
     expect(wrapper.text()).toContain('CODE')
     expect(wrapper.text()).toContain('void run()')
     expect(wrapper.get('.msg-evidence-strip').text()).toContain('2 sources')

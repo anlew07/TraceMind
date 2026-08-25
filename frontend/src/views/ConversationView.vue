@@ -67,13 +67,10 @@ const loadingList = ref(false)
 const loadingMessages = ref(false)
 const generating = ref(false)
 const pageError = ref('')
-const evidenceVisible = ref(
-  typeof window === 'undefined' ||
-    typeof window.matchMedia !== 'function' ||
-    window.matchMedia('(min-width: 681px)').matches,
-)
+const evidenceVisible = ref(false)
 const evidenceMessageId = ref<string | null>(null)
 const selectedSourceId = ref<string | null>(null)
+const expandedTraceIds = reactive(new Set<string>())
 const knowledgeDialogVisible = ref(false)
 const knowledgeSubmitting = ref(false)
 const knowledgeSourceMessage = ref<ConversationMessage | null>(null)
@@ -104,9 +101,7 @@ const evidenceSources = computed(() => evidenceMessage.value?.sources ?? [])
 const evidenceMetadata = computed(() => evidenceMessage.value?.generation_metadata ?? null)
 const selectedEvidenceSource = computed(
   () =>
-    evidenceSources.value.find(({ source_id }) => source_id === selectedSourceId.value) ??
-    evidenceSources.value[0] ??
-    null,
+    evidenceSources.value.find(({ source_id }) => source_id === selectedSourceId.value) ?? null,
 )
 
 type ConversationGroup = { label: string; items: Conversation[] }
@@ -179,25 +174,16 @@ async function scrollToLatest(force = false): Promise<void> {
   scheduleScrollToLatest(force)
 }
 
-function selectDefaultEvidenceMessage(): void {
+function resetEvidenceInspector(): void {
+  evidenceVisible.value = false
   evidenceMessageId.value = null
   selectedSourceId.value = null
-  for (let i = messages.value.length - 1; i >= 0; i--) {
-    const candidate = messages.value[i]
-    if (candidate?.role === 'assistant') {
-      evidenceMessageId.value = candidate.id
-      selectedSourceId.value = candidate.sources?.[0]?.source_id ?? null
-      return
-    }
-  }
 }
 
-async function showEvidence(messageId: string, sourceId?: string): Promise<void> {
+async function showEvidence(messageId: string, sourceId: string): Promise<void> {
   evidenceMessageId.value = messageId
-  const message = messages.value.find(({ id }) => id === messageId)
-  selectedSourceId.value = sourceId ?? message?.sources?.[0]?.source_id ?? null
+  selectedSourceId.value = sourceId
   evidenceVisible.value = true
-  if (!sourceId) return
   await nextTick()
   document
     .getElementById(`evidence-source-${messageId}-${sourceId}`)
@@ -302,7 +288,7 @@ async function loadMessages(conversationId: string): Promise<void> {
     const d = await getConversation(knowledgeBaseId, conversationId)
     if (selectedId.value === conversationId && rv === streamVersion) {
       messages.value = d.messages
-      selectDefaultEvidenceMessage()
+      resetEvidenceInspector()
       liveExecutionTrace.value = null
       followStreaming = true
       await scrollToLatest(true)
@@ -321,11 +307,9 @@ async function selectConversation(cid: string): Promise<void> {
   streamVersion += 1
   selectedId.value = cid
   messages.value = []
-  evidenceMessageId.value = null
-  selectedSourceId.value = null
+  resetEvidenceInspector()
   liveExecutionTrace.value = null
-  evidenceVisible.value =
-    typeof window.matchMedia !== 'function' || window.matchMedia('(min-width: 681px)').matches
+  expandedTraceIds.clear()
   followStreaming = true
   await loadMessages(cid)
 }
@@ -427,10 +411,6 @@ async function generate(): Promise<void> {
   let receivedDone = false
   const assistant = reactive(temporaryMessage('assistant', '', 'completed'))
   messages.value.push(temporaryMessage('user', prompt), assistant)
-  evidenceMessageId.value = assistant.id
-  selectedSourceId.value = null
-  evidenceVisible.value =
-    typeof window.matchMedia !== 'function' || window.matchMedia('(min-width: 681px)').matches
   query.value = ''
   generating.value = true
   followStreaming = true
@@ -453,9 +433,6 @@ async function generate(): Promise<void> {
           if (selectedId.value !== cid || cv !== streamVersion) return
           bindStreamIdentity(assistant, event)
           assistant.sources = event.sources
-          if (evidenceMessageId.value === assistant.id && !selectedSourceId.value) {
-            selectedSourceId.value = event.sources[0]?.source_id ?? null
-          }
         },
         onToken(event) {
           if (selectedId.value !== cid || cv !== streamVersion) return
@@ -617,7 +594,9 @@ function traceStepDetail(
     }[phase]
   }
   if (visualStatus === 'failed') return '执行失败'
-  if (visualStatus === 'fallback') return phase === 'rerank' ? '使用检索排序' : '使用原始查询'
+  if (visualStatus === 'fallback') {
+    return phase === 'rerank' ? '已降级 · 保留检索排序' : '已降级 · 使用原始查询'
+  }
   if (visualStatus === 'skipped') {
     if (phase === 'query_rewrite') return '无需改写'
     if (phase === 'rerank') return '未启用重排'
@@ -663,6 +642,35 @@ function traceSummary(message: ConversationMessage): TraceStep[] {
       },
     ]
   })
+}
+
+function isLiveTrace(message: ConversationMessage): boolean {
+  return generating.value && liveExecutionTrace.value?.message === message
+}
+
+function isTraceExpanded(message: ConversationMessage): boolean {
+  return isLiveTrace(message) || expandedTraceIds.has(message.id)
+}
+
+function traceCompactSummary(message: ConversationMessage): string {
+  const steps = traceSummary(message)
+  const marker = steps.some(({ state }) => state === 'failed') ? '!' : '✓'
+  const fallback = steps.find(({ state }) => state === 'fallback')
+  return `${marker} Execution Trace · ${steps.length} stages${fallback ? ` · ${fallback.label} fallback` : ''}`
+}
+
+function handleTraceSummaryClick(message: ConversationMessage, event: MouseEvent): void {
+  if (isLiveTrace(message)) event.preventDefault()
+}
+
+function handleTraceToggle(message: ConversationMessage, event: Event): void {
+  const details = event.currentTarget as HTMLDetailsElement
+  if (isLiveTrace(message)) {
+    if (!details.open) details.open = true
+    return
+  }
+  if (details.open) expandedTraceIds.add(message.id)
+  else expandedTraceIds.delete(message.id)
 }
 
 function traceDetails(message: ConversationMessage): TraceDetail[] {
@@ -765,13 +773,14 @@ onBeforeUnmount(() => {
       <section class="conv-thread" data-testid="conversation-thread" aria-label="会话内容">
         <header v-if="selectedConversation" class="conv-thread-header">
           <div class="conv-thread-heading">
-            <span class="conv-thread-context"
-              >RESEARCH SESSION · {{ knowledgeBaseName || '知识库' }}</span
-            >
             <h1>{{ selectedConversation.title }}</h1>
-            <time :datetime="selectedConversation.updated_at">
-              {{ new Date(selectedConversation.updated_at).toLocaleString('zh-CN') }}
-            </time>
+            <div class="conv-thread-meta">
+              <span>{{ knowledgeBaseName || '知识库' }}</span>
+              <span aria-hidden="true">·</span>
+              <time :datetime="selectedConversation.updated_at">
+                {{ new Date(selectedConversation.updated_at).toLocaleString('zh-CN') }}
+              </time>
+            </div>
           </div>
           <ElDropdown trigger="click" :hide-on-click="true">
             <button class="conv-thread-actions" aria-label="会话操作">会话操作 ···</button>
@@ -818,7 +827,7 @@ onBeforeUnmount(() => {
             >
               <header class="msg-head">
                 <span class="msg-who">{{
-                  msg.role === 'user' ? 'YOUR QUERY' : 'TRACEMIND ANSWER'
+                  msg.role === 'user' ? 'YOU' : 'TRACEMIND ANSWER'
                 }}</span>
                 <time v-if="msg.role === 'user'" :datetime="msg.created_at">
                   {{ formatMessageTime(msg.created_at) }}
@@ -887,27 +896,44 @@ onBeforeUnmount(() => {
                 这条回答没有可验证的引用，请结合原始资料核对。
               </div>
 
-              <section
+              <details
                 v-if="msg.role === 'assistant' && traceSummary(msg).length"
                 class="msg-lineage"
+                :class="{ 'is-live': isLiveTrace(msg) }"
                 aria-label="Execution Trace"
-                :role="liveExecutionTrace?.message === msg ? 'status' : undefined"
-                :aria-live="liveExecutionTrace?.message === msg ? 'polite' : undefined"
+                :open="isTraceExpanded(msg)"
+                :role="isLiveTrace(msg) ? 'status' : undefined"
+                :aria-live="isLiveTrace(msg) ? 'polite' : undefined"
+                @toggle="handleTraceToggle(msg, $event)"
               >
-                <header class="msg-lineage-head">
-                  <strong>Execution Trace</strong>
-                  <span>执行链路</span>
-                </header>
-                <ol class="msg-lineage-steps">
-                  <li v-for="step in traceSummary(msg)" :key="step.phase" :data-state="step.state">
-                    <span class="lineage-marker" aria-hidden="true"></span>
-                    <span class="lineage-copy">
-                      <strong>{{ step.label }}</strong>
-                      <small>{{ step.detail }}</small>
-                    </span>
-                  </li>
-                </ol>
-              </section>
+                <summary
+                  class="msg-lineage-head"
+                  @click="handleTraceSummaryClick(msg, $event)"
+                >
+                  <span v-if="isLiveTrace(msg)" class="lineage-live-title">
+                    <strong>Execution Trace</strong>
+                    <span>执行链路</span>
+                  </span>
+                  <strong v-else>{{ traceCompactSummary(msg) }}</strong>
+                  <span v-if="!isLiveTrace(msg)" class="lineage-toggle-label">展开</span>
+                </summary>
+                <div class="msg-lineage-body">
+                  <ol class="msg-lineage-steps">
+                    <li
+                      v-for="step in traceSummary(msg)"
+                      :key="step.phase"
+                      :class="`trace-${step.state}`"
+                      :data-state="step.state"
+                    >
+                      <span class="lineage-marker" aria-hidden="true"></span>
+                      <span class="lineage-copy">
+                        <strong>{{ step.label }}</strong>
+                        <small>{{ step.detail }}</small>
+                      </span>
+                    </li>
+                  </ol>
+                </div>
+              </details>
 
               <details v-if="msg.role === 'assistant' && doneMetadata(msg)" class="exec-details">
                 <summary>TRACE DETAIL · 执行详情</summary>
@@ -984,10 +1010,17 @@ onBeforeUnmount(() => {
         </form>
       </section>
 
+      <button
+        v-if="evidenceVisible"
+        class="evidence-backdrop"
+        type="button"
+        aria-label="关闭证据检查器"
+        @click="evidenceVisible = false"
+      ></button>
       <aside
+        v-if="evidenceVisible"
         id="evidence-inspector"
         class="conv-evidence"
-        :class="{ off: !evidenceVisible }"
         aria-label="来源检查器"
       >
         <div class="ev-head">

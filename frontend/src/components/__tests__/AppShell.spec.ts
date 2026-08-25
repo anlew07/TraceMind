@@ -19,7 +19,7 @@ describe('AppShell', () => {
     routeState.params = {}
   })
 
-  it('renders the global navigation without knowledge-base tabs', () => {
+  it('renders the compact global navigation without knowledge-base tabs', () => {
     const wrapper = mount(AppShell, { slots: { default: '<p>Page content</p>' } })
 
     expect(wrapper.text()).toContain('TraceMind')
@@ -28,22 +28,21 @@ describe('AppShell', () => {
     expect(wrapper.text()).toContain('知识库')
     expect(wrapper.text()).toContain('Page content')
     expect(wrapper.get('.brand-mark-placeholder').attributes('data-placeholder')).toBe('true')
-    expect(wrapper.find('.kb-bar').exists()).toBe(false)
+    expect(wrapper.find('.kb-tabs').exists()).toBe(false)
   })
 
-  it('renders scoped navigation and the injected knowledge-base name', () => {
+  it('renders scoped navigation and the injected knowledge-base name in one bar', () => {
     routeState.params = { knowledgeBaseId: 'kb-1' }
     const wrapper = mount(AppShell, {
       global: { provide: { shellKbName: ref('Project KB') } },
     })
 
-    expect(wrapper.findAll('.shell-context-value')[0]?.text()).toBe('Project KB')
-    expect(wrapper.findAll('.shell-context-value')[1]?.text()).toBe('Hybrid + Rerank')
+    expect(wrapper.get('.shell-context-value').text()).toBe('Project KB')
+    expect(wrapper.text()).not.toContain('Retrieval')
+    expect(wrapper.text()).not.toContain('Hybrid + Rerank')
     expect(wrapper.get('.kb-tab[data-to="/knowledge-bases/kb-1/documents"]').text()).toBe('文档')
     expect(wrapper.get('.kb-tab[data-to="/knowledge-bases/kb-1/chat"]').text()).toBe('问答')
-    expect(wrapper.get('.kb-tab[data-to="/knowledge-bases/kb-1/map"]').text()).toBe('知识图谱')
-    expect(wrapper.get('.map-link[data-to="/knowledge-bases/kb-1/map"]').text()).toContain(
-      '知识图谱',
-    )
+    expect(wrapper.get('.kb-tab[data-to="/knowledge-bases/kb-1/map"]').text()).toBe('图谱')
+    expect(wrapper.find('.kb-bar').exists()).toBe(false)
   })
 })

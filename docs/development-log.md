@@ -1128,3 +1128,25 @@ Alert、Rows 与 Retrieval Debug 统一进入同一 content grid，上传业务�
 96 passed。浏览器在 1024/1280/1440px 验证了 Conversation 与 Documents：1280/1440 保持三栏 Workbench，1024 使用
 可达的 Inspector 分区，Documents 水平轨道保持一致。检索算法、Prompt、CitationGuard、来源集合与模型调用均未改变，
 因此未重跑 retrieval quality corpus；新增 custom event 的延迟开销尚未单独量化，是后续性能观测项。
+
+# 2026-08-25 — UI Phase 1.1.2 Conversation Density & Responsive Evidence
+
+真实浏览器验收发现 Conversation 的 Source Inspector 会自动打开/选择首个来源，并在中等宽度落入 Composer 下方的
+普通 Grid 行；双层 Global Header、较高 Session Header、永久展开的 terminal Trace 和大面积 User Query 色块也压缩了
+Answer 阅读空间。本轮保持 RAG V2 SSE、Citation 解析、Save as Knowledge 与 MessageViewport 滚动模型不变，只修正展示层。
+
+Inspector 现在仅由用户点击具体 Citation 打开并选择对应来源，进入页面、切换历史会话、开始生成及 sources 到达都保持
+关闭。桌面使用按需右侧 pane，1120px 以下改为右侧 overlay，移动端为全宽 panel，不再创建底部 normal-flow 区域。Global
+Shell 合并为单层 compact app bar，并移除 Retrieval/Hybrid + Rerank 导航文案；Session Header、Knowledge action row 与
+User Query 视觉密度同步收紧。
+
+Execution Trace 继续复用现有 live/historical ViewModel：streaming 强制完整展开，terminal/no-answer 与历史记录默认折叠，
+用户可手动展开。fallback 使用独立 amber/ochre 语义和“已降级 · 保留检索排序”文案，未修改 pipeline event contract。
+未采用自动 Evidence 展开、底部 Inspector、第二套 Trace 状态模型或新的 UI/streaming framework。
+
+前端相关测试为 30 passed，全量为 105 passed；vue-tsc、ESLint 与 Vite production build 通过。真实浏览器在
+1440/1280/1024/900px 验证 Inspector 默认缺席、Citation 精确打开、关闭恢复空间、透明右对齐 Query、58px Global
+Header、64px Session Header 与历史 Trace 手动展开；1024/900px Inspector 的 computed position 为 absolute，Composer
+坐标打开前后不变。真实 RAG 流观察到 Retrieval/Rerank/Evidence/Generation 实时状态且 live Trace 始终展开，终态自动
+折叠为 5-stage summary。此次真实请求未触发 reranker fallback；fallback ViewModel/文案由组件测试覆盖，浏览器 computed
+style 验证 warning 与 error 颜色不同。

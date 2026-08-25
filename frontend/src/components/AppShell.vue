@@ -38,49 +38,36 @@ watch(kbId, () => {
           <span class="shell-context-label">Knowledge Base</span>
           <strong class="shell-context-value">{{ shellKbName || '知识库' }}</strong>
         </span>
-        <span class="shell-context-divider" aria-hidden="true"></span>
-        <span class="shell-context-group">
-          <span class="shell-context-label">Retrieval</span>
-          <strong class="shell-context-value">Hybrid + Rerank</strong>
-        </span>
       </div>
+
+      <nav v-if="kbId" class="kb-tabs" aria-label="知识库功能">
+        <RouterLink :to="`/knowledge-bases/${kbId}/chat`" class="kb-tab" active-class="active"
+          >问答</RouterLink
+        >
+        <RouterLink
+          :to="`/knowledge-bases/${kbId}/documents`"
+          class="kb-tab"
+          active-class="active"
+          >文档</RouterLink
+        >
+        <RouterLink :to="`/knowledge-bases/${kbId}/knowledge`" class="kb-tab" active-class="active"
+          >知识</RouterLink
+        >
+        <RouterLink :to="`/knowledge-bases/${kbId}/map`" class="kb-tab" active-class="active"
+          >图谱</RouterLink
+        >
+      </nav>
 
       <div class="shell-actions">
         <span class="local-first-status" role="status" aria-label="本地优先运行方式">
           <span class="status-dot" aria-hidden="true"></span>
           Local-first
         </span>
-        <RouterLink
-          v-if="kbId"
-          :to="`/knowledge-bases/${kbId}/map`"
-          class="global-nav-link map-link"
-          active-class="active"
-        >
-          <span aria-hidden="true">⌘</span>
-          知识图谱
-        </RouterLink>
         <RouterLink to="/knowledge-bases" class="global-nav-link" active-class="active"
           >知识库</RouterLink
         >
       </div>
     </header>
-
-    <div v-if="kbId" class="kb-bar">
-      <nav class="kb-tabs" aria-label="知识库功能">
-        <RouterLink :to="`/knowledge-bases/${kbId}/documents`" class="kb-tab" active-class="active"
-          >文档</RouterLink
-        >
-        <RouterLink :to="`/knowledge-bases/${kbId}/chat`" class="kb-tab" active-class="active"
-          >问答</RouterLink
-        >
-        <RouterLink :to="`/knowledge-bases/${kbId}/knowledge`" class="kb-tab" active-class="active"
-          >知识</RouterLink
-        >
-        <RouterLink :to="`/knowledge-bases/${kbId}/map`" class="kb-tab" active-class="active"
-          >知识图谱</RouterLink
-        >
-      </nav>
-    </div>
 
     <main class="app-content">
       <slot />

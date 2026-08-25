@@ -60,24 +60,19 @@ Core principle: Minimal clarity + Developer precision + Inspectable evidence
 
 ## Global Shell
 
-Two semantic layers. No global sidebar.
+One compact semantic layer. No global sidebar.
 
-### Global Bar (44px)
+### Compact App Bar (approximately 56–60px)
 ```
-TraceMind                              知识库
+TraceMind | 当前知识库 | 问答  文档  知识  图谱 | Local-first | 知识库
 ```
-- Brand wordmark on left. No decorative logo.
-- 知识库 link on right. Active state = bottom border accent.
-- `1px solid` bottom border. No shadow. No gradient.
-
-### KB Context Bar (38–40px, only when inside a KB)
-```
-当前知识库名称                         文档    问答    知识    知识图谱
-```
-- KB name from page data (existing `knowledgeBaseName` ref).
-- 文档 / 问答 / 知识 / 知识图谱 as text tabs. Active state = bottom border accent.
+- Brand, current KB context, KB navigation and local-first status share one bar.
+- KB name comes from page data (existing `knowledgeBaseName` ref).
+- 问答 / 文档 / 知识 / 图谱 are compact text tabs. Active state = bottom border accent.
+- Retrieval strategy is not global navigation; expose it only in Execution Trace, Inspector,
+  Settings or Retrieval Workspace.
 - No global KB selector dropdown at current stage.
-- No duplicated Documents/Ask controls.
+- `1px solid` bottom border. No shadow, gradient or second navigation row.
 
 **Implementation:** `AppShell.vue` with `provide/inject` for KB name.
 
@@ -164,7 +159,7 @@ Each document row shows:
 
 ## Ask / Conversation
 
-Core product page. Three-area layout at desktop (1440px).
+Core product page. Three-area workbench at desktop (1440px), with Evidence available on demand.
 
 ### Layout (approximate proportions)
 ```
@@ -180,17 +175,23 @@ Conversations (200px) | Answer (flex) | Evidence (360px)
 
 ### Answer (center)
 - **No ChatGPT-style bubbles.**
-- User messages: "You" label + left-border content area
+- User messages: right-aligned editorial block, maximum width around 65–72%, muted "You" label and
+  a thin deep-green right rule; transparent background and no card shadow
 - Assistant messages: "TraceMind" label + reading-body text
-- Inline citation pills: `[S1]` — blue accent, monospace, clickable
+- Inline citation pills: `[S1]` — brick/vermilion Evidence accent, monospace, clickable
 - **Provenance row** below each answer: "Cited from N sources"
 - **No duplicate full sources below the answer.** Evidence lives in the Inspector.
+- Execution Trace stays fully expanded while streaming, then folds to a compact summary at terminal
+  state. Historical traces are folded by default and use the same trace ViewModel.
 - Execution details: collapsed `▸` summary (L3)
 
 ### Evidence Inspector (right)
-- **Visible by default** at desktop width
-- Collapsible via `×` button; when collapsed, Answer expands
-- Clicking a citation `[S1]` re-opens the inspector
+- **Closed by default**, including initial entry, historical session switches and completed RAG answers
+- No source is selected automatically; clicking a citation `[S1]` selects that exact source and opens
+  the inspector
+- Desktop: right-side pane. Medium widths: right overlay/drawer without reflowing the composer or
+  MessageViewport. Mobile: full-width sheet/panel with an explicit close control.
+- Collapsible via `×` button; when closed, Answer immediately regains the available width
 - Two sections: **Sources** (L1) + **Execution** (L3)
 
 ### Source/Evidence Types
@@ -240,7 +241,7 @@ excerpt…
 ## Citation System
 
 - One consistent citation identity: `[S1]`, `[S2]`, `[S3]`
-- Blue-accent pill with monospace font
+- Brick/vermilion Evidence-accent pill with monospace font
 - Same color for all citations (document and code)
 - Source TYPE distinguished in Evidence Inspector via labels, not citation color
 - Clicking a citation opens/focuses the Evidence Inspector
@@ -271,12 +272,13 @@ Knowledge entries are durable engineering records saved from completed answers.
 | Text (`--color-text`) | Primary content |
 | Text secondary (`--color-text-secondary`) | Metadata, labels |
 | Text tertiary (`--color-text-tertiary`) | Captions, timestamps |
-| Accent (`--color-accent`) | Navigation active, citations, focus, links, primary buttons |
+| Accent (`--color-accent`) | Deep-green navigation active, focus, links, primary buttons |
+| Evidence (`--color-evidence`) | Brick/vermilion citations and source identity |
 | Border (`--color-border`) | Hairline separators |
 | Success/Warning/Error | Semantic states only |
 
-Blue is used ONLY for: navigation active, citations, focus, primary actions, links.
-Green = success. Not for code evidence identity.
+Deep green is used for navigation, focus, primary actions and links. Brick/vermilion is reserved for
+citations and Evidence identity. Muted green is used for success states.
 
 ### Typography
 - **System font stack** (no external CDN): `system-ui, 'PingFang SC', 'Microsoft YaHei UI', 'Segoe UI'`
