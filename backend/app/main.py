@@ -1,7 +1,7 @@
 import asyncio
 import logging
 from collections.abc import AsyncIterator
-from contextlib import asynccontextmanager, suppress
+from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -73,11 +73,8 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             app_settings.embedding_batch_size,
             app_settings.resolved_query_embedding_device,
         )
-        app.state.embedding_warmup_task = (
-            asyncio.create_task(prewarm_embedding_provider(app.state.embedding_provider))
-            if app_settings.rag_llm_enabled and app_settings.app_env.lower() != "test"
-            else None
-        )
+        if app_settings.rag_llm_enabled and app_settings.app_env.lower() != "test":
+            await prewarm_embedding_provider(app.state.embedding_provider)
         app.state.reranker_provider = (
             HttpRerankerProvider(
                 app_settings.reranker_base_url,
@@ -94,10 +91,6 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         try:
             yield
         finally:
-            if app.state.embedding_warmup_task is not None:
-                app.state.embedding_warmup_task.cancel()
-                with suppress(asyncio.CancelledError):
-                    await app.state.embedding_warmup_task
             if app.state.reranker_provider is not None:
                 try:
                     await app.state.reranker_provider.close()
