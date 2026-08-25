@@ -125,6 +125,7 @@ function mountView(options: { attachTo?: Element } = {}): VueWrapper {
     ...options,
     global: {
       stubs: {
+        RouterLink: { props: ['to'], template: '<a :data-to="to"><slot /></a>' },
         ElDropdown: { template: '<div><slot /><slot name="dropdown" /></div>' },
         ElDropdownMenu: { template: '<div><slot /></div>' },
         ElDropdownItem: {
@@ -199,6 +200,23 @@ describe('ConversationView', () => {
     expect(wrapper.get('[data-testid="evidence-source-a1-S1"]').text()).toContain(
       'first source excerpt',
     )
+    const answer = wrapper.get('[data-message-id="a1"]')
+    expect(answer.get('.msg-who').text()).toBe('TRACEMIND ANSWER')
+    expect(answer.get('.msg-evidence-strip').text()).toContain('[S1]')
+    expect(wrapper.get('.ev-head').text()).toContain('SOURCE INSPECTOR')
+  })
+
+  it('keeps the message viewport as the only scrolling region around the fixed composer', async () => {
+    const wrapper = mountView()
+    await flushPromises()
+
+    const thread = wrapper.get('[data-testid="conversation-thread"]')
+    const viewport = thread.get('[data-testid="message-viewport"]')
+    const composer = thread.get('[data-testid="conversation-composer"]')
+
+    expect(viewport.element.parentElement).toBe(thread.element)
+    expect(composer.element.parentElement).toBe(thread.element)
+    expect(viewport.element.contains(composer.element)).toBe(false)
   })
 
   it('creates a conversation from the empty state', async () => {
@@ -368,7 +386,7 @@ describe('ConversationView', () => {
     await flushPromises()
 
     expect(mockedDelete).toHaveBeenCalledWith('kb', 'c1')
-    expect(wrapper.text()).toContain('请选择或新建会话')
+    expect(wrapper.text()).toContain('开始一次可追溯的研究会话')
   })
 
   it('binds a citation to the source of its own assistant message', async () => {
@@ -391,7 +409,10 @@ describe('ConversationView', () => {
       'second source excerpt',
     )
 
-    await wrapper.get('[data-message-id="a1"] .cite-btn').trigger('click')
+    const citation = wrapper.get('[data-message-id="a1"] .cite-btn')
+    expect(citation.attributes('aria-label')).toBe('查看证据 S1')
+    expect(citation.attributes('aria-controls')).toBe('evidence-inspector')
+    await citation.trigger('click')
     await flushPromises()
 
     expect(wrapper.get('[data-testid="evidence-source-a1-S1"]').text()).toContain(
@@ -399,6 +420,90 @@ describe('ConversationView', () => {
     )
     expect(wrapper.find('[data-testid="evidence-source-a2-S1"]').exists()).toBe(false)
     expect(scrollIntoView).toHaveBeenCalledOnce()
+  })
+
+  it('shows only real direct-route lineage without retrieval or rerank steps', async () => {
+    mockedGet.mockResolvedValue(
+      detail(conv, [
+        message(
+          'direct-answer',
+          'Direct answer',
+          null,
+          'completed',
+          'c1',
+          'assistant',
+          doneEvent({
+            grounded: false,
+            route_mode: 'direct',
+            source_count: 0,
+            query_rewrite_mode: 'not_applicable',
+          }),
+        ),
+      ]),
+    )
+
+    const wrapper = mountView()
+    await flushPromises()
+
+    const answer = wrapper.get('[data-message-id="direct-answer"]')
+    const lineageLabels = answer.findAll('.lineage-copy strong').map((item) => item.text())
+    expect(answer.text()).toContain('直接回答')
+    expect(lineageLabels).not.toContain('检索')
+    expect(lineageLabels).not.toContain('重排')
+    expect(answer.text()).not.toContain('条真实来源')
+  })
+
+  it('orders answer evidence before lineage and collapsed trace detail', async () => {
+    mockedGet.mockResolvedValue(
+      detail(conv, [
+        message('a1', 'Answer [S1]', [src], 'completed', 'c1', 'assistant', doneEvent()),
+      ]),
+    )
+
+    const wrapper = mountView()
+    await flushPromises()
+
+    const answer = wrapper.get('[data-message-id="a1"]')
+    const children = Array.from(answer.element.children)
+    const evidenceIndex = children.indexOf(answer.get('.msg-evidence-strip').element)
+    const lineageIndex = children.indexOf(answer.get('.msg-lineage').element)
+    const detailIndex = children.indexOf(answer.get('.exec-details').element)
+
+    expect(evidenceIndex).toBeGreaterThan(-1)
+    expect(evidenceIndex).toBeLessThan(lineageIndex)
+    expect(lineageIndex).toBeLessThan(detailIndex)
+    expect(answer.get('.exec-details').attributes('open')).toBeUndefined()
+  })
+
+  it('renders a knowledge entry as a distinct evidence source in the inspector', async () => {
+    const knowledgeSource: RagSource = {
+      ...src,
+      source_id: 'S2',
+      source_type: 'knowledge_entry',
+      document_id: null,
+      document_version_id: null,
+      document_name: null,
+      relative_path: null,
+      knowledge_entry_id: 'knowledge-1',
+      knowledge_question: '事务为什么失败？',
+      knowledge_updated_at: '2026-08-14T00:00:00Z',
+      chunk_type: 'knowledge_entry',
+      section_title: 'Solution',
+      start_line: null,
+      end_line: null,
+      content: '把写操作放进同一个事务。',
+    }
+    mockedGet.mockResolvedValue(
+      detail(conv, [message('knowledge-answer', 'Answer [S2]', [knowledgeSource])]),
+    )
+
+    const wrapper = mountView()
+    await flushPromises()
+
+    const sourceItem = wrapper.get('[data-testid="evidence-source-knowledge-answer-S2"]')
+    expect(sourceItem.text()).toContain('KNOWLEDGE')
+    expect(sourceItem.text()).toContain('事务为什么失败？')
+    expect(sourceItem.text()).toContain('知识条目')
   })
 
   it('does not replace an explicitly selected historical source during streaming retrieval', async () => {
@@ -483,7 +588,7 @@ describe('ConversationView', () => {
 
     expect(wrapper.text()).toContain('Code')
     expect(wrapper.text()).toContain('void run()')
-    expect(wrapper.text()).toContain('引用了 2 条来源')
+    expect(wrapper.get('.msg-evidence-strip').text()).toContain('2 sources')
   })
 
   it('saves only a persisted completed assistant answer as knowledge', async () => {
