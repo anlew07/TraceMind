@@ -31,6 +31,7 @@ const currentPageLabel = computed(() => {
 
   if (activeSection.value) return labels[activeSection.value]
   if (route.name === 'retrieval') return '检索'
+  if (route.name === 'data-management') return '数据与恢复'
   return route.name === 'landing' ? '产品介绍' : 'Workspace'
 })
 

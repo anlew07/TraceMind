@@ -137,6 +137,17 @@ describe('AppShell', () => {
     expect(wrapper.get('.shell-mobile-menu').text()).not.toContain('检索')
   })
 
+  it('labels Data Management without adding it to primary navigation', () => {
+    routeState.name = 'data-management'
+    routeState.params = { knowledgeBaseId: 'kb-1' }
+    const wrapper = mountShell({ global: { provide: { shellKbName: ref('Project KB') } } })
+
+    expect(wrapper.get('.mobile-shell-context').text()).toContain('数据与恢复')
+    expect(wrapper.findAll('.kb-tab')).toHaveLength(4)
+    expect(wrapper.get('.kb-tabs').text()).not.toContain('数据与恢复')
+    expect(wrapper.get('.shell-mobile-menu').text()).not.toContain('数据与恢复')
+  })
+
   it('switches to a non-scrolling mobile shell with an ellipsized knowledge-base identity', () => {
     const tabletStart = mainCss.indexOf('@media (max-width: 820px)')
     const mobileStart = mainCss.indexOf('@media (max-width: 680px)', tabletStart)

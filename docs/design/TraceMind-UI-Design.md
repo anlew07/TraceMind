@@ -328,6 +328,59 @@ metrics or Query Rewrite.
 - Source TYPE distinguished in Evidence Inspector via labels, not citation color
 - Clicking a citation opens/focuses the Evidence Inspector
 
+---
+
+## Data Management & Recovery
+
+Data Management is a secondary local-first maintenance workspace. It protects Source of Truth and
+repairs or rebuilds derived state; it is not a dashboard, Settings page, storage analytics view or
+DevOps console.
+
+### Real data boundary
+
+- Archive Source of Truth contains Knowledge Base metadata, Documents, all Document Versions and
+  stored source files, Conversations, Messages and Knowledge Entries with their provenance
+  snapshots.
+- Restore is Workspace-level (`/knowledge-base-archives/restore`) and creates the archived Knowledge
+  Base identity. It does not belong to the currently open KB even when launched from that KB's
+  maintenance page.
+- Restored Document parse/index state and verified Knowledge retrieval index state begin pending;
+  `rebuild_status=not_started` is explicit. The UI must distinguish “Source data restored” from
+  “Ready for Retrieval”.
+- Derived state consists of parsed chunks, the latest Document retrieval indexes and verified
+  Knowledge retrieval indexes. Rebuild regenerates these from existing Source of Truth.
+
+### Page structure
+
+```text
+Data & Recovery header + current KB context        Recovery Inspector
+Backup & Restore
+Consistency Audit → selected findings → backend dry-run → Safe Repair
+Rebuild Derived State
+Source of Truth vs Derived State (collapsed)
+```
+
+- Entry lives in each Knowledge Space overflow menu; the four-item Global Shell navigation remains
+  unchanged.
+- Export and Audit are direct actions. Restore, Repair and Rebuild require one explicit confirmation.
+- Audit is visibly read-only and reports the API's `completed/partial`, severity counts, findings,
+  safe message and entity identity. It never invents a health score.
+- Audit findings do not expose repairability. The user may select findings for review, but only the
+  backend `dry_run` response may mark an item `repairable` and `planned`; execution sends only those
+  server-approved finding IDs.
+- Repair and Rebuild poll the existing status endpoints at a restrained interval only while queued
+  or running. Retry appears conservatively for failed or partially failed operations.
+- Rebuild progress uses only real count fields: Document Versions parsed, Documents indexed and
+  verified Knowledge Entries indexed. There are no fabricated stages or percentages.
+- Restore maps conflict, archive limit and invalid archive to distinct user guidance and never
+  exposes raw exceptions. A successful response offers explicit rebuild and navigation actions
+  without automatically redirecting.
+- Desktop uses an editorial maintenance plane with a narrow Recovery Inspector; below the workbench
+  threshold the Inspector becomes a normal single-column section. Findings and operation rows wrap
+  at 320px and never become a wide table.
+
+**Files:** `src/views/DataManagementView.vue`, `src/services/dataMaintenance.ts`
+
 ## Problem & Solution Knowledge
 
 Knowledge entries are durable engineering records saved from completed answers.

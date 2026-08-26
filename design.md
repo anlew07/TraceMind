@@ -88,7 +88,8 @@ Desktop application pages share this skeleton:
 
 - **Conversation / Evidence:** answer ledger in the center, source trace nearby, Evidence Inspector on the right.
 - **Retrieval Workspace:** query and real scope context above a dense ranked result ledger; Retrieval Inspector exposes scores and provenance. LLM Query Rewrite appears only if a real standalone API ever provides it.
-- **Data Management:** settings navigation, dense configuration/status sections, operational Inspector.
+- **Data Management:** editorial backup/restore, consistency and derived-state maintenance sections
+  with an operational Recovery Inspector; it is not a settings or resource dashboard.
 - **Documents / Knowledge:** editorial rows in the main plane; selected row drives Inspector content.
 - **Workspace Home:** slightly more open rhythm with flat editorial Knowledge Space tiles, one
   create action, and no invented dashboard metrics. Tiles use real name, description, and update

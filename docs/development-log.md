@@ -1255,3 +1255,21 @@ Reranked 样例真实从 Retrieval #2 提升到 Final #1，exact path 返回 `sr
 overlay、mobile full-width Inspector、Documents 入口及无横向溢出。前端全量 24 files / 149 tests、vue-tsc、ESLint 和 Vite
 production build 通过。当前运行时 rerank candidate limit 没有前端配置查询接口；若部署将其降到 5 以下，10-result 请求仍可能
 收到后端 422，UI 已保留明确恢复信息。
+
+# 2026-08-26 — UI Phase 2.6 Data Management & Recovery Workspace
+
+以本地最新 archive、restore、consistency audit/repair 与 rebuild route、schema、service 为事实来源完成数据维护能力审计。
+Archive 保存 Knowledge Base、Document/Version 与原始文件、Conversation/Message、KnowledgeEntry 与溯源快照；Restore 恢复这些
+Source of Truth，并把文档解析/索引及已验证知识索引重置为待重建，明确返回 `rebuild_status=not_started`。Audit 是只读快照，
+finding 只有 severity、安全文案、entity identity 和 details，不包含前端可自行判断的 repairability。
+
+新增 KB 内 secondary `/knowledge-bases/{id}/data-management` route，并从 Workspace Knowledge Space overflow 进入；四项主导航保持
+不变。页面提供真实 archive 下载、Workspace-level restore、只读 consistency audit、后端 dry-run Safe Repair review、异步 Repair
+状态/重试和 Derived State rebuild 状态/重试。Repair 只执行 dry-run 返回 `planned + repairable` 的 finding IDs；Rebuild 只展示
+API 的 parsed/indexed/failed counts，不伪造阶段或百分比。Restore 对 409 conflict、413 limit、422 invalid archive 和一般失败使用
+不同安全文案，成功后明确区分“Source data restored”与“Ready for Retrieval”，并由用户决定何时启动 rebuild 或打开恢复后的 KB。
+
+未采用 Resource Dashboard、健康评分、GPU/CPU/RAM/Storage 指标、Cloud/Auto Backup、全局 Settings、自动 Restore→Rebuild、前端
+repair allowlist、WebSocket/EventBus 或后端 schema 扩展。视觉继续使用锁定的 warm-paper Workbench：维护 section 以 hairline 分隔，
+amber 只表达真实维护警告，桌面 Recovery Inspector 在中窄屏收敛为单列。真实用户数据验收只允许 Export 与 read-only Audit；Restore、
+Repair 和 Rebuild 使用同构 fixture 或临时知识库，禁止故意破坏 Source of Truth。

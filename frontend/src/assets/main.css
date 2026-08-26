@@ -6656,3 +6656,762 @@ th {
     width: 100%;
   }
 }
+
+/* Phase 2.6 · Data Management & Recovery — editorial local-first maintenance workspace. */
+.data-management-page {
+  min-height: calc(100svh - var(--header-height));
+  background: var(--color-bg);
+  color: var(--color-text);
+}
+
+.data-management-page-state {
+  display: grid;
+  min-height: calc(100svh - var(--header-height));
+  place-content: center;
+  justify-items: center;
+  gap: var(--space-lg);
+  padding: var(--space-xl);
+  color: var(--color-text-secondary);
+  text-align: center;
+}
+
+.data-management-page-state p {
+  max-width: 54ch;
+  margin: 0;
+}
+
+.data-management-page-state.is-error {
+  color: var(--color-error);
+}
+
+.data-management-layout {
+  display: grid;
+  min-height: inherit;
+  grid-template-columns: minmax(0, 1fr) minmax(18rem, 22rem);
+}
+
+.data-management-main {
+  min-width: 0;
+  padding: clamp(var(--space-xl), 3vw, var(--space-2xl));
+}
+
+.data-management-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--space-2xl);
+  padding-bottom: var(--space-2xl);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.data-management-back {
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
+  color: var(--color-accent);
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.data-management-header h1 {
+  margin: var(--space-sm) 0 var(--space-md);
+  overflow-wrap: anywhere;
+  font-family: var(--font-serif);
+  font-size: clamp(var(--font-size-xl), 2.4vw, var(--font-size-2xl));
+  font-style: normal;
+  line-height: 1.15;
+}
+
+.data-management-header p {
+  max-width: 62ch;
+  margin: 0;
+  color: var(--color-text-secondary);
+  line-height: 1.65;
+}
+
+.data-management-context {
+  display: grid;
+  min-width: min(17rem, 34%);
+  justify-items: end;
+  gap: var(--space-xs);
+  text-align: right;
+}
+
+.data-management-context span,
+.maintenance-scope-label,
+.inspector-eyebrow {
+  color: var(--color-text-tertiary);
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+}
+
+.data-management-context strong {
+  max-width: 24rem;
+  overflow: hidden;
+  font-family: var(--font-serif);
+  font-size: var(--font-size-md);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.maintenance-section {
+  padding-block: var(--space-2xl);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.maintenance-section-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-xl);
+  margin-bottom: var(--space-xl);
+}
+
+.maintenance-section-heading.with-action {
+  align-items: center;
+}
+
+.maintenance-section-heading h2,
+.data-boundary-grid h2 {
+  margin: 0 0 var(--space-sm);
+  font-family: var(--font-serif);
+  font-size: var(--font-size-lg);
+  font-style: normal;
+  line-height: 1.3;
+}
+
+.maintenance-section-heading p,
+.maintenance-task-copy p,
+.repair-plan-heading p {
+  max-width: 68ch;
+  margin: 0;
+  color: var(--color-text-secondary);
+  line-height: 1.6;
+}
+
+.maintenance-section-heading .el-button,
+.maintenance-task > .el-button,
+.maintenance-actions .el-button,
+.repair-review-actions .el-button,
+.operation-heading .el-button {
+  min-height: 44px;
+  flex: 0 0 auto;
+  white-space: nowrap;
+}
+
+.data-management-page .el-button--primary {
+  --el-button-bg-color: var(--color-accent);
+  --el-button-border-color: var(--color-accent);
+  --el-button-text-color: var(--color-accent-ink);
+  --el-button-hover-bg-color: var(--color-accent-hover);
+  --el-button-hover-border-color: var(--color-accent-hover);
+  --el-button-hover-text-color: var(--color-accent-ink);
+  --el-button-active-bg-color: var(--color-accent-hover);
+  --el-button-active-border-color: var(--color-accent-hover);
+  --el-button-active-text-color: var(--color-accent-ink);
+  --el-button-disabled-bg-color: var(--color-border);
+  --el-button-disabled-border-color: var(--color-border);
+  --el-button-disabled-text-color: var(--color-text-tertiary);
+}
+
+.archive-workflows {
+  display: grid;
+  grid-template-columns: minmax(0, 0.82fr) minmax(0, 1.18fr);
+  border-block: 1px solid var(--color-border-light);
+}
+
+.maintenance-task {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-lg);
+  padding: var(--space-xl) var(--space-xl) var(--space-xl) 0;
+}
+
+.maintenance-task + .maintenance-task {
+  padding-inline: var(--space-xl) 0;
+  border-inline-start: 1px solid var(--color-border-light);
+}
+
+.maintenance-task-copy {
+  display: grid;
+  min-width: 0;
+  gap: var(--space-sm);
+}
+
+.maintenance-task-copy h3,
+.repair-plan-heading h3 {
+  margin: 0;
+  overflow-wrap: anywhere;
+  font-size: var(--font-size-md);
+  line-height: 1.35;
+}
+
+.maintenance-facts {
+  display: grid;
+  width: 100%;
+  gap: var(--space-sm);
+  margin: 0;
+}
+
+.maintenance-facts > div {
+  display: grid;
+  min-width: 0;
+  grid-template-columns: minmax(8rem, 0.55fr) minmax(0, 1fr);
+  gap: var(--space-md);
+  align-items: baseline;
+}
+
+.maintenance-facts dt {
+  color: var(--color-text-tertiary);
+  font-size: var(--font-size-xs);
+}
+
+.maintenance-facts dd {
+  min-width: 0;
+  margin: 0;
+  overflow-wrap: anywhere;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-sm);
+  font-variant-numeric: tabular-nums;
+}
+
+.maintenance-facts.compact > div {
+  grid-template-columns: minmax(6rem, 0.45fr) minmax(0, 1fr);
+}
+
+.technical-value,
+.finding-identity code,
+.repair-item-row code {
+  font-family: var(--font-mono);
+}
+
+.archive-file-picker {
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
+  justify-content: center;
+  padding-inline: var(--space-lg);
+  border: 1px dashed var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  color: var(--color-accent);
+  cursor: pointer;
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  outline: 2px solid transparent;
+  outline-offset: 2px;
+  white-space: nowrap;
+}
+
+.archive-file-picker.has-file {
+  border-style: solid;
+  background: var(--color-accent-soft);
+}
+
+.archive-file-picker:focus-within {
+  outline-color: var(--color-focus);
+}
+
+.archive-file-picker input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.restore-outcome,
+.repair-plan,
+.operation-panel,
+.rebuild-status-panel {
+  display: grid;
+  width: 100%;
+  gap: var(--space-lg);
+  padding: var(--space-lg);
+  border-inline-start: 2px solid var(--color-warning);
+  background: var(--color-warning-soft);
+}
+
+.restore-outcome p,
+.operation-safe-error {
+  margin: 0;
+  color: var(--color-text-secondary);
+  line-height: 1.55;
+}
+
+.maintenance-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-md);
+}
+
+.maintenance-text-link {
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
+  color: var(--color-accent);
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+  white-space: nowrap;
+}
+
+.maintenance-status {
+  display: inline-flex;
+  min-width: 0;
+  align-items: center;
+  gap: var(--space-sm);
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-xs);
+  line-height: 1.4;
+}
+
+.maintenance-status-dot {
+  width: 7px;
+  height: 7px;
+  flex: 0 0 auto;
+  border-radius: 50%;
+  background: var(--color-text-tertiary);
+}
+
+.maintenance-status.is-success .maintenance-status-dot,
+.operation-summary.is-success::before {
+  background: var(--color-success);
+}
+
+.maintenance-status.is-warning .maintenance-status-dot,
+.maintenance-status.is-active .maintenance-status-dot,
+.operation-summary.is-active::before {
+  background: var(--color-warning);
+}
+
+.maintenance-status.is-error .maintenance-status-dot,
+.operation-summary.is-error::before {
+  background: var(--color-error);
+}
+
+.operation-summary {
+  display: grid;
+  grid-template-columns: 7px minmax(0, 1fr);
+  gap: var(--space-xs) var(--space-sm);
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-xs);
+}
+
+.operation-summary::before {
+  width: 7px;
+  height: 7px;
+  margin-top: 0.35em;
+  border-radius: 50%;
+  background: var(--color-text-tertiary);
+  content: '';
+}
+
+.operation-summary strong,
+.operation-summary span {
+  grid-column: 2;
+}
+
+.read-only-note {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs);
+  margin-top: var(--space-md);
+  color: var(--color-success);
+  font-size: var(--font-size-xs);
+  font-weight: 700;
+}
+
+.audit-report {
+  display: grid;
+  gap: var(--space-xl);
+}
+
+.audit-summary,
+.operation-heading,
+.repair-plan-heading,
+.repair-review-actions {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-lg);
+}
+
+.audit-summary > span,
+.audit-summary time,
+.operation-heading time,
+.repair-review-actions > span {
+  color: var(--color-text-tertiary);
+  font-size: var(--font-size-xs);
+  font-variant-numeric: tabular-nums;
+}
+
+.maintenance-empty-result {
+  margin: 0;
+  padding: var(--space-xl) 0;
+  border-block: 1px solid var(--color-border-light);
+  color: var(--color-text-secondary);
+  line-height: 1.6;
+}
+
+.finding-ledger,
+.repair-item-ledger,
+.rebuild-ledger {
+  border-top: 1px solid var(--color-border-light);
+}
+
+.finding-row {
+  display: grid;
+  min-width: 0;
+  grid-template-columns: 44px minmax(0, 1fr);
+  border-bottom: 1px solid var(--color-border-light);
+}
+
+.finding-select {
+  display: grid;
+  width: 44px;
+  min-height: 44px;
+  place-items: start center;
+  padding-top: var(--space-lg);
+  cursor: pointer;
+}
+
+.finding-select input {
+  width: 17px;
+  height: 17px;
+  accent-color: var(--color-accent);
+}
+
+.finding-select input:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
+.finding-select input:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 2px;
+}
+
+.finding-copy {
+  display: grid;
+  min-width: 0;
+  gap: var(--space-md);
+  padding: var(--space-lg) 0;
+}
+
+.finding-heading {
+  display: flex;
+  min-width: 0;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-lg);
+}
+
+.finding-heading strong {
+  overflow-wrap: anywhere;
+  line-height: 1.5;
+}
+
+.finding-heading > span {
+  flex: 0 0 auto;
+  font-size: var(--font-size-xs);
+  font-weight: 700;
+}
+
+.severity-info {
+  color: var(--color-text-tertiary);
+}
+
+.severity-warning {
+  color: var(--color-warning);
+}
+
+.severity-error,
+.severity-critical,
+.rebuild-failed {
+  color: var(--color-error);
+}
+
+.finding-identity {
+  display: flex;
+  min-width: 0;
+  flex-wrap: wrap;
+  gap: var(--space-sm) var(--space-md);
+  color: var(--color-text-tertiary);
+  font-size: var(--font-size-xs);
+}
+
+.finding-identity code {
+  max-width: 100%;
+  overflow-wrap: anywhere;
+  color: var(--color-text-secondary);
+}
+
+.maintenance-detail {
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-xs);
+}
+
+.maintenance-detail summary,
+.data-boundary-explanation summary {
+  min-height: 44px;
+  cursor: pointer;
+  color: var(--color-accent);
+  font-weight: 600;
+  line-height: 44px;
+}
+
+.maintenance-detail .maintenance-facts {
+  padding: var(--space-md) 0 var(--space-sm);
+}
+
+.repair-review-actions {
+  padding-top: var(--space-lg);
+}
+
+.repair-plan,
+.operation-panel {
+  border-inline-start-color: var(--color-warning);
+}
+
+.repair-plan-heading {
+  align-items: flex-start;
+}
+
+.repair-item-row,
+.rebuild-row {
+  display: grid;
+  min-width: 0;
+  gap: var(--space-md);
+  padding-block: var(--space-md);
+  border-bottom: 1px solid var(--color-border-light);
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-xs);
+}
+
+.repair-item-row {
+  grid-template-columns: minmax(6.5rem, 0.4fr) minmax(8rem, 0.6fr) minmax(0, 1fr);
+}
+
+.repair-item-row code,
+.repair-item-row span {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.rebuild-status-panel {
+  border-inline-start-color: var(--color-accent);
+  background: var(--color-accent-soft);
+}
+
+.rebuild-row {
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  align-items: baseline;
+}
+
+.rebuild-row strong {
+  color: var(--color-text);
+  font-variant-numeric: tabular-nums;
+}
+
+.data-boundary-explanation {
+  padding-block: var(--space-xl);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.data-boundary-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-2xl);
+  padding-block: var(--space-lg);
+}
+
+.data-boundary-grid section {
+  min-width: 0;
+}
+
+.data-boundary-grid ul,
+.data-management-inspector ol {
+  display: grid;
+  gap: var(--space-sm);
+  margin: 0;
+  padding-inline-start: 1.2rem;
+  color: var(--color-text-secondary);
+  line-height: 1.55;
+}
+
+.data-management-inspector {
+  position: sticky;
+  top: var(--header-height);
+  align-self: start;
+  min-width: 0;
+  min-height: calc(100svh - var(--header-height));
+  padding: var(--space-2xl) var(--space-xl);
+  border-inline-start: 1px solid var(--color-border);
+  background: var(--color-surface);
+}
+
+.data-management-inspector h2 {
+  margin: var(--space-md) 0 var(--space-2xl);
+  overflow-wrap: anywhere;
+  font-family: var(--font-serif);
+  font-size: var(--font-size-lg);
+  font-style: normal;
+}
+
+.inspector-section {
+  display: grid;
+  gap: var(--space-sm);
+  padding-block: var(--space-lg);
+  border-top: 1px solid var(--color-border-light);
+}
+
+.inspector-section > span {
+  color: var(--color-text-tertiary);
+  font-size: var(--font-size-xs);
+  font-weight: 700;
+}
+
+.inspector-section strong,
+.inspector-section p,
+.inspector-note {
+  margin: 0;
+  overflow-wrap: anywhere;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-sm);
+  line-height: 1.6;
+}
+
+.inspector-note {
+  margin-top: var(--space-xl);
+  padding: var(--space-lg);
+  border-inline-start: 2px solid var(--color-warning);
+  background: var(--color-warning-soft);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .archive-file-picker:hover {
+    border-color: var(--color-accent);
+    background: var(--color-accent-soft);
+  }
+
+  .data-management-back:hover,
+  .maintenance-text-link:hover {
+    color: var(--color-accent-hover);
+  }
+}
+
+@media (max-width: 70rem) {
+  .data-management-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .data-management-inspector {
+    position: static;
+    min-height: 0;
+    margin-inline: var(--space-xl);
+    padding: var(--space-xl) 0 var(--space-2xl);
+    border-block-start: 1px solid var(--color-border);
+    border-inline-start: 0;
+    background: transparent;
+  }
+
+  .data-management-inspector h2 {
+    margin-bottom: var(--space-lg);
+  }
+}
+
+@media (max-width: 48rem) {
+  .data-management-main {
+    padding: var(--space-lg);
+  }
+
+  .data-management-header,
+  .maintenance-section-heading,
+  .maintenance-section-heading.with-action,
+  .audit-summary,
+  .operation-heading,
+  .repair-plan-heading,
+  .repair-review-actions {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .data-management-context {
+    min-width: 0;
+    justify-items: start;
+    text-align: left;
+  }
+
+  .data-management-context strong {
+    max-width: min(100%, 30rem);
+  }
+
+  .maintenance-section-heading .el-button,
+  .repair-review-actions .el-button {
+    width: 100%;
+  }
+
+  .archive-workflows,
+  .data-boundary-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .maintenance-task,
+  .maintenance-task + .maintenance-task {
+    padding: var(--space-xl) 0;
+    border-inline-start: 0;
+  }
+
+  .maintenance-task + .maintenance-task {
+    border-block-start: 1px solid var(--color-border-light);
+  }
+
+  .repair-item-row {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-sm);
+  }
+
+  .data-management-inspector {
+    margin-inline: var(--space-lg);
+  }
+}
+
+@media (max-width: 25.875rem) {
+  .maintenance-facts > div,
+  .maintenance-facts.compact > div,
+  .rebuild-row {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-xs);
+  }
+
+  .maintenance-actions {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .maintenance-actions .el-button,
+  .maintenance-text-link,
+  .archive-file-picker {
+    width: 100%;
+  }
+
+  .maintenance-text-link {
+    justify-content: center;
+  }
+
+  .finding-heading {
+    flex-direction: column;
+    gap: var(--space-sm);
+  }
+}

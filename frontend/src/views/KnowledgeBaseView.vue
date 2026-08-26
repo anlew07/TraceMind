@@ -56,7 +56,14 @@ function openEditDialog(knowledgeBase: KnowledgeBase): void {
   dialogVisible.value = true
 }
 
-async function handleSaved(knowledgeBase: KnowledgeBase, mode: 'created' | 'updated'): Promise<void> {
+function openDataManagement(knowledgeBase: KnowledgeBase): void {
+  void router.push(`/knowledge-bases/${knowledgeBase.id}/data-management`)
+}
+
+async function handleSaved(
+  knowledgeBase: KnowledgeBase,
+  mode: 'created' | 'updated',
+): Promise<void> {
   if (mode === 'created') {
     await router.push(`/knowledge-bases/${knowledgeBase.id}/chat`)
     return
@@ -164,6 +171,12 @@ onMounted(loadKnowledgeBases)
                 <template #dropdown>
                   <ElDropdownMenu>
                     <ElDropdownItem @click="openEditDialog(kb)">编辑</ElDropdownItem>
+                    <ElDropdownItem
+                      :data-testid="`data-management-${kb.id}`"
+                      @click="openDataManagement(kb)"
+                    >
+                      数据与恢复
+                    </ElDropdownItem>
                     <ElDropdownItem
                       :data-testid="`delete-${kb.id}`"
                       divided

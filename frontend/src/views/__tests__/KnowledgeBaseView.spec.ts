@@ -116,7 +116,18 @@ describe('KnowledgeBaseView', () => {
     const editBtn = wrapper.findAll('.el-dropdown-item').find((b) => b.text() === '编辑')
     const delBtn = wrapper.get('[data-testid="delete-8eaa2608"]')
     expect(editBtn).toBeTruthy()
+    expect(wrapper.get('[data-testid="data-management-8eaa2608"]').text()).toBe('数据与恢复')
     expect(delBtn.text()).toBe('删除')
+  })
+
+  it('opens Data Management from the knowledge-space overflow menu', async () => {
+    mockedList.mockResolvedValue(resp([kb]))
+    const wrapper = mountView()
+    await flushPromises()
+
+    await wrapper.get('[data-testid="data-management-8eaa2608"]').trigger('click')
+
+    expect(routerPush).toHaveBeenCalledWith('/knowledge-bases/8eaa2608/data-management')
   })
 
   it('invokes delete flow on dropdown item click', async () => {
@@ -136,9 +147,7 @@ describe('KnowledgeBaseView', () => {
     const wrapper = mountView()
     await flushPromises()
 
-    await wrapper
-      .getComponent({ name: 'KnowledgeBaseFormDialog' })
-      .vm.$emit('saved', kb, 'created')
+    await wrapper.getComponent({ name: 'KnowledgeBaseFormDialog' }).vm.$emit('saved', kb, 'created')
     await flushPromises()
 
     expect(routerPush).toHaveBeenCalledWith('/knowledge-bases/8eaa2608/chat')

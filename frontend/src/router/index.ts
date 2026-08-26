@@ -23,6 +23,11 @@ export default createRouter({
       component: () => import('@/views/RetrievalView.vue'),
     },
     {
+      path: '/knowledge-bases/:knowledgeBaseId/data-management',
+      name: 'data-management',
+      component: () => import('@/views/DataManagementView.vue'),
+    },
+    {
       path: '/knowledge-bases/:knowledgeBaseId/chat',
       name: 'conversation',
       component: ConversationView,
