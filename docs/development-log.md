@@ -1217,3 +1217,19 @@ ellipsis。Workspace Home 与 Landing 不渲染 KB 菜单，Inspector/Drawer z-i
 58px，768px 保持完整桌面导航，414/375/320px 使用 44px 高菜单触控区。长 KB 名称的 scrollWidth 大于 clientWidth 且被
 ellipsis；ESC 与选择导航均关闭菜单。Conversation 和 Documents Inspector 打开时，菜单 z-index 32 高于 Inspector 31 与
 backdrop 30，未产生第二个 backdrop。当前实现仍使用临时品牌字母标记，正式 Compass 资产继续作为既有后续事项。
+
+# 2026-08-25 — UI Phase 2.4 Knowledge Map
+
+以当前 `KnowledgeMapResponse` 和后端确定性派生逻辑为事实来源完成能力审计：节点只有 Knowledge Base、KnowledgeEntry、
+Document、Tag，关系只有 contains、cites、tagged、related；接口一次返回当前知识库完整图，没有分页、搜索、服务端过滤或
+权重。`related` 只由共享标签和仍存活的引用文档生成，原因通过 `shared_tags/shared_document_ids` 返回，前端不重新推导。
+
+保留 Cytoscape.js、原生 pan/zoom/fit 与既有 `cose` layout；Graph Canvas 成为主工作面，节点/关系筛选同时作为紧凑图例。
+默认不选择节点且 Inspector 关闭；选择后只强调真实邻域、降低无关元素权重，并按节点类型展示 API 已有字段。Knowledge 与
+Document 继续进入既有详情/聚焦资料路由。宽屏使用按需右 pane，中屏使用 overlay，移动端使用全宽 panel，层级低于全局
+Mobile Menu。修正旧实现仅按 KnowledgeEntry 数量判断空态的问题：Document 本身是有效图内容，只有 KB root 时才展示通往
+问答和资料的真实引导。
+
+未采用 GraphRAG、图数据库、图编辑、AI 关系生成、聚类、中心性、虚构统计、搜索或新的 graph abstraction；后端 schema、
+API 和数据派生逻辑均未修改。以当前真实小图及 100-node 同形 fixture 覆盖初始化、过滤、选择和 Inspector，完整门禁与浏览器
+多宽度验收结果记录在本阶段交付报告。

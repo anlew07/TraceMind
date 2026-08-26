@@ -380,15 +380,29 @@ For every new frontend feature:
 
 ## Knowledge Map
 
-- The graph and selected-item inspector are both L1. The inspector moves below the graph on narrow
-  screens and is never hidden by default.
-- Node color communicates type: Knowledge Base, KnowledgeEntry, Document and derived Tag. Related
-  edges are dashed and expose their shared tag/document reasons in the inspector.
-- Cytoscape core owns zoom, pan, drag, selection and the built-in layout. TraceMind owns the data
-  contract, filters, navigation and visual tokens; no wrapper or graph-layout plugin is used.
-- Filters operate locally and hide edges whose endpoint is hidden. KnowledgeEntry and Document
-  nodes provide direct navigation back to their existing detail/list locations.
-- The map is a visualization of current knowledge assets, not a retrieval surface or GraphRAG UI.
+- The graph is the dominant L1 workspace. The selected-item Inspector is also L1 but remains closed
+  until the user explicitly selects a node or edge; no item is selected automatically.
+- The only node types are the current API's Knowledge Base, KnowledgeEntry, Document and derived
+  Tag. Their restrained paper/green/vermilion/neutral treatment communicates type without turning
+  the canvas into a saturated bubble graph.
+- The only edge types are `contains`, `cites`, `tagged` and `related`. Direction follows the API's
+  `source → target`; related edges are dashed, and their shared tag/live-document reasons come only
+  from API metadata. There is no weight or inferred frontend score.
+- Selecting an item strengthens its real neighborhood and dims unrelated elements. Relationship
+  labels remain hidden by default and appear only in the selected context to protect canvas density.
+- Cytoscape core owns zoom, pan, drag, selection and the existing `cose` layout. TraceMind owns the
+  data contract, local node/edge filters, navigation and visual tokens; no wrapper, layout plugin or
+  coordinate algorithm is introduced.
+- KnowledgeEntry and Document nodes navigate to their existing detail/focused-list routes. The
+  Inspector renders only current API metadata; it never exposes graph IDs, payloads, embeddings or
+  internal state.
+- Wide desktop uses an optional right pane, medium widths use the shared overlay pattern, and mobile
+  uses a full-width panel below the Global Shell z-index. Closing it restores the full canvas.
+- A graph with only its Knowledge Base root is an empty relationship graph: show real Conversation
+  and Documents routes instead of initializing a fake canvas. Documents alone are valid graph
+  content and must never be hidden by a KnowledgeEntry-only empty check.
+- The map is a deterministic visualization of current knowledge assets, not a retrieval surface,
+  editable graph, GraphRAG UI, graph database console or AI relationship generator.
 
 ## Review Checklist
 
