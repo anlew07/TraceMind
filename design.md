@@ -87,7 +87,7 @@ Desktop application pages share this skeleton:
 ### 4.2 Page variants
 
 - **Conversation / Evidence:** answer ledger in the center, source trace nearby, Evidence Inspector on the right.
-- **Retrieval Workspace:** query/rewrite trace above a dense ranked result region; Retrieval Inspector exposes scores and provenance.
+- **Retrieval Workspace:** query and real scope context above a dense ranked result ledger; Retrieval Inspector exposes scores and provenance. LLM Query Rewrite appears only if a real standalone API ever provides it.
 - **Data Management:** settings navigation, dense configuration/status sections, operational Inspector.
 - **Documents / Knowledge:** editorial rows in the main plane; selected row drives Inspector content.
 - **Workspace Home:** slightly more open rhythm with flat editorial Knowledge Space tiles, one

@@ -174,9 +174,9 @@ Each document row shows:
 - Preserves the existing file picker, upload progress and cancellation behavior
 
 ### Retrieval Tools
-- "▸ Advanced · Retrieval debug" toggle at page bottom
-- Expands `SemanticSearchPanel` (Dense/Hybrid/Reranker)
-- Collapsed by default
+- Compact "Advanced · Retrieval Workspace" region at page bottom
+- Opens the dedicated `/knowledge-bases/{id}/retrieval` workspace
+- Does not retain a second embedded search implementation
 
 **Anti-patterns to avoid:**
 - CRUD tables
@@ -270,6 +270,53 @@ excerpt…
 - "GROUNDED" claims
 
 **File:** `src/views/ConversationView.vue`
+
+---
+
+## Retrieval Workspace
+
+Retrieval Workspace is a developer-facing retrieval laboratory, not a second Conversation and not
+a benchmark dashboard. It stops at Retrieval / Rerank / Evidence candidates and never creates an
+Answer, Conversation or Knowledge entry.
+
+### Real capability boundary
+
+- `Semantic`: dense retrieval against the current Qdrant cosine vector configuration
+- `Hybrid`: Dense + Qdrant BM25 combined by Qdrant RRF; the returned score is an RRF ranking score
+- `Reranked`: Hybrid candidates followed by the local Cross-Encoder; `rerank_score` is a raw logit,
+  not a probability
+- One user-selected mode runs per request; the initial mode is Hybrid
+- Scope is either the entire current Knowledge Base or one real `document_id`
+- Explicit file paths may produce `path_scope_mode=exact`, `scoped_relative_path` and a path-stripped
+  `semantic_query`
+- `semantic_query` is not LLM Query Rewrite and only appears when exact path scope actually occurs
+- Limit stays compact at 5 or 10 so the default configured rerank candidate limit is respected
+- Language remains an optional Advanced hint, not a prominent invented language system
+
+### Page structure
+
+```text
+Workspace header + KB context
+Query composer: Query · Mode · Scope · Limit · Run
+Optional real path-scope notice
+Retrieval Result Ledger               Result Inspector (closed by default)
+```
+
+Each result leads with final rank, document identity and readable chunk excerpt. Location and path
+are L2. Ranking mode and raw scores are L3 but remain visible enough for comparison. Reranked rows
+use API-provided `retrieval_rank` to state `Retrieved #N → Reranked #M`; the frontend never
+reconstructs the original rank.
+
+The Result Inspector follows the shared selection pattern and exposes only returned identity,
+location, full chunk content and ranking fields. It never exposes vectors, Qdrant point IDs,
+content hashes, index generations, prompts, Graph state or raw exceptions. Desktop uses a side pane;
+tablet uses an overlay; mobile uses a full-width sheet.
+
+The workspace is entered from Documents Advanced and is deliberately absent from the four-item
+Global Header navigation. It does not execute LangGraph, Generation, three-way Compare, evaluation
+metrics or Query Rewrite.
+
+**Files:** `src/views/RetrievalView.vue`, `src/components/SemanticSearchPanel.vue`
 
 ---
 

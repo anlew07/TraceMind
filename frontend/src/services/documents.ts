@@ -128,10 +128,17 @@ export function semanticSearch(
   query: string,
   language: string | null,
   limit = 5,
+  documentId: string | null = null,
 ): Promise<SemanticSearchResponse> {
+  const body = {
+    query,
+    language: language || null,
+    limit,
+    ...(documentId ? { document_id: documentId } : {}),
+  }
   return apiRequest(`/api/v1/knowledge-bases/${knowledgeBaseId}/search/semantic`, {
     method: 'POST',
-    body: JSON.stringify({ query, language: language || null, limit }),
+    body: JSON.stringify(body),
   })
 }
 
@@ -140,10 +147,17 @@ export function hybridSearch(
   query: string,
   language: string | null,
   limit = 5,
+  documentId: string | null = null,
 ): Promise<SemanticSearchResponse> {
+  const body = {
+    query,
+    language: language || null,
+    limit,
+    ...(documentId ? { document_id: documentId } : {}),
+  }
   return apiRequest(`/api/v1/knowledge-bases/${knowledgeBaseId}/search/hybrid`, {
     method: 'POST',
-    body: JSON.stringify({ query, language: language || null, limit }),
+    body: JSON.stringify(body),
   })
 }
 
@@ -152,10 +166,17 @@ export function rerankedSearch(
   query: string,
   language: string | null,
   limit = 5,
+  documentId: string | null = null,
 ): Promise<SemanticSearchResponse> {
+  const body = {
+    query,
+    language: language || null,
+    limit,
+    ...(documentId ? { document_id: documentId } : {}),
+  }
   return apiRequest(`/api/v1/knowledge-bases/${knowledgeBaseId}/search/reranked`, {
     method: 'POST',
-    body: JSON.stringify({ query, language: language || null, limit }),
+    body: JSON.stringify(body),
   })
 }
 

@@ -104,8 +104,9 @@ function mountView() {
           props: ['modelValue'],
           template: '<div v-if="modelValue" data-testid="chunk-dialog" />',
         },
-        SemanticSearchPanel: {
-          template: '<div data-testid="retrieval-debug-panel" />',
+        RouterLink: {
+          props: ['to'],
+          template: '<a data-testid="retrieval-workspace-link"><slot /></a>',
         },
         ElDropdown: {
           props: ['trigger'],
@@ -158,7 +159,7 @@ describe('DocumentView', () => {
     expect(wrapper.text()).toContain('2.0 KB')
     expect(wrapper.text()).toContain('Ready')
     expect(wrapper.text()).toContain('2 Chunks')
-    expect(wrapper.text()).toContain('Advanced · 检索调试')
+    expect(wrapper.text()).toContain('Advanced · Retrieval Workspace')
     expect(wrapper.text()).toContain('1 份资料')
   })
 
@@ -286,16 +287,22 @@ describe('DocumentView', () => {
     ['processing', '索引中'],
     ['succeeded', 'Ready'],
     ['failed', '索引失败'],
-  ] as const)('maps the %s index state to a truthful product status', async (indexStatus, label) => {
-    mockedList.mockResolvedValue(
-      response([
-        { ...document, latest_version: { ...document.latest_version, index_status: indexStatus } },
-      ]),
-    )
-    const wrapper = mountView()
-    await flushPromises()
-    expect(wrapper.text()).toContain(label)
-  })
+  ] as const)(
+    'maps the %s index state to a truthful product status',
+    async (indexStatus, label) => {
+      mockedList.mockResolvedValue(
+        response([
+          {
+            ...document,
+            latest_version: { ...document.latest_version, index_status: indexStatus },
+          },
+        ]),
+      )
+      const wrapper = mountView()
+      await flushPromises()
+      expect(wrapper.text()).toContain(label)
+    },
+  )
 
   it('keeps the inspector closed until a row is selected and exposes only real metadata', async () => {
     mockedList.mockResolvedValue(response([document]))
@@ -357,15 +364,13 @@ describe('DocumentView', () => {
     expect(mockedParse).toHaveBeenCalledWith('kb-id', 'document-id', 'version-id', false)
   })
 
-  it('keeps retrieval debug collapsed until explicitly requested', async () => {
+  it('replaces the embedded retrieval debug with one dedicated workspace entry', async () => {
     mockedList.mockResolvedValue(response([document]))
     const wrapper = mountView()
     await flushPromises()
 
     expect(wrapper.find('[data-testid="retrieval-debug-panel"]').exists()).toBe(false)
-    const toggle = wrapper.findAll('button').find((button) => button.text().includes('检索调试'))
-    await toggle?.trigger('click')
-    expect(wrapper.find('[data-testid="retrieval-debug-panel"]').exists()).toBe(true)
+    expect(wrapper.get('.document-retrieval-link').text()).toContain('打开 Retrieval Workspace')
   })
 
   it('starts polling for pending documents and stops after a terminal state', async () => {

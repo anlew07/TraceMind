@@ -1233,3 +1233,25 @@ Mobile Menu。修正旧实现仅按 KnowledgeEntry 数量判断空态的问题�
 未采用 GraphRAG、图数据库、图编辑、AI 关系生成、聚类、中心性、虚构统计、搜索或新的 graph abstraction；后端 schema、
 API 和数据派生逻辑均未修改。以当前真实小图及 100-node 同形 fixture 覆盖初始化、过滤、选择和 Inspector，完整门禁与浏览器
 多宽度验收结果记录在本阶段交付报告。
+
+# 2026-08-26 — UI Phase 2.5 Retrieval Workspace
+
+以本地最新源码审计 standalone retrieval：Semantic 走 Qdrant dense cosine 检索；Hybrid 走 Dense + Qdrant BM25 + RRF；
+Reranked 在 Hybrid candidates 上执行本地 Cross-Encoder。三个 endpoint 共用真实 `document_id` / language / limit 与显式
+path scope，返回 document/chunk identity、location、`ranking_mode`、`retrieval_score`、`rerank_score` 和 API 提供的
+`retrieval_rank`。Standalone API 不执行 LangGraph LLM Query Rewrite；`semantic_query` 只表示显式路径被移除后的语义查询。
+
+新增 KB 内独立 `/knowledge-bases/{id}/retrieval` route，但不加入四项 Global Header 导航。Documents 的 Advanced 区域从
+内嵌完整 Debug UI 收口为唯一 Workspace 入口；既有 `SemanticSearchPanel` 被重构为该 Workspace 的唯一检索主体，没有形成两套
+search state 或 renderer。默认 Hybrid，一次只调用一个用户选择的模式；Document scope 直接透传 `document_id`，Language
+保留在 Advanced，Limit 收紧为 5/10 以符合当前默认 rerank candidate 上限。Results 使用 editorial ledger，Inspector 默认关闭，
+只展示真实 identity/location/content/ranking；Reranked 用 API `retrieval_rank` 显示 `Retrieved #N → Reranked #M`，raw logit、
+RRF 与 cosine 均不转成百分比或概率。
+
+未采用 LLM Query Rewrite API、LangGraph Trace、自动三路 Compare、score normalization、benchmark/evaluation、Generation、
+Conversation、EventBus 或后端扩展。真实 API 验收覆盖 Semantic、Hybrid、Reranked、Document scope、exact path scope 和 0 result；
+Reranked 样例真实从 Retrieval #2 提升到 Final #1，exact path 返回 `src/main/java/demo/UserService.java` 与
+`semantic_query=source 方法返回什么？`。Chromium 在 1440/1280/1024/900/768/414/375/320px 验证 desktop pane、tablet
+overlay、mobile full-width Inspector、Documents 入口及无横向溢出。前端全量 24 files / 149 tests、vue-tsc、ESLint 和 Vite
+production build 通过。当前运行时 rerank candidate limit 没有前端配置查询接口；若部署将其降到 5 以下，10-result 请求仍可能
+收到后端 422，UI 已保留明确恢复信息。

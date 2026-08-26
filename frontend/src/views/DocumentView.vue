@@ -9,12 +9,11 @@ import {
   ElMessageBox,
 } from 'element-plus'
 import { computed, inject, nextTick, onBeforeUnmount, onMounted, ref, watch, type Ref } from 'vue'
-import { useRoute } from 'vue-router'
+import { RouterLink, useRoute } from 'vue-router'
 
 import DocumentUploadPanel from '@/components/DocumentUploadPanel.vue'
 import DocumentChunkDialog from '@/components/DocumentChunkDialog.vue'
 import DocumentVersionDialog from '@/components/DocumentVersionDialog.vue'
-import SemanticSearchPanel from '@/components/SemanticSearchPanel.vue'
 import { ApiError } from '@/services/api'
 import {
   deleteDocument,
@@ -49,7 +48,6 @@ const chunkDialogVisible = ref(false)
 const parsingId = ref<string | null>(null)
 const indexingId = ref<string | null>(null)
 const showUpload = ref(false)
-const showRetrievalDebug = ref(false)
 let pollingTimer: ReturnType<typeof setInterval> | undefined
 
 type DocumentStatusTone = 'ready' | 'active' | 'warning' | 'failed'
@@ -360,11 +358,7 @@ onBeforeUnmount(() => {
           <form class="doc-search-bar" @submit.prevent="loadDocuments">
             <label for="document-filter">筛选资料</label>
             <div class="doc-search-control">
-              <input
-                id="document-filter"
-                v-model="query"
-                placeholder="按文件名或路径筛选"
-              />
+              <input id="document-filter" v-model="query" placeholder="按文件名或路径筛选" />
               <ElButton native-type="submit" :loading="loading">搜索</ElButton>
             </div>
             <span class="doc-search-summary">{{ searchSummary }}</span>
@@ -380,9 +374,7 @@ onBeforeUnmount(() => {
           />
 
           <section class="document-list-region" aria-label="资料列表" :aria-busy="loading">
-            <div v-if="loading && items.length === 0" class="loading-state">
-              正在加载资料…
-            </div>
+            <div v-if="loading && items.length === 0" class="loading-state">正在加载资料…</div>
             <div
               v-else-if="items.length === 0 && !errorMessage"
               class="document-empty-state"
@@ -429,7 +421,9 @@ onBeforeUnmount(() => {
                     <span class="doc-meta-row">
                       <span class="doc-meta">V{{ document.latest_version.version_number }}</span>
                       <span class="doc-meta-sep">·</span>
-                      <span class="doc-meta">{{ formatSize(document.latest_version.file_size) }}</span>
+                      <span class="doc-meta">{{
+                        formatSize(document.latest_version.file_size)
+                      }}</span>
                       <span class="doc-meta-sep">·</span>
                       <span class="doc-meta">{{ document.latest_version.chunk_count }} Chunks</span>
                       <span class="doc-meta-sep">·</span>
@@ -510,10 +504,16 @@ onBeforeUnmount(() => {
           </section>
 
           <div class="document-retrieval-region">
-            <ElButton text @click="showRetrievalDebug = !showRetrievalDebug">
-              {{ showRetrievalDebug ? '▾' : '▸' }} Advanced · 检索调试
-            </ElButton>
-            <SemanticSearchPanel v-if="showRetrievalDebug" :knowledge-base-id="knowledgeBaseId" />
+            <div>
+              <span>Advanced · Retrieval Workspace</span>
+              <p>测试当前知识库的真实召回、排序和 Evidence candidates。</p>
+            </div>
+            <RouterLink
+              :to="{ name: 'retrieval', params: { knowledgeBaseId } }"
+              class="document-retrieval-link"
+            >
+              打开 Retrieval Workspace <span aria-hidden="true">→</span>
+            </RouterLink>
           </div>
         </div>
       </section>
@@ -534,7 +534,12 @@ onBeforeUnmount(() => {
       >
         <header class="document-inspector-header">
           <span>DOCUMENT INSPECTOR</span>
-          <button type="button" class="inspector-close" aria-label="关闭文档详情" @click="closeInspector">
+          <button
+            type="button"
+            class="inspector-close"
+            aria-label="关闭文档详情"
+            @click="closeInspector"
+          >
             ×
           </button>
         </header>
@@ -556,36 +561,92 @@ onBeforeUnmount(() => {
         <section class="document-inspector-section">
           <h3>资料信息</h3>
           <dl class="document-facts">
-            <div><dt>来源</dt><dd>{{ sourceTypeLabel(inspectedDocument) }}</dd></div>
+            <div>
+              <dt>来源</dt>
+              <dd>{{ sourceTypeLabel(inspectedDocument) }}</dd>
+            </div>
             <div>
               <dt>类型</dt>
-              <dd>{{ inspectedDocument.latest_version.mime_type || fileExtension(inspectedDocument) || '—' }}</dd>
+              <dd>
+                {{
+                  inspectedDocument.latest_version.mime_type ||
+                  fileExtension(inspectedDocument) ||
+                  '—'
+                }}
+              </dd>
             </div>
-            <div><dt>大小</dt><dd>{{ formatSize(inspectedDocument.latest_version.file_size) }}</dd></div>
-            <div><dt>更新时间</dt><dd>{{ formatDate(inspectedDocument.updated_at) }}</dd></div>
+            <div>
+              <dt>大小</dt>
+              <dd>{{ formatSize(inspectedDocument.latest_version.file_size) }}</dd>
+            </div>
+            <div>
+              <dt>更新时间</dt>
+              <dd>{{ formatDate(inspectedDocument.updated_at) }}</dd>
+            </div>
           </dl>
         </section>
 
         <section class="document-inspector-section">
           <h3>当前版本</h3>
           <dl class="document-facts">
-            <div><dt>版本</dt><dd>V{{ inspectedDocument.latest_version.version_number }} / {{ inspectedDocument.version_count }}</dd></div>
-            <div><dt>Chunks</dt><dd>{{ inspectedDocument.latest_version.chunk_count }}</dd></div>
-            <div><dt>已索引</dt><dd>{{ inspectedDocument.latest_version.indexed_chunk_count }}</dd></div>
-            <div><dt>导入时间</dt><dd>{{ formatDate(inspectedDocument.latest_version.created_at) }}</dd></div>
-            <div><dt>解析完成</dt><dd>{{ formatOptionalDate(inspectedDocument.latest_version.parsed_at) }}</dd></div>
-            <div><dt>索引完成</dt><dd>{{ formatOptionalDate(inspectedDocument.latest_version.indexed_at) }}</dd></div>
+            <div>
+              <dt>版本</dt>
+              <dd>
+                V{{ inspectedDocument.latest_version.version_number }} /
+                {{ inspectedDocument.version_count }}
+              </dd>
+            </div>
+            <div>
+              <dt>Chunks</dt>
+              <dd>{{ inspectedDocument.latest_version.chunk_count }}</dd>
+            </div>
+            <div>
+              <dt>已索引</dt>
+              <dd>{{ inspectedDocument.latest_version.indexed_chunk_count }}</dd>
+            </div>
+            <div>
+              <dt>导入时间</dt>
+              <dd>{{ formatDate(inspectedDocument.latest_version.created_at) }}</dd>
+            </div>
+            <div>
+              <dt>解析完成</dt>
+              <dd>{{ formatOptionalDate(inspectedDocument.latest_version.parsed_at) }}</dd>
+            </div>
+            <div>
+              <dt>索引完成</dt>
+              <dd>{{ formatOptionalDate(inspectedDocument.latest_version.indexed_at) }}</dd>
+            </div>
           </dl>
         </section>
 
         <details class="document-technical-detail">
           <summary>Technical detail</summary>
           <dl class="document-facts">
-            <div><dt>Parser</dt><dd>{{ inspectedDocument.latest_version.parser_name || '—' }} {{ inspectedDocument.latest_version.parser_version || '' }}</dd></div>
-            <div><dt>Embedding</dt><dd>{{ inspectedDocument.latest_version.embedding_model || '—' }}</dd></div>
-            <div><dt>Dimension</dt><dd>{{ inspectedDocument.latest_version.embedding_dimension || '—' }}</dd></div>
-            <div><dt>Content hash</dt><dd class="technical-value">{{ inspectedDocument.latest_version.content_hash }}</dd></div>
-            <div><dt>Index generation</dt><dd class="technical-value">{{ inspectedDocument.latest_version.active_index_generation || '—' }}</dd></div>
+            <div>
+              <dt>Parser</dt>
+              <dd>
+                {{ inspectedDocument.latest_version.parser_name || '—' }}
+                {{ inspectedDocument.latest_version.parser_version || '' }}
+              </dd>
+            </div>
+            <div>
+              <dt>Embedding</dt>
+              <dd>{{ inspectedDocument.latest_version.embedding_model || '—' }}</dd>
+            </div>
+            <div>
+              <dt>Dimension</dt>
+              <dd>{{ inspectedDocument.latest_version.embedding_dimension || '—' }}</dd>
+            </div>
+            <div>
+              <dt>Content hash</dt>
+              <dd class="technical-value">{{ inspectedDocument.latest_version.content_hash }}</dd>
+            </div>
+            <div>
+              <dt>Index generation</dt>
+              <dd class="technical-value">
+                {{ inspectedDocument.latest_version.active_index_generation || '—' }}
+              </dd>
+            </div>
           </dl>
         </details>
 

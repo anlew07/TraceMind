@@ -18,6 +18,11 @@ export default createRouter({
       component: DocumentView,
     },
     {
+      path: '/knowledge-bases/:knowledgeBaseId/retrieval',
+      name: 'retrieval',
+      component: () => import('@/views/RetrievalView.vue'),
+    },
+    {
       path: '/knowledge-bases/:knowledgeBaseId/chat',
       name: 'conversation',
       component: ConversationView,
