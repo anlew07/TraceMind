@@ -1,24 +1,64 @@
 import { flushPromises, mount } from '@vue/test-utils'
-import { ElMessage } from 'element-plus'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import SemanticSearchPanel from '@/components/SemanticSearchPanel.vue'
+import { ApiError } from '@/services/api'
 import { hybridSearch, rerankedSearch, semanticSearch } from '@/services/documents'
-import type { SemanticSearchResult } from '@/types/document'
+import type { DocumentItem, SemanticSearchResult } from '@/types/document'
 
 vi.mock('@/services/documents', () => ({
   hybridSearch: vi.fn(),
   rerankedSearch: vi.fn(),
   semanticSearch: vi.fn(),
 }))
+
 const mockedSearch = vi.mocked(semanticSearch)
 const mockedHybridSearch = vi.mocked(hybridSearch)
 const mockedRerankedSearch = vi.mocked(rerankedSearch)
 
-function result(content = 'class DocumentService'): SemanticSearchResult {
+const document: DocumentItem = {
+  id: 'document-id',
+  knowledge_base_id: 'kb-id',
+  name: 'service.py',
+  relative_path: 'backend/service.py',
+  source_type: 'upload',
+  created_at: '2026-08-26T00:00:00Z',
+  updated_at: '2026-08-26T00:00:00Z',
+  version_count: 1,
+  latest_version: {
+    id: 'version-id',
+    version_number: 2,
+    content_hash: 'a'.repeat(64),
+    file_size: 512,
+    mime_type: 'text/x-python',
+    extension: '.py',
+    created_at: '2026-08-26T00:00:00Z',
+    parse_status: 'succeeded',
+    parser_name: 'tree-sitter',
+    parser_version: '1',
+    chunk_count: 2,
+    parse_started_at: null,
+    parsed_at: '2026-08-26T00:00:00Z',
+    last_parse_attempt_at: null,
+    parse_error_code: null,
+    parse_error_message: null,
+    index_status: 'succeeded',
+    active_index_generation: 'generation-id',
+    index_started_at: null,
+    indexed_at: '2026-08-26T00:00:00Z',
+    last_index_attempt_at: null,
+    indexed_chunk_count: 2,
+    embedding_model: 'model',
+    embedding_dimension: 1024,
+    index_error_code: null,
+    index_error_message: null,
+  },
+}
+
+function result(overrides: Partial<SemanticSearchResult> = {}): SemanticSearchResult {
   return {
-    score: 0.91234,
-    content,
+    score: 0.71234,
+    content: 'class DocumentService:\n    pass',
     knowledge_base_id: 'kb-id',
     document_id: 'document-id',
     document_version_id: 'version-id',
@@ -35,136 +75,202 @@ function result(content = 'class DocumentService'): SemanticSearchResult {
     page_number: null,
     start_line: 10,
     end_line: 14,
-    ranking_mode: 'reranker',
-    retrieval_score: 0.71,
-    rerank_score: 0.91234,
+    ranking_mode: 'hybrid',
+    retrieval_score: 0.71234,
+    rerank_score: null,
     retrieval_rank: 2,
+    ...overrides,
   }
 }
 
-async function submit(wrapper: ReturnType<typeof mount>, query = 'service layer'): Promise<void> {
-  await wrapper.get('input[aria-label="语义查询"]').setValue(query)
+function mountPanel() {
+  return mount(SemanticSearchPanel, {
+    props: { knowledgeBaseId: 'kb-id', documents: [document] },
+    global: {
+      stubs: {
+        RouterLink: {
+          props: ['to'],
+          template: '<a data-testid="document-link"><slot /></a>',
+        },
+      },
+    },
+  })
+}
+
+async function submit(wrapper: ReturnType<typeof mountPanel>, query = 'service layer') {
+  await wrapper.get('textarea[aria-label="检索查询"]').setValue(query)
   await wrapper.get('form').trigger('submit')
   await flushPromises()
 }
 
-describe('SemanticSearchPanel', () => {
+function modeButton(wrapper: ReturnType<typeof mountPanel>, label: string) {
+  return wrapper.findAll('[role="radio"]').find((button) => button.text().includes(label))!
+}
+
+describe('SemanticSearchPanel retrieval workbench', () => {
   beforeEach(() => {
     mockedSearch.mockReset()
     mockedHybridSearch.mockReset()
     mockedRerankedSearch.mockReset()
-    vi.spyOn(ElMessage, 'error').mockImplementation(() => ({ close: vi.fn() }))
   })
 
-  it('uses the dedicated layout, limit five, language filter, and traceable result cards', async () => {
-    mockedRerankedSearch.mockResolvedValue({ items: [result()] })
-    const wrapper = mount(SemanticSearchPanel, { props: { knowledgeBaseId: 'kb-id' } })
+  it('defaults to one Hybrid request with a truthful mode description', async () => {
+    mockedHybridSearch.mockResolvedValue({ items: [result()] })
+    const wrapper = mountPanel()
 
-    expect(wrapper.find('.semantic-search-content').exists()).toBe(true)
-    expect(wrapper.get('form').classes()).toContain('semantic-search-form')
-    expect(wrapper.get('form').classes()).not.toContain('document-toolbar')
-    await wrapper.get('input[aria-label="语言过滤"]').setValue('python')
+    expect(modeButton(wrapper, 'Hybrid').attributes('aria-checked')).toBe('true')
+    expect(wrapper.text()).toContain('Dense + BM25 · RRF')
     await submit(wrapper)
 
-    expect(mockedRerankedSearch).toHaveBeenCalledWith('kb-id', 'service layer', 'python', 5)
-    expect(wrapper.findAll('.search-result-card')).toHaveLength(1)
-    expect(wrapper.text()).toContain('backend/service.py · V2')
-    expect(wrapper.text()).toContain('Reranker 原始分数 0.9123')
-    expect(wrapper.text()).toContain('原 RRF 分数 0.7100')
-    expect(wrapper.text()).toContain('原 RRF 排名 2')
-    expect(wrapper.text()).toContain('Document service')
-    expect(wrapper.text()).toContain('第 10-14 行')
-    expect(wrapper.text()).toContain('class DocumentService')
+    expect(mockedHybridSearch).toHaveBeenCalledWith('kb-id', 'service layer', null, 5, null)
+    expect(mockedSearch).not.toHaveBeenCalled()
+    expect(mockedRerankedSearch).not.toHaveBeenCalled()
+    expect(wrapper.text()).toContain('RRF 分数 0.7123')
+    expect(wrapper.text()).not.toContain('%')
   })
 
-  it('shows a neutral empty state when no result clears the threshold', async () => {
-    mockedRerankedSearch.mockResolvedValue({ items: [] })
-    const wrapper = mount(SemanticSearchPanel, { props: { knowledgeBaseId: 'kb-id' } })
-
-    await submit(wrapper, 'unanswered question')
-
-    expect(wrapper.text()).toContain('未找到足够相关的内容')
-    expect(wrapper.text()).toContain('请换个问法，或确认文档中包含相关信息。')
-    expect(wrapper.findAll('.search-result-card')).toHaveLength(0)
-  })
-
-  it('shows exact path scope and semantic query for dense debugging', async () => {
+  it('runs Semantic against the dense endpoint and labels cosine without a percentage', async () => {
     mockedSearch.mockResolvedValue({
-      items: [result('return source;')],
+      items: [result({ ranking_mode: 'dense', retrieval_score: null })],
+    })
+    const wrapper = mountPanel()
+    await modeButton(wrapper, 'Semantic').trigger('click')
+    await submit(wrapper)
+
+    expect(mockedSearch).toHaveBeenCalledWith('kb-id', 'service layer', null, 5, null)
+    expect(wrapper.text()).toContain('Cosine 分数 0.7123')
+    expect(wrapper.text()).not.toContain('相似度')
+  })
+
+  it('runs Reranked once and uses API retrieval rank for the ranking shift', async () => {
+    mockedRerankedSearch.mockResolvedValue({
+      items: [
+        result({
+          score: 1.8245,
+          ranking_mode: 'reranker',
+          rerank_score: 1.8245,
+          retrieval_score: 0.31,
+          retrieval_rank: 7,
+        }),
+      ],
+    })
+    const wrapper = mountPanel()
+    await modeButton(wrapper, 'Reranked').trigger('click')
+    await submit(wrapper)
+
+    expect(mockedRerankedSearch).toHaveBeenCalledWith('kb-id', 'service layer', null, 5, null)
+    expect(wrapper.text()).toContain('检索 #7 → 重排 #1')
+    expect(wrapper.text()).toContain('重排分数 1.8245')
+    expect(wrapper.text()).not.toContain('probability')
+    expect(wrapper.text()).not.toContain('概率')
+  })
+
+  it('sends the selected real document scope and limit', async () => {
+    mockedHybridSearch.mockResolvedValue({ items: [] })
+    const wrapper = mountPanel()
+    await wrapper.get('select[aria-label="文档范围"]').setValue('document-id')
+    await wrapper.get('select[aria-label="结果数量"]').setValue('10')
+    await submit(wrapper)
+
+    expect(mockedHybridSearch).toHaveBeenCalledWith(
+      'kb-id',
+      'service layer',
+      null,
+      10,
+      'document-id',
+    )
+  })
+
+  it('shows path scope and semantic query only when the API returns an exact scope', async () => {
+    mockedHybridSearch.mockResolvedValue({
+      items: [result()],
       path_scope_mode: 'exact',
       scoped_relative_path: 'src/main/java/demo/UserService.java',
       semantic_query: 'source 方法返回什么？',
     })
-    const wrapper = mount(SemanticSearchPanel, { props: { knowledgeBaseId: 'kb-id' } })
-    await wrapper.get('select[aria-label="检索模式"]').setValue('dense')
-
+    const wrapper = mountPanel()
     await submit(wrapper, 'src/main/java/demo/UserService.java 中 source 方法返回什么？')
 
-    const scope = wrapper.get('[data-testid="semantic-search-scope"]')
-    expect(scope.text()).toContain('路径限定')
+    const scope = wrapper.get('[data-testid="retrieval-path-scope"]')
     expect(scope.text()).toContain('src/main/java/demo/UserService.java')
-    expect(scope.text()).toContain('语义查询')
     expect(scope.text()).toContain('source 方法返回什么？')
+    expect(scope.text()).not.toContain('AI Rewritten')
+    expect(scope.text()).not.toContain('Original Query')
   })
 
-  it('keeps missing path scope metadata visually quiet', async () => {
-    mockedRerankedSearch
-      .mockResolvedValueOnce({ items: [result()] })
-      .mockResolvedValueOnce({ items: [result()] })
-    const wrapper = mount(SemanticSearchPanel, { props: { knowledgeBaseId: 'kb-id' } })
+  it('does not manufacture a rewrite section when no path scope is returned', async () => {
+    mockedHybridSearch.mockResolvedValue({
+      items: [result()],
+      path_scope_mode: 'none',
+      semantic_query: 'should stay hidden',
+    })
+    const wrapper = mountPanel()
     await submit(wrapper)
-    expect(wrapper.find('[data-testid="semantic-search-scope"]').exists()).toBe(false)
-    await submit(wrapper)
-    expect(wrapper.find('[data-testid="semantic-search-scope"]').exists()).toBe(false)
+
+    expect(wrapper.find('[data-testid="retrieval-path-scope"]').exists()).toBe(false)
+    expect(wrapper.text()).not.toContain('should stay hidden')
   })
 
-  it('keeps API failures separate from an empty result', async () => {
-    mockedRerankedSearch.mockRejectedValue(new Error('unavailable'))
-    const wrapper = mount(SemanticSearchPanel, { props: { knowledgeBaseId: 'kb-id' } })
+  it('keeps a successful zero-result response separate from an error', async () => {
+    mockedHybridSearch.mockResolvedValue({ items: [] })
+    const wrapper = mountPanel()
+    await submit(wrapper, 'missing evidence')
 
-    await submit(wrapper)
-
-    expect(ElMessage.error).toHaveBeenCalledWith('Reranker 暂时不可用，可切换到混合检索')
-    expect(wrapper.text()).not.toContain('未找到足够相关的内容')
+    expect(wrapper.text()).toContain('未找到检索结果')
+    expect(wrapper.text()).toContain('放宽资料范围')
+    expect(wrapper.find('[role="alert"]').exists()).toBe(false)
   })
 
-  it('keeps long original content once in the DOM without rendering HTML', async () => {
-    const longContent = `<strong>unsafe</strong>\n${'完整正文 '.repeat(400)}`
-    mockedRerankedSearch.mockResolvedValue({ items: [result(longContent)] })
-    const wrapper = mount(SemanticSearchPanel, { props: { knowledgeBaseId: 'kb-id' } })
-
+  it('shows Reranker unavailable as a recoverable 503 instead of empty results', async () => {
+    mockedRerankedSearch.mockRejectedValue(new ApiError(503, 'private detail'))
+    const wrapper = mountPanel()
+    await modeButton(wrapper, 'Reranked').trigger('click')
     await submit(wrapper)
 
-    const content = wrapper.get('.search-result-content')
-    expect(content.element.textContent).toBe(longContent)
-    expect(content.find('strong').exists()).toBe(false)
-    expect(wrapper.findAll('.search-result-card')).toHaveLength(1)
+    expect(wrapper.get('[role="alert"]').text()).toContain('Reranker 当前不可用')
+    expect(wrapper.text()).not.toContain('未找到检索结果')
+    await wrapper.get('[role="alert"] button').trigger('click')
+    expect(modeButton(wrapper, 'Hybrid').attributes('aria-checked')).toBe('true')
   })
 
-  it('defaults to reranker and switches through hybrid and dense while clearing results', async () => {
-    mockedRerankedSearch.mockResolvedValue({ items: [result()] })
+  it('keeps the Inspector closed until a result is selected and exposes real result fields', async () => {
     mockedHybridSearch.mockResolvedValue({ items: [result()] })
-    mockedSearch.mockResolvedValue({ items: [result('dense result')] })
-    const wrapper = mount(SemanticSearchPanel, { props: { knowledgeBaseId: 'kb-id' } })
-
-    const modeSelect = wrapper.get('select[aria-label="检索模式"]')
-    expect((modeSelect.element as HTMLSelectElement).value).toBe('reranker')
-    await submit(wrapper)
-    expect(wrapper.text()).toContain('Reranker 原始分数')
-
-    await modeSelect.setValue('hybrid')
-    await flushPromises()
-    expect(wrapper.findAll('.search-result-card')).toHaveLength(0)
-    await submit(wrapper)
-    expect(mockedHybridSearch).toHaveBeenCalledWith('kb-id', 'service layer', null, 5)
-    expect(wrapper.text()).toContain('RRF 分数')
-
-    await modeSelect.setValue('dense')
-    await flushPromises()
-    expect(wrapper.findAll('.search-result-card')).toHaveLength(0)
+    const wrapper = mountPanel()
     await submit(wrapper)
 
-    expect(mockedSearch).toHaveBeenCalledWith('kb-id', 'service layer', null, 5)
-    expect(wrapper.text()).toContain('余弦分数 0.9123')
+    expect(wrapper.find('#retrieval-inspector').exists()).toBe(false)
+    await wrapper.get('.retrieval-result-select').trigger('click')
+
+    const inspector = wrapper.get('#retrieval-inspector')
+    expect(inspector.text()).toContain('检索结果详情')
+    expect(inspector.text()).toContain('backend/service.py')
+    expect(inspector.text()).toContain('Document service')
+    expect(inspector.text()).toContain('行号')
+    expect(inspector.text()).toContain('0.7123')
+    expect(inspector.text()).not.toContain('generation-id')
+    expect(inspector.text()).not.toContain('content hash')
+    expect(wrapper.get('[data-testid="document-link"]').text()).toContain('打开资料')
+
+    await inspector.get('button[aria-label="关闭检索结果详情"]').trigger('click')
+    expect(wrapper.find('#retrieval-inspector').exists()).toBe(false)
+
+    await wrapper.get('.retrieval-result-select').trigger('click')
+    window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }))
+    await wrapper.vm.$nextTick()
+    expect(wrapper.find('#retrieval-inspector').exists()).toBe(false)
+  })
+
+  it('renders returned content as text rather than HTML', async () => {
+    mockedHybridSearch.mockResolvedValue({
+      items: [result({ content: '<strong>unsafe</strong>' })],
+    })
+    const wrapper = mountPanel()
+    await submit(wrapper)
+    await wrapper.get('.retrieval-result-select').trigger('click')
+
+    expect(wrapper.find('.retrieval-result-excerpt strong').exists()).toBe(false)
+    expect(wrapper.get('.retrieval-inspector-content pre').element.textContent).toBe(
+      '<strong>unsafe</strong>',
+    )
   })
 })

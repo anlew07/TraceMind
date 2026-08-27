@@ -1109,3 +1109,201 @@ Reranking、path scope、Conversation 与 LangGraph production coverage 保留�
 因此移除显式 `openai` dependency；它仍由 `langchain-openai` 作为 transitive dependency 锁定，未升级
 LangChain/LangGraph。受影响定向测试 83 passed，全量 567 passed、40 skipped；Ruff、format、mypy 与
 `uv sync --frozen --offline` 通过。
+
+# 2026-08-25 — UI Phase 1.1.1 Production Streaming Integration
+
+为消除 RAG 执行期间的静默等待，现有 LangGraph nodes 通过 `get_stream_writer()` 增量发送受白名单约束的
+`pipeline` 产品事件；phase 固定为 routing/query_rewrite/retrieval/rerank/evidence/generation，status 固定为
+started/completed/skipped/fallback/failed，metadata 只允许 route_mode/candidate_count/source_count。FastAPI 继续消费
+`graph.astream(stream_mode="custom")`，保留 sources/token/no_answer/done/terminal_status，并在 SSE 边界拒绝 Graph state、
+prompt、raw output 或内部字段。未采用新的 EventBus、Queue、callback bridge，也未恢复旧 retrieval/finish_reason/latency
+contract。
+
+Conversation 将实时事件与历史 done metadata 归一为同一 Execution Trace ViewModel：Direct 主链只展示真实 Generation，
+RAG no-answer 展示实际执行的改写、检索、重排与 Evidence，且 source_count=0 时不伪造 Generation。独立 GENERATING card
+已删除；Citation 仍复用既有解析与 showEvidence，Evidence Inspector 保持一等信息。Documents 的 Heading、Import、Search、
+Alert、Rows 与 Retrieval Debug 统一进入同一 content grid，上传业务逻辑未变。
+
+后端 Ruff/format/mypy 通过，全量为 568 passed、40 skipped；前端 vue-tsc、ESLint、Vite build 通过，全量 Vitest 为
+96 passed。浏览器在 1024/1280/1440px 验证了 Conversation 与 Documents：1280/1440 保持三栏 Workbench，1024 使用
+可达的 Inspector 分区，Documents 水平轨道保持一致。检索算法、Prompt、CitationGuard、来源集合与模型调用均未改变，
+因此未重跑 retrieval quality corpus；新增 custom event 的延迟开销尚未单独量化，是后续性能观测项。
+
+# 2026-08-25 — UI Phase 1.1.2 Conversation Density & Responsive Evidence
+
+真实浏览器验收发现 Conversation 的 Source Inspector 会自动打开/选择首个来源，并在中等宽度落入 Composer 下方的
+普通 Grid 行；双层 Global Header、较高 Session Header、永久展开的 terminal Trace 和大面积 User Query 色块也压缩了
+Answer 阅读空间。本轮保持 RAG V2 SSE、Citation 解析、Save as Knowledge 与 MessageViewport 滚动模型不变，只修正展示层。
+
+Inspector 现在仅由用户点击具体 Citation 打开并选择对应来源，进入页面、切换历史会话、开始生成及 sources 到达都保持
+关闭。桌面使用按需右侧 pane，1120px 以下改为右侧 overlay，移动端为全宽 panel，不再创建底部 normal-flow 区域。Global
+Shell 合并为单层 compact app bar，并移除 Retrieval/Hybrid + Rerank 导航文案；Session Header、Knowledge action row 与
+User Query 视觉密度同步收紧。
+
+Execution Trace 继续复用现有 live/historical ViewModel：streaming 强制完整展开，terminal/no-answer 与历史记录默认折叠，
+用户可手动展开。fallback 使用独立 amber/ochre 语义和“已降级 · 保留检索排序”文案，未修改 pipeline event contract。
+未采用自动 Evidence 展开、底部 Inspector、第二套 Trace 状态模型或新的 UI/streaming framework。
+
+前端相关测试为 30 passed，全量为 105 passed；vue-tsc、ESLint 与 Vite production build 通过。真实浏览器在
+1440/1280/1024/900px 验证 Inspector 默认缺席、Citation 精确打开、关闭恢复空间、透明右对齐 Query、58px Global
+Header、64px Session Header 与历史 Trace 手动展开；1024/900px Inspector 的 computed position 为 absolute，Composer
+坐标打开前后不变。真实 RAG 流观察到 Retrieval/Rerank/Evidence/Generation 实时状态且 live Trace 始终展开，终态自动
+折叠为 5-stage summary。此次真实请求未触发 reranker fallback；fallback ViewModel/文案由组件测试覆盖，浏览器 computed
+style 验证 warning 与 error 颜色不同。
+
+# 2026-08-25 — UI Phase 2.1 Workspace Home & Entry Flow
+
+根路由从二次 Landing/selector 改为日常 Research Desk：Workspace 只使用 Knowledge Base 真实的 name、description 与
+updated_at，以无阴影、薄边框的 editorial tiles 展示，并直接进入 Conversation。创建成功同样直接进入新知识库的
+Conversation；重命名、删除和 `/documents`、`/knowledge`、`/map` 既有路由保持。产品介绍页独立为 `/landing`，唯一入口
+动作返回 `/`，不再阻断日常工作流。
+
+空知识库 Conversation 通过现有 Documents list API 做一次轻量探测：确认 total=0 时提供“导入资料”与“仍然开始对话”，
+前者通过 `?import=1` 打开既有 DocumentUploadPanel，后者保留当前 Direct route；探测失败不阻断会话。本轮未修改后端 API、
+SSE、RAG、LangGraph、上传逻辑或数据模型，也未引入虚构的文档数、会话数、Owner 或 Activity 字段。
+
+# 2026-08-25 — Conversation Asymmetric Message Surfaces
+
+在不修改 Conversation 数据、Citation、Inspector、Execution Trace 或 streaming 状态的前提下，将透明右规则 Query 调整为
+紧凑的 muted-sage 右对齐气泡，并将 TraceMind Answer 调整为更宽的 warm-paper 阅读 surface。Evidence、Execution Trace、
+Trace Detail 与 Promote to Knowledge 继续位于对应 Answer article 内，通过细分隔线形成同一回答的次级区域；未采用对称聊天
+气泡、重阴影或独立 dashboard 卡片。
+
+# 2026-08-25 — UI Phase 2.2 Documents Research Ledger
+
+Documents 从通用管理列表收敛为资料账本：导入默认折叠，搜索继续只使用现有文件名/路径查询，资源行以版本、大小、Chunk、更新时间
+和由 parse/index 真实状态推导的单一产品状态呈现。选中行后才打开 Document Inspector；Inspector 仅展示当前 API 已有的路径、
+来源、MIME、版本、解析/索引信息，并复用 Chunk、版本、下载与失败阶段重试。中宽屏使用 overlay，窄屏使用全宽 sheet。
+
+现有 API 没有归档、标签、Owner、状态筛选或稳定的整文 Reader，因此未虚构这些字段，也未用 Chunk 拼装 Reader；Retrieval Debug
+继续作为默认折叠的 L3 工具。未修改后端、上传业务、Home → Conversation → Documents `?import=1` 引导或 RAG 路径。
+
+# 2026-08-25 — UI Phase 2.3 Knowledge Workspace
+
+先以现有 API、schema、service、model、route 与测试审计 KnowledgeEntry：可维护字段为 question/background/root cause/
+solution/failed attempts/tags/validation status，原始 question/answer/sources 为不可变溯源快照；来源 Conversation 删除后
+外键置空但快照保留。Verified 会触发异步知识索引，只有已验证且拥有当前成功索引代次的条目进入 RAG；Unverified 与
+Outdated 不参与检索，验证状态和索引状态因此保持两套独立语义。
+
+Knowledge List 收敛为无卡片网格的 editorial ledger：问题与解决方案摘要为主，验证、标签、RAG 可用性、索引与更新时间依次
+降级，搜索/验证/标签继续复用真实服务端筛选。Detail 保留独立 route，以正文为阅读主体，并在同一记录页呈现 Knowledge
+Status、Evidence Snapshot、Conversation → Answer → Evidence → Knowledge 轻量来源链路及检索索引；索引失败只提供现有
+重试操作，不改变“已验证”状态。Evidence snapshot 模式不根据历史 ID 假设 live source 可用，来源 Conversation 则依据真实
+nullable 字段显示可打开或“来源会话已不可用、快照仍保留”。
+
+未采用永久 Inspector、CRUD table、独立 RAG toggle、AI 重写/自动整理、虚构 source availability 或 backend schema 扩展；
+Conversation 的 Promote to Knowledge、Knowledge Map 与 RAG 实现均保持不变。
+
+Knowledge/Evidence/Conversation 定向测试为 38 passed，前端全量为 128 passed；vue-tsc、ESLint 与 Vite production build
+通过。当前本地真实 API 没有 KnowledgeEntry，因此实际后端数据用于验证 empty state； populated 浏览器验收使用与当前
+KnowledgeEntryResponse 完全同形的临时网络 fixture，不写入本地数据库，覆盖 verified/unverified/outdated、index ready/
+failed、Evidence、多标签、长 solution 与 failed attempts。1440/1280/1024/900px 均无横向溢出；1024 保持正文 + Evidence
+双栏，900 收敛为纵向 Knowledge Record。Hallmark 额外检查 320/375/414/768px empty state 与 DOM scroll width，页面内容无
+横向滚动；现有 Global Shell 的窄屏导航压缩不属于本 Phase。
+
+# 2026-08-25 — UI Phase 2.3.1 Global Shell Mobile Responsive
+
+真实浏览器审计确认原 Global Shell 在 820px 以下启用 Header 横向滚动，并在 680px 以下隐藏 KB 名称却继续并排展示四个
+业务 tab 与 Local-first；375px 的 Header 已出现 1px 内部溢出，320px 达到 20px，且 KB identity 在移动端完全丢失。
+
+保持 681px 以上已通过验收的 58px 单层桌面 Header；680px 以下收敛为 `TraceMind | 当前页 · KB | 菜单`。业务导航、返回
+Workspace 与完整 Local-first 说明进入 Element Plus light-dismiss dropdown，Header 上保留 Local-first 状态点；KB 长名称使用
+ellipsis。Workspace Home 与 Landing 不渲染 KB 菜单，Inspector/Drawer z-index 与业务页面布局不变。未采用横向滚动导航、
+多行 Header、Bottom Navigation 或新的 navigation framework。
+
+前端 AppShell 定向测试为 5 passed，全量为 23 files / 131 passed；vue-tsc、ESLint 与 Vite production build 通过。
+真实浏览器在 Workspace、Conversation、Documents、Knowledge 与 Knowledge Detail 上逐项检查
+1440/1280/1024/900/768/414/375/320px：所有宽度的 document 与 Header scrollWidth 均未超过 viewport，Header 始终为
+58px，768px 保持完整桌面导航，414/375/320px 使用 44px 高菜单触控区。长 KB 名称的 scrollWidth 大于 clientWidth 且被
+ellipsis；ESC 与选择导航均关闭菜单。Conversation 和 Documents Inspector 打开时，菜单 z-index 32 高于 Inspector 31 与
+backdrop 30，未产生第二个 backdrop。当前实现仍使用临时品牌字母标记，正式 Compass 资产继续作为既有后续事项。
+
+# 2026-08-25 — UI Phase 2.4 Knowledge Map
+
+以当前 `KnowledgeMapResponse` 和后端确定性派生逻辑为事实来源完成能力审计：节点只有 Knowledge Base、KnowledgeEntry、
+Document、Tag，关系只有 contains、cites、tagged、related；接口一次返回当前知识库完整图，没有分页、搜索、服务端过滤或
+权重。`related` 只由共享标签和仍存活的引用文档生成，原因通过 `shared_tags/shared_document_ids` 返回，前端不重新推导。
+
+保留 Cytoscape.js、原生 pan/zoom/fit 与既有 `cose` layout；Graph Canvas 成为主工作面，节点/关系筛选同时作为紧凑图例。
+默认不选择节点且 Inspector 关闭；选择后只强调真实邻域、降低无关元素权重，并按节点类型展示 API 已有字段。Knowledge 与
+Document 继续进入既有详情/聚焦资料路由。宽屏使用按需右 pane，中屏使用 overlay，移动端使用全宽 panel，层级低于全局
+Mobile Menu。修正旧实现仅按 KnowledgeEntry 数量判断空态的问题：Document 本身是有效图内容，只有 KB root 时才展示通往
+问答和资料的真实引导。
+
+未采用 GraphRAG、图数据库、图编辑、AI 关系生成、聚类、中心性、虚构统计、搜索或新的 graph abstraction；后端 schema、
+API 和数据派生逻辑均未修改。以当前真实小图及 100-node 同形 fixture 覆盖初始化、过滤、选择和 Inspector，完整门禁与浏览器
+多宽度验收结果记录在本阶段交付报告。
+
+# 2026-08-26 — UI Phase 2.5 Retrieval Workspace
+
+以本地最新源码审计 standalone retrieval：Semantic 走 Qdrant dense cosine 检索；Hybrid 走 Dense + Qdrant BM25 + RRF；
+Reranked 在 Hybrid candidates 上执行本地 Cross-Encoder。三个 endpoint 共用真实 `document_id` / language / limit 与显式
+path scope，返回 document/chunk identity、location、`ranking_mode`、`retrieval_score`、`rerank_score` 和 API 提供的
+`retrieval_rank`。Standalone API 不执行 LangGraph LLM Query Rewrite；`semantic_query` 只表示显式路径被移除后的语义查询。
+
+新增 KB 内独立 `/knowledge-bases/{id}/retrieval` route，但不加入四项 Global Header 导航。Documents 的 Advanced 区域从
+内嵌完整 Debug UI 收口为唯一 Workspace 入口；既有 `SemanticSearchPanel` 被重构为该 Workspace 的唯一检索主体，没有形成两套
+search state 或 renderer。默认 Hybrid，一次只调用一个用户选择的模式；Document scope 直接透传 `document_id`，Language
+保留在 Advanced，Limit 收紧为 5/10 以符合当前默认 rerank candidate 上限。Results 使用 editorial ledger，Inspector 默认关闭，
+只展示真实 identity/location/content/ranking；Reranked 用 API `retrieval_rank` 显示 `Retrieved #N → Reranked #M`，raw logit、
+RRF 与 cosine 均不转成百分比或概率。
+
+未采用 LLM Query Rewrite API、LangGraph Trace、自动三路 Compare、score normalization、benchmark/evaluation、Generation、
+Conversation、EventBus 或后端扩展。真实 API 验收覆盖 Semantic、Hybrid、Reranked、Document scope、exact path scope 和 0 result；
+Reranked 样例真实从 Retrieval #2 提升到 Final #1，exact path 返回 `src/main/java/demo/UserService.java` 与
+`semantic_query=source 方法返回什么？`。Chromium 在 1440/1280/1024/900/768/414/375/320px 验证 desktop pane、tablet
+overlay、mobile full-width Inspector、Documents 入口及无横向溢出。前端全量 24 files / 149 tests、vue-tsc、ESLint 和 Vite
+production build 通过。当前运行时 rerank candidate limit 没有前端配置查询接口；若部署将其降到 5 以下，10-result 请求仍可能
+收到后端 422，UI 已保留明确恢复信息。
+
+# 2026-08-26 — UI Phase 2.6 Data Management & Recovery Workspace
+
+以本地最新 archive、restore、consistency audit/repair 与 rebuild route、schema、service 为事实来源完成数据维护能力审计。
+Archive 保存 Knowledge Base、Document/Version 与原始文件、Conversation/Message、KnowledgeEntry 与溯源快照；Restore 恢复这些
+Source of Truth，并把文档解析/索引及已验证知识索引重置为待重建，明确返回 `rebuild_status=not_started`。Audit 是只读快照，
+finding 只有 severity、安全文案、entity identity 和 details，不包含前端可自行判断的 repairability。
+
+新增 KB 内 secondary `/knowledge-bases/{id}/data-management` route，并从 Workspace Knowledge Space overflow 进入；四项主导航保持
+不变。页面提供真实 archive 下载、Workspace-level restore、只读 consistency audit、后端 dry-run Safe Repair review、异步 Repair
+状态/重试和 Derived State rebuild 状态/重试。Repair 只执行 dry-run 返回 `planned + repairable` 的 finding IDs；Rebuild 只展示
+API 的 parsed/indexed/failed counts，不伪造阶段或百分比。Restore 对 409 conflict、413 limit、422 invalid archive 和一般失败使用
+不同安全文案，成功后明确区分“Source data restored”与“Ready for Retrieval”，并由用户决定何时启动 rebuild 或打开恢复后的 KB。
+
+未采用 Resource Dashboard、健康评分、GPU/CPU/RAM/Storage 指标、Cloud/Auto Backup、全局 Settings、自动 Restore→Rebuild、前端
+repair allowlist、WebSocket/EventBus 或后端 schema 扩展。视觉继续使用锁定的 warm-paper Workbench：维护 section 以 hairline 分隔，
+amber 只表达真实维护警告，桌面 Recovery Inspector 在中窄屏收敛为单列。真实用户数据验收只允许 Export 与 read-only Audit；Restore、
+Repair 和 Rebuild 使用同构 fixture 或临时知识库，禁止故意破坏 Source of Truth。
+
+# 2026-08-26 — UI Phase 2.7 Final Stabilization & Merge Readiness
+
+本轮停止新增页面和功能，以 `feature/ui-redesign` 的真实模板、route、动态 class、测试和浏览器行为为依据进行最终收敛。
+审计发现普通 UI 文案仍混有英文，多个 Inspector 缺少统一的 Escape 关闭行为，Conversation 仍局部重定义第二套硬编码颜色，
+`main.css` 还保留已被 Workspace Home、独立 Retrieval Workspace 和 Phase 1.1.1 Conversation 完全替代的旧样式块。
+
+采用最小风险方案：普通页面标题、操作、状态和维护文案改为自然中文，保留 RAG、Semantic、Hybrid、Reranked、RRF、
+Cross-Encoder、Evidence、Execution Trace、Local-first 等稳定专业术语；Conversation、Documents、Retrieval 和 Knowledge Map
+的可关闭 Inspector 补齐 Escape 行为，不引入新的 Inspector framework。CSS 只删除经 template、component、dynamic class、route
+和 tests 共同确认无引用的旧 Home、旧 embedded Retrieval Debug 与旧 Conversation 块，并让 Conversation 复用全局设计 token；
+高风险且仍参与 cascade 的页面样式保持原状。
+
+未采用 CSS framework 迁移、全量 class 重命名、Inspector 抽象重构、自动恢复、Document Reader 或新品牌资产。Document Reader
+因缺少稳定全文/分页阅读 API 契约继续延期；Compass Logo 等待正式批准资产，二者均不是合并阻塞项。Retrieval Workspace
+继续只运行真实 Semantic/Hybrid/Reranked 检索，不执行生成；Data & Recovery 继续以 Source of Truth 与 Derived State 边界及现有
+archive/restore/audit/repair/rebuild API 为唯一功能范围。最终门禁与真实浏览器 Daily-use 结果在本轮交付报告中记录，未完成的
+浏览器覆盖不会在文档中提前写成已验证事实。
+
+最终前端门禁为 vue-tsc、ESLint、Vite production build 全部通过，Vitest 为 26 files / 170 tests passed。
+真实 Chromium 逐页覆盖 Landing、Workspace、Conversation、Documents、Retrieval、Knowledge、Knowledge Detail、Knowledge Map
+和 Data & Recovery，并在 1440/1280/1024/900/768/414/375/320px 验证无页面级横向溢出。Daily-use 使用真实数据完成
+5 轮 Conversation（Direct 与 RAG）、Citation/Evidence Inspector、Documents 搜索与 Inspector、Hybrid/Reranked、Knowledge
+Detail、Document graph node、只读 Audit 和返回 Workspace；Console/Network 未出现错误。验收发现并修复 680px 以下 Conversation
+仅声明 grid tracks 却仍保持 flex 的布局回归，修复后 320px Composer 与 MessageViewport 均完整可用。基于这些证据，本轮 UI
+达到 merge-ready；Document Reader 与 Compass Logo 仍按既定原因延期。
+
+# 2026-08-26 — UI Merge Readiness Landing Entry Fix
+
+保留已完成的 Landing，但将根路径收敛为纯本地首次入口判断：`/` 仅在
+`tracemind.landing.seen.v1` 尚未记录时进入 `/landing`，已记录时直接进入 `/knowledge-bases`；显式
+`/landing` 和所有 Knowledge Base 深层链接不受判断影响。Landing 的“进入工作区”先尝试写入 localStorage，再直接导航
+`/knowledge-bases`，读失败安全回退 Landing，写失败仍允许进入工作区。未采用全局 router guard、cookie、后端偏好字段或
+onboarding framework。

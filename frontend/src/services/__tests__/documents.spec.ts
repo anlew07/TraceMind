@@ -46,6 +46,22 @@ describe('document search services', () => {
     })
   })
 
+  it('adds a real document scope to standalone retrieval requests', async () => {
+    mockedApiRequest.mockResolvedValue({ items: [] })
+
+    await hybridSearch('kb-id', '事务边界', null, 10, 'document-id')
+
+    expect(mockedApiRequest).toHaveBeenCalledWith('/api/v1/knowledge-bases/kb-id/search/hybrid', {
+      method: 'POST',
+      body: JSON.stringify({
+        query: '事务边界',
+        language: null,
+        limit: 10,
+        document_id: 'document-id',
+      }),
+    })
+  })
+
   it('adds an optional relative path to the existing multipart upload request', async () => {
     mockedApiRequest.mockResolvedValue({})
     const file = new File(['content'], 'main.py')

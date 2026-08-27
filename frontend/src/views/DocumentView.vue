@@ -5,17 +5,15 @@ import {
   ElDropdown,
   ElDropdownItem,
   ElDropdownMenu,
-  ElEmpty,
   ElMessage,
   ElMessageBox,
 } from 'element-plus'
-import { inject, nextTick, onBeforeUnmount, onMounted, ref, watch, type Ref } from 'vue'
-import { useRoute } from 'vue-router'
+import { computed, inject, nextTick, onBeforeUnmount, onMounted, ref, watch, type Ref } from 'vue'
+import { RouterLink, useRoute } from 'vue-router'
 
 import DocumentUploadPanel from '@/components/DocumentUploadPanel.vue'
 import DocumentChunkDialog from '@/components/DocumentChunkDialog.vue'
 import DocumentVersionDialog from '@/components/DocumentVersionDialog.vue'
-import SemanticSearchPanel from '@/components/SemanticSearchPanel.vue'
 import { ApiError } from '@/services/api'
 import {
   deleteDocument,
@@ -36,19 +34,29 @@ watch(knowledgeBaseName, (name) => {
   shellKbName.value = name || ''
 })
 const items = ref<DocumentItem[]>([])
+const total = ref(0)
 const query = ref('')
+const appliedQuery = ref('')
 const focusedDocumentId = ref('')
 const loading = ref(false)
 const errorMessage = ref('')
 const deletingId = ref<string | null>(null)
 const versionDialogVisible = ref(false)
 const selectedDocument = ref<DocumentItem | null>(null)
+const inspectedDocument = ref<DocumentItem | null>(null)
 const chunkDialogVisible = ref(false)
 const parsingId = ref<string | null>(null)
 const indexingId = ref<string | null>(null)
 const showUpload = ref(false)
-const showRetrievalDebug = ref(false)
 let pollingTimer: ReturnType<typeof setInterval> | undefined
+
+type DocumentStatusTone = 'ready' | 'active' | 'warning' | 'failed'
+
+interface DocumentStatusView {
+  label: string
+  detail: string
+  tone: DocumentStatusTone
+}
 
 function elapsedLabel(value: string | null): string {
   if (!value) return ''
@@ -56,26 +64,57 @@ function elapsedLabel(value: string | null): string {
   return ` · ${seconds}s`
 }
 
-function processingSummary(document: DocumentItem): string {
+function documentStatus(document: DocumentItem): DocumentStatusView {
   const version = document.latest_version
   if (version.parse_status === 'failed') {
-    return `处理失败 · ${parseErrorSummary(document)}`
+    return {
+      label: '解析失败',
+      detail: parseErrorSummary(document) || '解析失败，请重试',
+      tone: 'failed',
+    }
   }
-  if (version.parse_status === 'pending') return '等待处理'
+  if (version.parse_status === 'pending') {
+    return { label: '等待解析', detail: '文件已导入，等待解析任务', tone: 'warning' }
+  }
   if (version.parse_status === 'processing') {
-    return `解析中${elapsedLabel(version.parse_started_at)}`
+    return {
+      label: '解析中',
+      detail: `正在提取可检索内容${elapsedLabel(version.parse_started_at)}`,
+      tone: 'active',
+    }
   }
   if (version.index_status === 'failed') {
-    return `处理失败 · ${version.index_error_message || '索引失败，请重试'}`
+    return {
+      label: '索引失败',
+      detail: version.index_error_message || '索引失败，请重试',
+      tone: 'failed',
+    }
   }
   if (version.index_status === 'pending') {
-    return `已解析 · ${version.chunk_count} 个 Chunk · 等待建立索引`
+    return {
+      label: '等待索引',
+      detail: `已解析 ${version.chunk_count} 个 Chunk，等待建立索引`,
+      tone: 'warning',
+    }
   }
   if (version.index_status === 'processing') {
-    return `正在建立索引${elapsedLabel(version.index_started_at)}`
+    return {
+      label: '索引中',
+      detail: `正在建立检索索引${elapsedLabel(version.index_started_at)}`,
+      tone: 'active',
+    }
   }
-  return 'Ready'
+  return {
+    label: '可用',
+    detail: `已解析并索引 ${version.indexed_chunk_count || version.chunk_count} 个 Chunk`,
+    tone: 'ready',
+  }
 }
+
+const searchSummary = computed(() => {
+  if (appliedQuery.value.trim()) return `${total.value} 条匹配资料`
+  return `${total.value} 份资料`
+})
 
 function formatDate(value: string): string {
   return new Intl.DateTimeFormat('zh-CN', { dateStyle: 'medium', timeStyle: 'short' }).format(
@@ -96,6 +135,12 @@ async function loadDocuments(): Promise<void> {
   try {
     const response = await listDocuments(knowledgeBaseId, query.value)
     items.value = response.items
+    total.value = response.total
+    appliedQuery.value = query.value
+    if (inspectedDocument.value) {
+      inspectedDocument.value =
+        response.items.find((item) => item.id === inspectedDocument.value?.id) ?? null
+    }
     updatePolling()
     await focusRequestedDocument()
   } catch {
@@ -193,6 +238,7 @@ async function loadPage(): Promise<void> {
   query.value = typeof route.query?.query === 'string' ? route.query.query : ''
   focusedDocumentId.value =
     typeof route.query?.focusDocument === 'string' ? route.query.focusDocument : ''
+  showUpload.value = route.query?.import === '1'
   try {
     knowledgeBaseName.value = (await getKnowledgeBase(knowledgeBaseId)).name
   } catch {
@@ -206,9 +252,26 @@ async function handleUploadCompleted(): Promise<void> {
   showUpload.value = false
 }
 
+async function clearSearch(): Promise<void> {
+  query.value = ''
+  await loadDocuments()
+}
+
 function showVersions(document: DocumentItem): void {
   selectedDocument.value = document
   versionDialogVisible.value = true
+}
+
+function inspectDocument(document: DocumentItem): void {
+  inspectedDocument.value = document
+}
+
+function closeInspector(): void {
+  inspectedDocument.value = null
+}
+
+function handleEscape(event: KeyboardEvent): void {
+  if (event.key === 'Escape' && inspectedDocument.value) closeInspector()
 }
 
 async function confirmDelete(document: DocumentItem): Promise<void> {
@@ -225,6 +288,7 @@ async function confirmDelete(document: DocumentItem): Promise<void> {
   deletingId.value = document.id
   try {
     await deleteDocument(knowledgeBaseId, document.id)
+    if (inspectedDocument.value?.id === document.id) closeInspector()
     ElMessage.success('文档删除成功')
     await loadDocuments()
   } catch {
@@ -234,10 +298,8 @@ async function confirmDelete(document: DocumentItem): Promise<void> {
   }
 }
 
-function statusPillClass(status: string): string {
-  if (status === 'succeeded') return 'st-pill st-pill-ok'
-  if (status === 'failed') return 'st-pill st-pill-err'
-  return 'st-pill st-pill-warn'
+function statusPillClass(tone: DocumentStatusTone): string {
+  return `st-pill document-status-pill document-status-${tone}`
 }
 
 function fileNameOnly(document: DocumentItem): string {
@@ -258,172 +320,370 @@ function baseNameWithoutExt(document: DocumentItem): string {
   return dot >= 0 ? full.slice(0, dot) : full
 }
 
-onMounted(loadPage)
+function sourceTypeLabel(document: DocumentItem): string {
+  if (document.source_type === 'upload') return '本地导入'
+  return document.source_type
+}
+
+function formatOptionalDate(value: string | null): string {
+  return value ? formatDate(value) : '—'
+}
+
+onMounted(() => {
+  window.addEventListener('keydown', handleEscape)
+  void loadPage()
+})
 onBeforeUnmount(() => {
+  window.removeEventListener('keydown', handleEscape)
   if (pollingTimer !== undefined) clearInterval(pollingTimer)
 })
 </script>
 
 <template>
   <main class="management-page document-page">
-    <!-- Page Header -->
-    <header class="management-header">
-      <div>
-        <h1>文档</h1>
-        <p>可用于检索、问答与可追溯引用的文档和代码资料</p>
-      </div>
-      <div class="header-actions">
-        <ElButton type="primary" @click="showUpload = !showUpload">
-          {{ showUpload ? '收起' : '导入文件' }}
-        </ElButton>
-      </div>
-    </header>
-
-    <!-- Upload Panel (collapsible) -->
-    <DocumentUploadPanel
-      v-if="showUpload"
-      :knowledge-base-id="knowledgeBaseId"
-      @completed="handleUploadCompleted"
-    />
-
-    <!-- Search -->
-    <div class="doc-search-bar">
-      <input
-        v-model="query"
-        aria-label="按名称或路径筛选文档"
-        placeholder="按名称或路径筛选…"
-        @keyup.enter="loadDocuments"
-      />
-      <ElButton :loading="loading" @click="loadDocuments" size="small">搜索</ElButton>
-    </div>
-
-    <ElAlert
-      v-if="errorMessage"
-      :title="errorMessage"
-      type="error"
-      show-icon
-      :closable="false"
-      style="max-width: 1160px; margin: 0 auto var(--space-lg)"
-    />
-
-    <!-- Document List -->
-    <section :aria-busy="loading">
-      <div v-if="loading && items.length === 0" class="loading-state">正在加载文档…</div>
-      <ElEmpty v-else-if="items.length === 0 && !errorMessage" description="暂无文档" />
-
-      <div v-else class="doc-list">
-        <div
-          v-for="document in items"
-          :key="document.id"
-          :id="`document-${document.id}`"
-          class="doc-item"
-          :class="{ 'doc-item-focused': document.id === focusedDocumentId }"
-        >
-          <div class="doc-main">
-            <div class="doc-name-row">
-              <span class="doc-name">{{ baseNameWithoutExt(document) }}</span>
-              <span class="doc-ext">{{ fileExtension(document) }}</span>
+    <div class="document-workspace-shell">
+      <section class="document-main-plane">
+        <div class="document-content-grid">
+          <header class="management-header">
+            <div>
+              <h1>资料</h1>
+              <p>当前知识库的研究资料与可追溯来源</p>
             </div>
-            <div class="doc-path">{{ document.relative_path || document.name }}</div>
-            <div class="doc-meta-row">
-              <span class="doc-meta">V{{ document.latest_version.version_number }}</span>
-              <span class="doc-meta-sep">·</span>
-              <span class="doc-meta">{{ formatSize(document.latest_version.file_size) }}</span>
-              <span class="doc-meta-sep">·</span>
-              <span class="doc-meta">{{ document.latest_version.chunk_count }} 个 Chunk</span>
-              <span class="doc-meta-sep">·</span>
-              <span class="doc-meta">{{
-                document.latest_version.parsed_at
-                  ? formatDate(document.latest_version.parsed_at)
-                  : '—'
-              }}</span>
-              <span class="doc-statuses">
-                <span
-                  :class="
-                    statusPillClass(
-                      document.latest_version.parse_status === 'failed' ||
-                        document.latest_version.index_status === 'failed'
-                        ? 'failed'
-                        : document.latest_version.parse_status === 'succeeded' &&
-                            document.latest_version.index_status === 'succeeded'
-                          ? 'succeeded'
-                          : 'processing',
-                    )
-                  "
-                  >{{ processingSummary(document) }}</span
-                >
-              </span>
+            <div class="header-actions">
+              <ElButton type="primary" @click="showUpload = !showUpload">
+                {{ showUpload ? '收起导入' : '导入资料' }}
+              </ElButton>
             </div>
+          </header>
+
+          <div v-if="showUpload" class="document-import-region">
+            <DocumentUploadPanel
+              :knowledge-base-id="knowledgeBaseId"
+              @completed="handleUploadCompleted"
+            />
           </div>
 
-          <!-- Overflow actions -->
-          <ElDropdown trigger="click" :hide-on-click="true">
-            <button class="doc-more" aria-label="文档操作">···</button>
-            <template #dropdown>
-              <ElDropdownMenu>
-                <ElDropdownItem
-                  :disabled="document.latest_version.chunk_count === 0"
-                  @click="showChunks(document)"
-                  >查看 Chunk</ElDropdownItem
-                >
-                <ElDropdownItem
-                  :disabled="
-                    parsingId !== null || document.latest_version.parse_status === 'processing'
-                  "
-                  @click="
-                    requestParse(document, document.latest_version.parse_status === 'succeeded')
-                  "
-                  >{{
-                    document.latest_version.parse_status === 'succeeded' ? '重新解析' : '重试解析'
-                  }}</ElDropdownItem
-                >
-                <ElDropdownItem
-                  :disabled="
-                    indexingId !== null ||
-                    document.latest_version.parse_status !== 'succeeded' ||
-                    document.latest_version.index_status === 'processing'
-                  "
-                  @click="
-                    requestIndex(document, document.latest_version.index_status === 'succeeded')
-                  "
-                  >{{
-                    document.latest_version.index_status === 'succeeded' ? '重建索引' : '建立索引'
-                  }}</ElDropdownItem
-                >
-                <ElDropdownItem @click="downloadCurrentDocument(knowledgeBaseId, document.id)"
-                  >下载</ElDropdownItem
-                >
-                <ElDropdownItem @click="showVersions(document)">历史版本</ElDropdownItem>
-                <ElDropdownItem
-                  :data-testid="`delete-document-${document.id}`"
-                  divided
-                  style="color: var(--color-error)"
-                  @click="confirmDelete(document)"
-                  >删除</ElDropdownItem
-                >
-              </ElDropdownMenu>
-            </template>
-          </ElDropdown>
-        </div>
-      </div>
-    </section>
+          <form class="doc-search-bar" @submit.prevent="loadDocuments">
+            <label for="document-filter">筛选资料</label>
+            <div class="doc-search-control">
+              <input id="document-filter" v-model="query" placeholder="按文件名或路径筛选" />
+              <ElButton native-type="submit" :loading="loading">搜索</ElButton>
+            </div>
+            <span class="doc-search-summary">{{ searchSummary }}</span>
+          </form>
 
-    <!-- Retrieval Tools -->
-    <div
-      style="
-        max-width: 1160px;
-        margin: var(--space-2xl) auto 0;
-        padding-top: var(--space-lg);
-        border-top: 1px solid var(--color-border-light);
-      "
-    >
-      <ElButton size="small" text @click="showRetrievalDebug = !showRetrievalDebug">
-        {{ showRetrievalDebug ? '▾' : '▸' }} 检索调试
-      </ElButton>
-      <SemanticSearchPanel v-if="showRetrievalDebug" :knowledge-base-id="knowledgeBaseId" />
+          <ElAlert
+            v-if="errorMessage"
+            class="document-alert"
+            :title="errorMessage"
+            type="error"
+            show-icon
+            :closable="false"
+          />
+
+          <section class="document-list-region" aria-label="资料列表" :aria-busy="loading">
+            <div v-if="loading && items.length === 0" class="loading-state">正在加载资料…</div>
+            <div
+              v-else-if="items.length === 0 && !errorMessage"
+              class="document-empty-state"
+              data-testid="document-empty-state"
+            >
+              <template v-if="query.trim()">
+                <h2>没有匹配的资料</h2>
+                <p>换一个文件名或路径关键词，或清除当前筛选。</p>
+                <ElButton @click="clearSearch">清除筛选</ElButton>
+              </template>
+              <template v-else>
+                <h2>你的知识空间还没有资料</h2>
+                <p>导入文档或代码文件，TraceMind 会解析并建立可追溯的检索索引。</p>
+                <ElButton v-if="!showUpload" type="primary" @click="showUpload = true">
+                  导入第一份资料
+                </ElButton>
+              </template>
+            </div>
+
+            <div v-else class="doc-list">
+              <article
+                v-for="document in items"
+                :key="document.id"
+                :id="`document-${document.id}`"
+                class="doc-item"
+                :class="{
+                  'doc-item-focused': document.id === focusedDocumentId,
+                  'doc-item-selected': document.id === inspectedDocument?.id,
+                }"
+              >
+                <button
+                  type="button"
+                  class="doc-select"
+                  :aria-pressed="document.id === inspectedDocument?.id"
+                  :aria-controls="inspectedDocument ? 'document-inspector' : undefined"
+                  @click="inspectDocument(document)"
+                >
+                  <span class="doc-main">
+                    <span class="doc-name-row">
+                      <span class="doc-name">{{ baseNameWithoutExt(document) }}</span>
+                      <span class="doc-ext">{{ fileExtension(document) }}</span>
+                    </span>
+                    <span class="doc-path">{{ document.relative_path || document.name }}</span>
+                    <span class="doc-meta-row">
+                      <span class="doc-meta">V{{ document.latest_version.version_number }}</span>
+                      <span class="doc-meta-sep">·</span>
+                      <span class="doc-meta">{{
+                        formatSize(document.latest_version.file_size)
+                      }}</span>
+                      <span class="doc-meta-sep">·</span>
+                      <span class="doc-meta">{{ document.latest_version.chunk_count }} Chunks</span>
+                      <span class="doc-meta-sep">·</span>
+                      <span class="doc-meta">更新于 {{ formatDate(document.updated_at) }}</span>
+                    </span>
+                  </span>
+                  <span class="doc-state">
+                    <span :class="statusPillClass(documentStatus(document).tone)">
+                      {{ documentStatus(document).label }}
+                    </span>
+                    <span class="doc-state-detail">{{ documentStatus(document).detail }}</span>
+                  </span>
+                </button>
+
+                <div class="doc-overflow" @click.stop @keydown.stop>
+                  <ElDropdown trigger="click" :hide-on-click="true">
+                    <button type="button" class="doc-more" aria-label="资料操作">···</button>
+                    <template #dropdown>
+                      <ElDropdownMenu>
+                        <ElDropdownItem
+                          :disabled="document.latest_version.chunk_count === 0"
+                          @click="showChunks(document)"
+                          >查看 Chunk</ElDropdownItem
+                        >
+                        <ElDropdownItem
+                          :disabled="
+                            parsingId !== null ||
+                            document.latest_version.parse_status === 'processing'
+                          "
+                          @click="
+                            requestParse(
+                              document,
+                              document.latest_version.parse_status === 'succeeded',
+                            )
+                          "
+                          >{{
+                            document.latest_version.parse_status === 'succeeded'
+                              ? '重新解析'
+                              : '重试解析'
+                          }}</ElDropdownItem
+                        >
+                        <ElDropdownItem
+                          :disabled="
+                            indexingId !== null ||
+                            document.latest_version.parse_status !== 'succeeded' ||
+                            document.latest_version.index_status === 'processing'
+                          "
+                          @click="
+                            requestIndex(
+                              document,
+                              document.latest_version.index_status === 'succeeded',
+                            )
+                          "
+                          >{{
+                            document.latest_version.index_status === 'succeeded'
+                              ? '重建索引'
+                              : '建立索引'
+                          }}</ElDropdownItem
+                        >
+                        <ElDropdownItem
+                          @click="downloadCurrentDocument(knowledgeBaseId, document.id)"
+                          >下载</ElDropdownItem
+                        >
+                        <ElDropdownItem @click="showVersions(document)">历史版本</ElDropdownItem>
+                        <ElDropdownItem
+                          :data-testid="`delete-document-${document.id}`"
+                          divided
+                          style="color: var(--color-error)"
+                          @click="confirmDelete(document)"
+                          >删除</ElDropdownItem
+                        >
+                      </ElDropdownMenu>
+                    </template>
+                  </ElDropdown>
+                </div>
+              </article>
+            </div>
+          </section>
+
+          <div class="document-retrieval-region">
+            <div>
+              <span>高级 · 检索工作区</span>
+              <p>测试当前知识库的真实召回、排序和 Evidence 候选。</p>
+            </div>
+            <RouterLink
+              :to="{ name: 'retrieval', params: { knowledgeBaseId } }"
+              class="document-retrieval-link"
+            >
+              打开检索工作区 <span aria-hidden="true">→</span>
+            </RouterLink>
+          </div>
+        </div>
+      </section>
+
+      <button
+        v-if="inspectedDocument"
+        type="button"
+        class="document-inspector-backdrop"
+        tabindex="-1"
+        aria-hidden="true"
+        @click="closeInspector"
+      />
+      <aside
+        v-if="inspectedDocument"
+        id="document-inspector"
+        class="document-inspector"
+        aria-label="文档详情"
+      >
+        <header class="document-inspector-header">
+          <span>资料详情</span>
+          <button
+            type="button"
+            class="inspector-close"
+            aria-label="关闭文档详情"
+            @click="closeInspector"
+          >
+            ×
+          </button>
+        </header>
+
+        <div class="document-inspector-identity">
+          <div class="doc-name-row">
+            <h2>{{ baseNameWithoutExt(inspectedDocument) }}</h2>
+            <span class="doc-ext">{{ fileExtension(inspectedDocument) }}</span>
+          </div>
+          <p>{{ inspectedDocument.relative_path || inspectedDocument.name }}</p>
+          <span :class="statusPillClass(documentStatus(inspectedDocument).tone)">
+            {{ documentStatus(inspectedDocument).label }}
+          </span>
+          <p class="document-inspector-status-detail">
+            {{ documentStatus(inspectedDocument).detail }}
+          </p>
+        </div>
+
+        <section class="document-inspector-section">
+          <h3>资料信息</h3>
+          <dl class="document-facts">
+            <div>
+              <dt>来源</dt>
+              <dd>{{ sourceTypeLabel(inspectedDocument) }}</dd>
+            </div>
+            <div>
+              <dt>类型</dt>
+              <dd>
+                {{
+                  inspectedDocument.latest_version.mime_type ||
+                  fileExtension(inspectedDocument) ||
+                  '—'
+                }}
+              </dd>
+            </div>
+            <div>
+              <dt>大小</dt>
+              <dd>{{ formatSize(inspectedDocument.latest_version.file_size) }}</dd>
+            </div>
+            <div>
+              <dt>更新时间</dt>
+              <dd>{{ formatDate(inspectedDocument.updated_at) }}</dd>
+            </div>
+          </dl>
+        </section>
+
+        <section class="document-inspector-section">
+          <h3>当前版本</h3>
+          <dl class="document-facts">
+            <div>
+              <dt>版本</dt>
+              <dd>
+                V{{ inspectedDocument.latest_version.version_number }} /
+                {{ inspectedDocument.version_count }}
+              </dd>
+            </div>
+            <div>
+              <dt>Chunks</dt>
+              <dd>{{ inspectedDocument.latest_version.chunk_count }}</dd>
+            </div>
+            <div>
+              <dt>已索引</dt>
+              <dd>{{ inspectedDocument.latest_version.indexed_chunk_count }}</dd>
+            </div>
+            <div>
+              <dt>导入时间</dt>
+              <dd>{{ formatDate(inspectedDocument.latest_version.created_at) }}</dd>
+            </div>
+            <div>
+              <dt>解析完成</dt>
+              <dd>{{ formatOptionalDate(inspectedDocument.latest_version.parsed_at) }}</dd>
+            </div>
+            <div>
+              <dt>索引完成</dt>
+              <dd>{{ formatOptionalDate(inspectedDocument.latest_version.indexed_at) }}</dd>
+            </div>
+          </dl>
+        </section>
+
+        <details class="document-technical-detail">
+          <summary>技术详情</summary>
+          <dl class="document-facts">
+            <div>
+              <dt>Parser</dt>
+              <dd>
+                {{ inspectedDocument.latest_version.parser_name || '—' }}
+                {{ inspectedDocument.latest_version.parser_version || '' }}
+              </dd>
+            </div>
+            <div>
+              <dt>Embedding</dt>
+              <dd>{{ inspectedDocument.latest_version.embedding_model || '—' }}</dd>
+            </div>
+            <div>
+              <dt>维度</dt>
+              <dd>{{ inspectedDocument.latest_version.embedding_dimension || '—' }}</dd>
+            </div>
+            <div>
+              <dt>内容哈希</dt>
+              <dd class="technical-value">{{ inspectedDocument.latest_version.content_hash }}</dd>
+            </div>
+            <div>
+              <dt>索引代次</dt>
+              <dd class="technical-value">
+                {{ inspectedDocument.latest_version.active_index_generation || '—' }}
+              </dd>
+            </div>
+          </dl>
+        </details>
+
+        <div class="document-inspector-actions">
+          <ElButton
+            :disabled="inspectedDocument.latest_version.chunk_count === 0"
+            @click="showChunks(inspectedDocument)"
+            >查看 Chunk</ElButton
+          >
+          <ElButton @click="showVersions(inspectedDocument)">历史版本</ElButton>
+          <ElButton @click="downloadCurrentDocument(knowledgeBaseId, inspectedDocument.id)">
+            下载
+          </ElButton>
+          <ElButton
+            v-if="inspectedDocument.latest_version.parse_status === 'failed'"
+            :loading="parsingId === inspectedDocument.id"
+            @click="requestParse(inspectedDocument, false)"
+            >重试解析</ElButton
+          >
+          <ElButton
+            v-else-if="inspectedDocument.latest_version.index_status === 'failed'"
+            :loading="indexingId === inspectedDocument.id"
+            @click="requestIndex(inspectedDocument, false)"
+            >重试索引</ElButton
+          >
+        </div>
+      </aside>
     </div>
 
-    <!-- Dialogs -->
     <DocumentVersionDialog
       v-model="versionDialogVisible"
       :knowledge-base-id="knowledgeBaseId"

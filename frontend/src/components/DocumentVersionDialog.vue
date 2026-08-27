@@ -83,7 +83,7 @@ watch(
       </thead>
       <tbody>
         <tr v-for="version in versions" :key="version.id">
-          <td>Version {{ version.version_number }}</td>
+          <td>版本 {{ version.version_number }}</td>
           <td>{{ version.file_size }} B</td>
           <td>{{ indexLabels[version.index_status] }}</td>
           <td>{{ new Date(version.created_at).toLocaleString('zh-CN') }}</td>

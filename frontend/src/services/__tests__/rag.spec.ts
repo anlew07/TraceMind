@@ -17,6 +17,7 @@ function response(chunks: string[], contentType = 'text/event-stream'): Response
 }
 
 const handlers = () => ({
+  onPipeline: vi.fn(),
   onSources: vi.fn(),
   onToken: vi.fn(),
   onNoAnswer: vi.fn(),
@@ -29,6 +30,7 @@ describe('streamRagAnswer', () => {
 
   it('posts JSON and parses events split across arbitrary chunks', async () => {
     const wire =
+      'event: pipeline\ndata: {"trace_id":"t","phase":"routing","status":"completed","metadata":{"route_mode":"rag"}}\n\n' +
       'event: sources\ndata: {"trace_id":"t","source_count":0,"sources":[]}\n\n' +
       'event: token\ndata: {"trace_id":"t","text":"答"}\n\n' +
       'event: token\ndata: {"trace_id":"t","text":"案"}\n\n' +
@@ -47,12 +49,19 @@ describe('streamRagAnswer', () => {
       headers: { Accept: 'text/event-stream', 'Content-Type': 'application/json' },
       body: JSON.stringify({ query: '问题', language: 'java' }),
     })
+    expect(callbacks.onPipeline).toHaveBeenCalledWith(
+      expect.objectContaining({
+        phase: 'routing',
+        status: 'completed',
+        metadata: { route_mode: 'rag' },
+      }),
+    )
     expect(callbacks.onSources).toHaveBeenCalledOnce()
     expect(callbacks.onToken.mock.calls.map(([event]) => event.text)).toEqual(['答', '案'])
     expect(callbacks.onDone).toHaveBeenCalledOnce()
   })
 
-  it('ignores removed pipeline and retrieval events', async () => {
+  it('dispatches pipeline but ignores removed retrieval events', async () => {
     vi.spyOn(globalThis, 'fetch').mockResolvedValue(
       response([
         'event: pipeline\ndata: {"trace_id":"t","phase":"routing","status":"completed"}\n\n' +
@@ -64,6 +73,7 @@ describe('streamRagAnswer', () => {
 
     await streamRagAnswer('kb', { query: 'x' }, callbacks)
 
+    expect(callbacks.onPipeline).toHaveBeenCalledOnce()
     expect(callbacks.onSources).not.toHaveBeenCalled()
     expect(callbacks.onToken).not.toHaveBeenCalled()
     expect(callbacks.onDone).toHaveBeenCalledOnce()

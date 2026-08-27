@@ -28,6 +28,29 @@ export interface RagSourcesEvent extends ConversationEventFields {
   sources: RagSource[]
 }
 
+export type RagPipelinePhase =
+  | 'routing'
+  | 'query_rewrite'
+  | 'retrieval'
+  | 'rerank'
+  | 'evidence'
+  | 'generation'
+
+export type RagPipelineStatus = 'started' | 'completed' | 'skipped' | 'fallback' | 'failed'
+
+export interface RagPipelineMetadata {
+  route_mode?: 'direct' | 'rag'
+  candidate_count?: number
+  source_count?: number
+}
+
+export interface RagPipelineEvent extends ConversationEventFields {
+  trace_id: string
+  phase: RagPipelinePhase
+  status: RagPipelineStatus
+  metadata?: RagPipelineMetadata
+}
+
 export interface RagTokenEvent extends ConversationEventFields {
   trace_id: string
   text: string

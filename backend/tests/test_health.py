@@ -6,6 +6,7 @@ from httpx import ASGITransport, AsyncClient, Response
 
 from app.api.routes.health import get_postgres_check, get_qdrant_check, get_redis_check
 from app.core.config import Settings
+from app.embedding import SentenceTransformerEmbeddingProvider
 from app.main import create_app
 
 HealthCheck = Callable[[], Awaitable[None]]
@@ -87,3 +88,26 @@ async def test_settings_can_be_overridden() -> None:
 
     assert response.json()["service"] == "TraceMind Test API"
     assert response.json()["version"] == "9.9.9"
+
+
+async def test_embedding_prewarm_finishes_before_application_is_ready(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    prewarmed = False
+
+    async def fake_prewarm(provider: SentenceTransformerEmbeddingProvider) -> None:
+        nonlocal prewarmed
+        prewarmed = True
+
+    monkeypatch.setattr("app.main.prewarm_embedding_provider", fake_prewarm)
+    app = create_app(
+        Settings(
+            app_env="development",
+            llm_base_url="http://llm.test/v1",
+            llm_model="test-model",
+        )
+    )
+
+    assert prewarmed is False
+    async with app.router.lifespan_context(app):
+        assert prewarmed is True

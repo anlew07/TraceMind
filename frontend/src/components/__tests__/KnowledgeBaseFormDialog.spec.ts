@@ -59,6 +59,7 @@ describe('KnowledgeBaseFormDialog', () => {
       description: 'Original description',
     })
     expect(wrapper.emitted('saved')).toHaveLength(1)
+    expect(wrapper.emitted('saved')?.[0]).toEqual([knowledgeBase, 'created'])
   })
 
   it('shows a readable message for a name conflict', async () => {
@@ -87,6 +88,10 @@ describe('KnowledgeBaseFormDialog', () => {
       description: null,
     })
     expect(wrapper.emitted('saved')).toHaveLength(1)
+    expect(wrapper.emitted('saved')?.[0]).toEqual([
+      { ...knowledgeBase, name: 'Updated', description: null },
+      'updated',
+    ])
   })
 
   it('prevents duplicate submissions while a request is pending', async () => {
