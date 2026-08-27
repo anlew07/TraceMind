@@ -1,5 +1,8 @@
 # 开发日志
 
+> Historical Documentation：本文件记录 2026-07 至 2026-08 的开发过程与当时验证，不再作为
+> Current Docs，也不再追加日常任务。当前事实以代码和 `docs/README.md` 所列 Current Docs 为准。
+
 本文件用于保留每次开发的决策与验证证据。按时间倒序新增记录；不要用提交信息替代本日志。
 
 ## 2026-08-10 - UI Refresh 收尾基线

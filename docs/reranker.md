@@ -4,7 +4,7 @@
 
 TraceMind 使用两阶段检索：
 
-1. Qdrant Dense + BM25 RRF 负责从当前 active generation 召回前 10 个候选。
+1. Qdrant 返回 Dense 与 BM25 分支，应用层 deterministic RRF 从当前 active generation 融合前 10 个候选。
 2. 独立本地 Cross-Encoder 按 Query 与完整候选文本的相关性重新排序，最终返回前 5 个。
 
 Dense 解决语义召回，BM25 解决关键词和技术标识召回，Reranker 只负责二阶段排序。当前
@@ -20,11 +20,11 @@ Client，不在 Backend 或 Celery Worker 中加载模型。服务只监听 `127
 
 Windows 本地离线启动：
 
-```cmd
-cd /d E:\pycharmprojects\TraceMind\backend
-set HF_HOME=E:\ai-cache\huggingface
-set HF_HUB_OFFLINE=1
-set TRANSFORMERS_OFFLINE=1
+```powershell
+cd backend
+$env:HF_HOME = "<your-huggingface-cache>"
+$env:HF_HUB_OFFLINE = "1"
+$env:TRANSFORMERS_OFFLINE = "1"
 uv run --no-sync uvicorn app.reranker_server:app --host 127.0.0.1 --port 8011 --workers 1
 ```
 
@@ -58,4 +58,6 @@ RAG 默认请求 Hybrid Top 10。Reranker 成功时使用重排后的 Top 5；�
 安全 503。原有 `/search/hybrid` 和 `/search/semantic` 保持不变。
 
 当前不使用 BGE 备用模型，不实现训练、微调、量化、Weighted RRF 或阈值自动调优。
-当前也没有检索评测集；后续应通过真实数据评估 MRR、Recall@K 和 nDCG。
+仓库已有固定 Document Retrieval 评测集，但它不运行 Reranker，也不能证明 Cross-Encoder 的
+排序收益。改变 Reranker 模型、输入或默认开关前，应新增隔离的 reranked evaluation，并记录
+MRR、Recall@K、nDCG、延迟和资源成本。

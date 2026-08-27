@@ -1,122 +1,100 @@
 # TraceMind Knowledge Design
 
-## Stage 13 — Problem & Solution Knowledge
+本文描述当前 KnowledgeEntry、Evidence Snapshot、验证状态、检索索引和 Knowledge Map 的稳定设计。
 
-### Problem
+## 1. KnowledgeEntry 的问题与角色
 
-Conversation answers are useful but remain chronological and difficult to maintain as durable
-engineering knowledge. Stage 13 adds an explicit conversion from one completed assistant answer to
-one structured knowledge entry without changing the RAG pipeline.
+Conversation 适合保留时间顺序，但不适合长期维护解决经验。KnowledgeEntry 将一个已完成的 assistant answer 转换为结构化知识，同时保留创建时的 provenance。
 
-### Constraints
+当前维护字段包括：
 
-- Knowledge creation starts from a completed assistant message in the same knowledge base.
-- The client may edit the structured fields but cannot submit provenance or evidence snapshots.
-- Deleting a conversation must not delete the durable knowledge or its snapshots.
-- Tags and evidence are values on the entry, not separate domain entities.
-- The implementation adds one business table and one transaction boundary per mutation.
+- Question
+- Background
+- Root Cause
+- Solution
+- Failed Attempts
+- Tags
+- Validation Status
 
-### Data and provenance contract
+Knowledge 只能从同一 Knowledge Base 内已持久化且完成的 assistant message 创建。客户端可以编辑维护字段，但不能提交或改写 provenance snapshot。
 
-`knowledge_entries` stores the editable question, background, root cause, solution, failed
-attempts, validation status and normalized tags. It also stores immutable snapshots of the paired
-user question, assistant answer, cited sources and safe generation metadata.
+## 2. Provenance 与 Evidence Snapshot
 
-The service resolves the conversation and paired user message from the submitted assistant message
-ID. It filters the answer's actual `[Sx]` citations against `ConversationMessage.sources`, validates
-them as `RagSource`, checks their knowledge-base scope and copies only display-safe source fields.
-Retrieval scores, ranks, index generations, retrieval queries and prompts are not persisted.
+`knowledge_entries` 保存不可变的 paired user question、assistant answer、实际引用的 sources 和安全 generation metadata snapshot。Service 会：
 
-Source foreign keys use `ON DELETE SET NULL`; snapshots remain available when their original
-conversation is deleted. A unique constraint on the assistant message enforces one current entry
-per answer. A knowledge base containing documents or knowledge entries cannot be deleted.
+1. 解析 submitted assistant message 与对应 user message；
+2. 从 answer 中提取真实 `[Sx]`；
+3. 只保留同时存在于 `ConversationMessage.sources` 的引用；
+4. 以 `RagSource` 校验类型和 Knowledge Base scope；
+5. 复制 display-safe 字段。
 
-### Alternatives not adopted
+Prompt、凭据、index generation、retrieval query、内部 Graph state 与未引用来源不会进入 snapshot。Conversation 外键使用 `ON DELETE SET NULL`，所以原会话删除后，知识与快照仍可保留。一个 assistant message 最多对应一个当前 KnowledgeEntry。
 
-- Tag and source tables were rejected because tags are simple filter values and evidence is an
-  immutable snapshot, not independently managed data.
-- Manual standalone entry creation was deferred so provenance remains deterministic in the MVP.
-- Full-text search infrastructure was deferred; bounded case-insensitive SQL search is sufficient
-  for the local-first MVP.
+## 3. 验证与维护边界
 
-### Validation
+Validation Status 是用户维护的知识可信状态；Index Status 是 Derived State 的运行状态，两者不能合并。
 
-Unit and API tests cover provenance resolution, source allowlisting, cross-KB rejection, duplicate
-answers, CRUD, filters and rollback. PostgreSQL integration tests cover migration round trips and
-the `SET NULL` snapshot-preservation behavior. Frontend tests cover the save workflow, resource
-list and shared Evidence renderer.
+- `unverified`：不进入 RAG。
+- `verified`：具备索引资格；只有索引成功且 source version 当前有效时才可检索。
+- `outdated`：不进入 RAG，旧 active generation 立即失去数据库资格。
 
-### Current limits
+修改维护字段会使旧索引内容失效，并异步创建新 generation。原 assistant answer snapshot 不随维护字段编辑而改变，也不会被直接索引。
 
-- Tags are normalized with Unicode `casefold()` and stored in lowercase-like canonical form.
-- Search is SQL substring matching rather than a ranked full-text index.
-- Knowledge entries are created only from persisted completed answers.
+## 4. Verified Knowledge Retrieval
 
-## Stage 14 — Derived Knowledge Map
+Knowledge indexing 复用 Document 的 Embedding Provider、Qdrant collection、DeterministicChunker 和 generation 激活协议。
 
-The Knowledge Map is a read-only projection, not a retrieval or storage subsystem. The scoped map
-endpoint loads the current Knowledge Base, live Documents and KnowledgeEntries, then derives four
-node types and four transparent edge types at request time.
+索引正文由 Question、Background、Root Cause、Solution、Failed Attempts 和 Tags 生成。每个 Qdrant payload 明确包含：
 
-- `contains`: the Knowledge Base contains each live Document and KnowledgeEntry.
-- `cites`: a KnowledgeEntry snapshot names a Document that still exists in the same Knowledge Base.
-- `tagged`: a KnowledgeEntry contains a normalized tag value; `tag:{value}` is its stable node ID.
-- `related`: two entries share a tag or a live cited Document. One stable undirected edge aggregates
-  all matching tag and document reasons.
+- `source_type=knowledge_entry`
+- `knowledge_base_id`
+- `knowledge_entry_id`
+- `index_generation`
+- `knowledge_question`
+- `knowledge_updated_at`
+- chunk identity、content、hash、section 与 validation status
 
-Deleted-document snapshots remain visible in Knowledge detail but intentionally produce no live
-Document node, cite edge or document-based related reason. The map adds no model, table, migration,
-cache, graph database, entity extraction or GraphRAG path. Its current in-memory derivation is an
-MVP trade-off for local knowledge-base sizes; large-graph pagination or clustering is deferred.
+只有 verified entry 的 current active generation 会由 PostgreSQL Repository 返回。更新、状态变化和删除会投递幂等 Celery sync；attempt generation 与 source `updated_at` 都匹配时才能激活。失败 generation 会清理，队列或索引失败保留可见的 retryable state。
 
-## Stage 16 — Verified Knowledge Retrieval Loop
+默认、无显式 scope 的 RAG 使用一次 Query Embedding，在同一个 Qdrant 查询中过滤 active Document 与 verified Knowledge generations。显式 Document/path scope 或 language scope 保持 document-only。Knowledge Evidence 使用 `[Sx]`，但以“已验证知识”和 Entry link 标识，不制造文件名、页码或路径。
 
-### Problem
+## 5. 未采用方案
 
-Stage 13 made completed answers maintainable, but saved entries remained browse-only. Later RAG
-requests could retrieve only original document chunks, so verified problem-solving experience did
-not return to the answer loop.
+- **索引 answer snapshot**：生成文本未经用户维护，直接回灌会强化未经验证的答案。
+- **把 Knowledge 当作 Markdown Document**：会制造虚假文件身份并削弱 Citation 语义。
+- **第二个 Qdrant collection**：需要跨 collection score fusion，却没有提供相应可信收益。
+- **同步索引**：本地 Embedding 模型会让编辑请求产生不可预测等待。
+- **独立 Tag / Evidence 表**：当前 Tag 是简单过滤值，Evidence 是不可独立维护的快照；JSON/array 结构更符合当前边界。
 
-### Adopted design
+## 6. Knowledge Map
 
-- Only `verified` KnowledgeEntry content participates in default RAG. `unverified` and `outdated`
-  entries are excluded by database-owned active-generation selection, even if stale Qdrant points
-  still await cleanup.
-- Maintained fields are indexed: question, background, root cause, solution, failed attempts and
-  tags. Immutable assistant answer snapshots are deliberately excluded to avoid reinforcing an
-  unverified generated answer.
-- KnowledgeEntry uses the existing Embedding provider and Qdrant collection, but has an explicit
-  `source_type=knowledge_entry`, its own entry ID, chunks, active/attempt generations and indexing
-  status. It is never represented as a synthetic Document.
-- RAG embeds the query once and runs one Dense/BM25/RRF search over the union of active document
-  and verified-knowledge generations. Explicit document/path or language scope remains
-  document-only.
-- Knowledge sources keep the existing `[Sx]` citation identity, open the maintained entry, and
-  identify themselves as verified knowledge. Saving an answer that cites maintained knowledge
-  snapshots the source identity without recursively copying its provenance graph.
-- Create/update/status changes enqueue an idempotent Celery sync. Updating maintained fields makes
-  an older generation ineligible immediately. Moving away from `verified` removes the active
-  generation; deletion schedules entry-scoped point cleanup.
+Knowledge Map 是只读、请求时派生的 PostgreSQL projection，不是存储或 Retrieval subsystem。
 
-### Alternatives not adopted
+节点类型：
 
-- Indexing `answer_snapshot` directly was rejected because generated text is evidence only after a
-  user maintains and verifies it.
-- A second Qdrant collection was rejected because it would require a second query embedding or
-  application-side cross-collection score fusion without providing an MVP trust benefit.
-- Synchronous indexing in the mutation request was rejected because the local embedding model can
-  make ordinary knowledge editing block for an unpredictable duration.
-- Treating entries as Markdown Documents was rejected because it would create fake file identity
-  and weaken citation semantics.
+- Knowledge Base
+- Document
+- KnowledgeEntry
+- Tag
 
-### Migration, recovery and limits
+边类型：
 
-Migration `20260814_0011` adds indexing state only; existing entries remain `not_indexed`. A user
-must mark an entry verified, edit an already verified entry, or explicitly retry indexing before it
-is retrieved. Repeated sync is generation-safe: only the current attempt may activate, old or
-failed generations are deleted, and an unavailable queue leaves a visible retryable error.
+- `contains`：Knowledge Base 包含 live Document / KnowledgeEntry。
+- `cites`：Entry snapshot 指向同一 Knowledge Base 中仍存在的 Document。
+- `tagged`：Entry 包含规范化 Tag。
+- `related`：两个 Entry 共享 Tag 或 live cited Document；metadata 记录透明原因。
 
-Qdrant remains derived data. Existing document points without `source_type` continue to deserialize
-as documents. `ensure_collection` adds the new keyword payload indexes without requiring a document
-reindex. Orphan cleanup after a permanently unavailable Qdrant/queue is still a broader maintenance
-concern and belongs to the planned consistency-audit stage.
+已删除 Document 的 snapshot 仍可在 Knowledge Detail 中显示，但不会产生 live Document node、`cites` edge 或 document-based related reason。图数据不持久化，不调用模型，不计算 embedding similarity，也不参与 RAG。
+
+## 7. 数据恢复
+
+Archive 导出维护字段、validation status、provenance foreign keys 与 snapshots，但不导出 Knowledge indexing runtime 字段或 Qdrant points。Restore 后 verified entry 处于 pending，其他状态处于 not_indexed。Rebuild 只为当前 verified entries 重建索引。
+
+Qdrant 是 Derived State。索引丢失不会删除 KnowledgeEntry 或 snapshot；可通过 Rebuild 恢复。Consistency Audit / Safe Repair 只在明确 allowlist 中处理索引与孤立点，不自动改写维护字段。
+
+## 8. 当前限制
+
+- KnowledgeEntry 只能从已完成的持久 Conversation answer 创建。
+- Tags 使用 Unicode `casefold()` 规范化；搜索是有界 SQL substring matching，不是 ranked full-text search。
+- Knowledge Map 在内存中派生，面向个人数据规模，没有分页、聚类、缓存或图检索。
+- 固定 Document Retrieval dataset 不能证明 KnowledgeEntry 的真实回答质量；已有专项实验只验证回归隔离、来源身份和索引资格。需要独立 Gold Dataset 才能评估 Knowledge Recall 与回答支持率。

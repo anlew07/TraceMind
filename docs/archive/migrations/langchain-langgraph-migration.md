@@ -1,5 +1,8 @@
 # TraceMind LangChain / LangGraph Architecture Migration Review
 
+> Historical Migration：该评审描述迁移前状态与已完成方案。Production RAG 已迁移到 LangGraph；
+> 当前节点、状态、SSE 和 fallback 以代码与 `docs/architecture/TraceMind-Architecture.md` 为准。
+
 ## 1. Research date
 
 - 调研日期：2026-08-17

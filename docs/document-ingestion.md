@@ -63,4 +63,7 @@ Redis/Celery 暂时不可用不会回滚已完成的导入：文件与版本保�
 
 ## 当前边界
 
-“文件已导入”不代表“文件已解析”，“文件已解析”也不代表“已经建立检索索引”。解析与 Chunking 见 [文档解析说明](document-parsing.md)；当前没有 Embedding、BM25、Qdrant 写入或 RAG。
+“文件已导入”不代表“文件已解析”，“文件已解析”也不代表“已经建立检索索引”。解析与
+Chunking 见 [文档解析说明](document-parsing.md)；解析成功后由独立 Celery indexing task 生成
+Embedding 并写入 Qdrant。只有当前版本拥有成功的 active generation 时才参与默认检索。完整
+链路见 [当前系统架构](architecture/TraceMind-Architecture.md)。

@@ -83,7 +83,7 @@ function makeGraphCore(definitions: Array<{ group?: string; data?: Record<string
   for (const definition of definitions.filter(({ group }) => group === 'nodes')) {
     const data = definition.data ?? {}
     const styles = new Map<string, string>([['display', 'element']])
-    const item = {
+    const item: GraphItemMock = {
       id: () => String(data.id),
       data: (name: string) => data[name],
       style: (property: string, value?: string) => {
@@ -107,7 +107,7 @@ function makeGraphCore(definitions: Array<{ group?: string; data?: Record<string
       target: () => item,
       classes: new Set<string>(),
       styles,
-    } satisfies GraphItemMock
+    }
     byId.set(item.id(), item)
     nodeItems.push(item)
   }
@@ -115,7 +115,7 @@ function makeGraphCore(definitions: Array<{ group?: string; data?: Record<string
   for (const definition of definitions.filter(({ group }) => group === 'edges')) {
     const data = definition.data ?? {}
     const styles = new Map<string, string>([['display', 'element']])
-    const item = {
+    const item: GraphItemMock = {
       id: () => String(data.id),
       data: (name: string) => data[name],
       style: (property: string, value?: string) => {
@@ -139,7 +139,7 @@ function makeGraphCore(definitions: Array<{ group?: string; data?: Record<string
       target: () => byId.get(String(data.target))!,
       classes: new Set<string>(),
       styles,
-    } satisfies GraphItemMock
+    }
     byId.set(item.id(), item)
     edgeItems.push(item)
   }
@@ -338,13 +338,13 @@ describe('KnowledgeMapView', () => {
     const wrapper = mountView()
     await flushPromises()
 
-    const nodeFilters = wrapper.findAll('.knowledge-map-filter-group').at(0)!.findAll('input')
+    const nodeFilters = wrapper.findAll('.knowledge-map-filter-group')[0]!.findAll('input')
     await nodeFilters[3]!.setValue(false)
     expect(mocks.lastCore?.byId.get('tag:postgres')?.styles.get('display')).toBe('none')
     expect(mocks.lastCore?.byId.get('tagged:entry:tag')?.styles.get('display')).toBe('none')
 
     await nodeFilters[3]!.setValue(true)
-    const edgeFilters = wrapper.findAll('.knowledge-map-filter-group').at(1)!.findAll('input')
+    const edgeFilters = wrapper.findAll('.knowledge-map-filter-group')[1]!.findAll('input')
     await edgeFilters[3]!.setValue(false)
     expect(mocks.lastCore?.byId.get('related:entries')?.styles.get('display')).toBe('none')
   })

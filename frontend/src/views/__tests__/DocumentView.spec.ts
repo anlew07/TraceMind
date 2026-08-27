@@ -235,11 +235,11 @@ describe('DocumentView', () => {
     await flushPromises()
 
     const grid = wrapper.get('.document-content-grid')
-    expect(grid.get('.management-header').exists()).toBe(true)
-    expect(grid.get('.document-import-region').exists()).toBe(true)
-    expect(grid.get('.doc-search-bar').exists()).toBe(true)
-    expect(grid.get('.document-list-region .doc-list').exists()).toBe(true)
-    expect(grid.get('.document-retrieval-region').exists()).toBe(true)
+    expect(grid.find('.management-header').exists()).toBe(true)
+    expect(grid.find('.document-import-region').exists()).toBe(true)
+    expect(grid.find('.doc-search-bar').exists()).toBe(true)
+    expect(grid.find('.document-list-region .doc-list').exists()).toBe(true)
+    expect(grid.find('.document-retrieval-region').exists()).toBe(true)
   })
 
   it('triggers current version download via dropdown', async () => {

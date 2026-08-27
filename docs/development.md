@@ -80,7 +80,9 @@ npm run dev
 uv run celery -A app.worker.celery_app:celery_app worker --loglevel=INFO
 ```
 
-Worker 注册 `app.tasks.documents.parse_document_version` 和 `app.tasks.indexing.index_document_version`。任务只接收 DocumentVersion UUID 与 force 标量，并为每次执行创建独立 AsyncEngine/Session。
+Worker 注册 Document parse/index、KnowledgeEntry index、Knowledge Base rebuild 和 Consistency
+repair 任务。任务只接收 UUID、generation 与必要的 force 标量；每次执行创建独立
+AsyncEngine/Session，并以数据库状态、lease 或 generation fencing 判断当前任务是否仍有效。
 
 ## 后端检查
 
@@ -157,31 +159,24 @@ npm run test:unit -- --run
 npm run build
 ```
 
-## 单轮 RAG 配置
+## Production RAG 配置
 
 在 `.env` 中同时设置 `LLM_BASE_URL` 和 `LLM_MODEL` 可启用 RAG；`LLM_API_KEY` 对不校验
-Key 的本地 OpenAI-compatible 服务可以为空。其余参数及 SSE 事件见
-[RAG 说明](rag.md)。未配置时应用正常启动，RAG API 返回受控 503。
+Key 的本地 OpenAI-compatible 服务可以为空。LangChain / LangGraph、Query Rewrite、SSE、
+Citation Guard、候选数量与 fallback 见
+[当前系统架构](architecture/TraceMind-Architecture.md)。未配置时应用正常启动，RAG API
+返回受控 503。依赖只通过 `uv sync` / `uv sync --frozen` 安装，不单独向虚拟环境写入未锁定 SDK。
 
-本机 CUDA 环境只安装新增 SDK，避免同步替换 Torch：
-
-```powershell
-cd backend
-uv lock
-uv pip install --python .venv\Scripts\python.exe "openai>=2.46,<3"
-uv run --no-sync pytest -m "not integration"
-```
-
-测试使用 Fake Provider，不需要真实 LLM，也不得将 API Key 写入仓库。
+测试使用 Fake ChatModel，不需要真实 LLM，也不得将 API Key 写入仓库。
 
 ## 启动本地 Reranker
 
 Reranker 只允许本机单 Worker运行：
 
-```cmd
-set HF_HOME=E:\ai-cache\huggingface
-set HF_HUB_OFFLINE=1
-set TRANSFORMERS_OFFLINE=1
+```powershell
+$env:HF_HOME = "<your-huggingface-cache>"
+$env:HF_HUB_OFFLINE = "1"
+$env:TRANSFORMERS_OFFLINE = "1"
 uv run --no-sync uvicorn app.reranker_server:app --host 127.0.0.1 --port 8011 --workers 1
 ```
 

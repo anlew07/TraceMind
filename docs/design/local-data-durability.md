@@ -1,4 +1,7 @@
-# Stage 17A 本地数据持久性：Knowledge Base Archive v1
+# TraceMind Local Data Durability
+
+本文描述当前已实现的数据持久性与修复不变量。下文保留 Stage 17A / 17B 标题，用于说明设计
+形成顺序；它们不是未来计划，当前能力边界以各节的实际契约为准。
 
 ## 状态
 
@@ -16,7 +19,7 @@ TraceMind 的长期业务数据分布在 PostgreSQL 和本地原文件目录，D
 备份。Stage 17A 需要提供单个 Knowledge Base 的可移植归档，同时保持 UUID、业务时间、真实
 Evidence 和生成快照，不把运行时索引状态伪装成可恢复事实。
 
-约束包括：本地优先、单机 MVP、最小修改；不实现 Merge、Import as Copy、增量备份、云同步、
+约束包括：本地优先、单机使用、最小修改；不实现 Merge、Import as Copy、增量备份、云同步、
 加密归档、Agent 或通用 audit/repair；不归档 secret、`.env`、日志、模型缓存或 `.claude/`。
 
 ## Archive v1 实际结构
@@ -69,8 +72,8 @@ v1 写入时使用 ZIP `stored` 方法。PDF/DOCX 等原文件通常已经压缩
 
 DocumentChunk、Qdrant vector/BM25、Redis/Celery 状态均不在归档中。Restore 后 DocumentChunk
 由确定性 Parser/Chunker 重建；所有版本 Parse，但只有每个 Document 最新版本进入 Qdrant。
-verified KnowledgeEntry 只用 maintained fields 重建索引，answer snapshot 不参与索引。以上
-Source of Truth Restore 已实现；Parse/Index 和 KnowledgeEntry Rebuild 尚未实现。
+verified KnowledgeEntry 只用 maintained fields 重建索引，answer snapshot 不参与索引。Source
+of Truth Restore、Document Parse/Index Rebuild 和 KnowledgeEntry Rebuild 均已实现。
 
 ## Export 一致性和清理
 
@@ -159,8 +162,8 @@ journal 清理失败时不撤销 Source of Truth，journal 留待 startup recove
 Export/Restore 专项测试覆盖安全路径、symlink/device/encrypted entry、size/hash、重复 entry、
 compression ratio、严格 JSON、临时文件清理、共享锁查询、冲突预检、外键顺序、
 字段 allowlist、历史版本原文件、Evidence/metadata/provenance snapshot、运行态排除、manifest
-checksum、staging/promotion/flush/commit 失败补偿、journal recovery 和 API 错误映射。完整门禁结果记录在
-`docs/development-log.md`。
+checksum、staging/promotion/flush/commit 失败补偿、journal recovery 和 API 错误映射。历史实现
+与门禁记录保存在 `docs/archive/development-log.md`；它们不是当前 release validation 的替代品。
 
 第三阶段已经补齐以下 Derived State Rebuild 契约。
 

@@ -28,7 +28,8 @@ ParsedBlock 包含正文、block_type、可选页码、成对起止行号、章�
 
 ChunkDraft/DocumentChunk 包含从 0 连续递增的 chunk_index、正文、UTF-8 SHA-256、Python 字符数及同一组引用字段。Chunker 对相同输入和配置输出一致；PDF 不跨页，Markdown 优先不跨章节并保持 fenced code，代码使用完整行 overlap，DOCX 优先保持段落和表格边界。只有超长单行使用硬字符切分。
 
-DocumentChunk 尚未写入 Qdrant，也没有 Embedding、BM25 或检索分数。
+DocumentChunk 行本身不保存 Embedding、BM25 vector 或检索分数。独立 indexing task 会把
+Chunk 正文和引用 metadata 复制为 Qdrant Derived State，并以 active generation 关联当前版本。
 
 ## 状态机与一致性
 
