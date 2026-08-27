@@ -13,6 +13,11 @@ import {
 } from '@/services/dataMaintenance'
 
 const fetchMock = vi.fn<typeof fetch>()
+const apiBaseUrl = (import.meta.env.VITE_API_BASE_URL ?? '').replace(/\/$/, '')
+
+function expectedApiUrl(path: string): string {
+  return `${apiBaseUrl}${path}`
+}
 
 describe('dataMaintenance service', () => {
   beforeEach(() => {
@@ -31,7 +36,7 @@ describe('dataMaintenance service', () => {
     const result = await exportKnowledgeBaseArchive('kb-1')
 
     expect(fetchMock).toHaveBeenCalledWith(
-      'http://localhost:8000/api/v1/knowledge-bases/kb-1/archive',
+      expectedApiUrl('/api/v1/knowledge-bases/kb-1/archive'),
       {
         headers: { Accept: 'application/zip' },
       },
@@ -64,7 +69,7 @@ describe('dataMaintenance service', () => {
     await restoreKnowledgeBaseArchive(new File(['archive'], 'Project.tracemind.zip'))
 
     const [path, init] = fetchMock.mock.calls[0]
-    expect(path).toBe('http://localhost:8000/api/v1/knowledge-base-archives/restore')
+    expect(path).toBe(expectedApiUrl('/api/v1/knowledge-base-archives/restore'))
     expect(init?.method).toBe('POST')
     expect(init?.body).toBeInstanceOf(FormData)
     expect((init?.body as FormData).get('file')).toBeInstanceOf(File)
@@ -85,10 +90,10 @@ describe('dataMaintenance service', () => {
     await retryConsistencyRepair('kb-1', 'repair-1')
 
     expect(fetchMock.mock.calls.map(([path]) => path)).toEqual([
-      'http://localhost:8000/api/v1/knowledge-bases/kb-1/consistency-audit',
-      'http://localhost:8000/api/v1/knowledge-bases/kb-1/consistency-repair',
-      'http://localhost:8000/api/v1/knowledge-bases/kb-1/consistency-repair/repair-1',
-      'http://localhost:8000/api/v1/knowledge-bases/kb-1/consistency-repair/repair-1/retry',
+      expectedApiUrl('/api/v1/knowledge-bases/kb-1/consistency-audit'),
+      expectedApiUrl('/api/v1/knowledge-bases/kb-1/consistency-repair'),
+      expectedApiUrl('/api/v1/knowledge-bases/kb-1/consistency-repair/repair-1'),
+      expectedApiUrl('/api/v1/knowledge-bases/kb-1/consistency-repair/repair-1/retry'),
     ])
     expect(fetchMock.mock.calls[1][1]?.body).toBe(JSON.stringify(request))
     expect(fetchMock.mock.calls[3][1]?.method).toBe('POST')
@@ -102,9 +107,9 @@ describe('dataMaintenance service', () => {
     await retryKnowledgeBaseRebuild('kb-1')
 
     expect(fetchMock.mock.calls.map(([path]) => path)).toEqual([
-      'http://localhost:8000/api/v1/knowledge-bases/kb-1/rebuild',
-      'http://localhost:8000/api/v1/knowledge-bases/kb-1/rebuild',
-      'http://localhost:8000/api/v1/knowledge-bases/kb-1/rebuild/retry',
+      expectedApiUrl('/api/v1/knowledge-bases/kb-1/rebuild'),
+      expectedApiUrl('/api/v1/knowledge-bases/kb-1/rebuild'),
+      expectedApiUrl('/api/v1/knowledge-bases/kb-1/rebuild/retry'),
     ])
     expect(fetchMock.mock.calls[0][1]?.method).toBeUndefined()
     expect(fetchMock.mock.calls[1][1]?.method).toBe('POST')
