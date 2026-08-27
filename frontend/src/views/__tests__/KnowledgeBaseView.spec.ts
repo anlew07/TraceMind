@@ -71,7 +71,7 @@ describe('KnowledgeBaseView', () => {
     await flushPromises()
     expect(wrapper.text()).toContain('Backend Notes')
     expect(wrapper.text()).toContain('Architecture records')
-    expect(wrapper.text()).toContain('Workspace')
+    expect(wrapper.text()).toContain('工作区')
     expect(wrapper.text()).toContain('更新于')
     expect(wrapper.text()).not.toContain('文档数量')
     expect(wrapper.get('.workspace-kb-link').attributes('data-to')).toBe(
@@ -84,7 +84,7 @@ describe('KnowledgeBaseView', () => {
     const wrapper = mountView()
     await flushPromises()
     expect(wrapper.text()).toContain('建立第一个知识空间')
-    expect(wrapper.text()).toContain('创建 Knowledge Base')
+    expect(wrapper.text()).toContain('创建知识库')
   })
 
   it('shows error state', async () => {

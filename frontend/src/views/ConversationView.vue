@@ -190,6 +190,10 @@ function resetEvidenceInspector(): void {
   selectedSourceId.value = null
 }
 
+function handleEscape(event: KeyboardEvent): void {
+  if (event.key === 'Escape' && evidenceVisible.value) resetEvidenceInspector()
+}
+
 async function showEvidence(messageId: string, sourceId: string): Promise<void> {
   evidenceMessageId.value = messageId
   selectedSourceId.value = sourceId
@@ -673,7 +677,7 @@ function traceCompactSummary(message: ConversationMessage): string {
   const steps = traceSummary(message)
   const marker = steps.some(({ state }) => state === 'failed') ? '!' : '✓'
   const fallback = steps.find(({ state }) => state === 'fallback')
-  return `${marker} Execution Trace · ${steps.length} stages${fallback ? ` · ${fallback.label} fallback` : ''}`
+  return `${marker} Execution Trace · ${steps.length} 个阶段${fallback ? ` · ${fallback.label} 已降级` : ''}`
 }
 
 function handleTraceSummaryClick(message: ConversationMessage, event: MouseEvent): void {
@@ -728,6 +732,7 @@ function traceDetails(message: ConversationMessage): TraceDetail[] {
 }
 
 onMounted(async () => {
+  window.addEventListener('keydown', handleEscape)
   const [knowledgeBaseResult, documentResult] = await Promise.allSettled([
     getKnowledgeBase(knowledgeBaseId),
     listDocuments(knowledgeBaseId, '', 0, 1),
@@ -743,6 +748,7 @@ onMounted(async () => {
   await loadList()
 })
 onBeforeUnmount(() => {
+  window.removeEventListener('keydown', handleEscape)
   stopGeneration(false)
   if (scrollFrame !== null) window.cancelAnimationFrame(scrollFrame)
   streamVersion += 1
@@ -756,13 +762,14 @@ onBeforeUnmount(() => {
       <aside class="conv-sidebar" aria-label="会话列表">
         <header class="conv-sidebar-head">
           <div class="conv-sidebar-workspace">
-            <span class="conv-sidebar-kicker">WORKSPACE</span>
+            <span class="conv-sidebar-kicker">工作区</span>
             <strong>{{ knowledgeBaseName || '知识库' }}</strong>
           </div>
         </header>
         <div class="conv-sidebar-section-head">
-          <span>SESSIONS</span>
+          <span>会话</span>
           <button
+            type="button"
             class="conv-sidebar-new"
             data-testid="new-conversation-sidebar"
             aria-label="新建会话"
@@ -779,6 +786,7 @@ onBeforeUnmount(() => {
           >
             <h2>{{ group.label }}</h2>
             <button
+              type="button"
               v-for="c in group.items"
               :key="c.id"
               class="conv-sidebar-item"
@@ -807,7 +815,9 @@ onBeforeUnmount(() => {
             </div>
           </div>
           <ElDropdown trigger="click" :hide-on-click="true">
-            <button class="conv-thread-actions" aria-label="会话操作">会话操作 ···</button>
+            <button type="button" class="conv-thread-actions" aria-label="会话操作">
+              会话操作 ···
+            </button>
             <template #dropdown>
               <ElDropdownMenu>
                 <ElDropdownItem @click="renameSelected">重命名</ElDropdownItem>
@@ -831,7 +841,7 @@ onBeforeUnmount(() => {
             class="conv-empty conv-empty-knowledge-base"
             data-testid="empty-knowledge-base-onboarding"
           >
-            <span class="conv-empty-kicker">NO MATERIALS YET</span>
+            <span class="conv-empty-kicker">暂无资料</span>
             <strong>这个知识空间还没有资料</strong>
             <p>导入文档或代码后，TraceMind 才能用可检查的证据回答；也可以先使用 Direct 模式开始会话。</p>
             <div class="conv-empty-actions">
@@ -850,16 +860,16 @@ onBeforeUnmount(() => {
             </div>
           </div>
           <div v-else-if="!selectedId" class="conv-empty">
-            <span class="conv-empty-kicker">START INVESTIGATION</span>
+            <span class="conv-empty-kicker">开始调查</span>
             <strong>开始一次可追溯的研究会话</strong>
-            <p>选择已有 Session，或为当前知识库创建新的调查。</p>
+            <p>选择已有会话，或为当前知识库创建新的调查。</p>
             <ElButton type="primary" data-testid="new-conversation-empty" @click="addConversation"
-              >新建 Session</ElButton
+              >新建会话</ElButton
             >
           </div>
           <template v-else>
             <div v-if="messages.length === 0" class="conv-empty investigation-empty">
-              <span class="conv-empty-kicker">START INVESTIGATION</span>
+              <span class="conv-empty-kicker">开始调查</span>
               <strong>向这个知识库提出一个问题</strong>
               <p>TraceMind 会将回答连接到可检查的真实证据。</p>
               <blockquote>“总结这个项目的核心架构”</blockquote>
@@ -874,7 +884,7 @@ onBeforeUnmount(() => {
             >
               <header class="msg-head">
                 <span class="msg-who">{{
-                  msg.role === 'user' ? 'YOU' : 'TRACEMIND ANSWER'
+                  msg.role === 'user' ? '你' : 'TRACEMIND 回答'
                 }}</span>
                 <time v-if="msg.role === 'user'" :datetime="msg.created_at">
                   {{ formatMessageTime(msg.created_at) }}
@@ -927,7 +937,7 @@ onBeforeUnmount(() => {
                     [{{ source.source_id }}]
                   </button>
                 </span>
-                <span class="msg-evidence-count">{{ msg.sources.length }} sources</span>
+                <span class="msg-evidence-count">{{ msg.sources.length }} 条来源</span>
               </nav>
               <div
                 v-else-if="
@@ -983,7 +993,7 @@ onBeforeUnmount(() => {
               </details>
 
               <details v-if="msg.role === 'assistant' && doneMetadata(msg)" class="exec-details">
-                <summary>TRACE DETAIL · 执行详情</summary>
+                <summary>执行详情 · TRACE DETAIL</summary>
                 <dl class="exec-grid">
                   <template v-for="row in traceDetails(msg)" :key="row.label">
                     <dt>{{ row.label }}</dt>
@@ -1001,7 +1011,7 @@ onBeforeUnmount(() => {
                 class="msg-knowledge-action"
               >
                 <div>
-                  <strong>Promote to Knowledge</strong>
+                  <strong>沉淀为知识</strong>
                   <span>将已验证回答沉淀为可复用知识</span>
                 </div>
                 <button
@@ -1031,7 +1041,7 @@ onBeforeUnmount(() => {
           data-testid="conversation-composer"
           @submit.prevent="generate"
         >
-          <span class="conv-composer-label">CONTINUE INVESTIGATION</span>
+          <span class="conv-composer-label">继续调查</span>
           <div class="conv-composer-row">
             <label class="conv-composer-field">
               <span class="sr-only">你的问题</span>
@@ -1073,10 +1083,10 @@ onBeforeUnmount(() => {
       >
         <div class="ev-head">
           <div>
-            <strong>SOURCE INSPECTOR</strong>
+            <strong>来源详情</strong>
             <span>来源检查器</span>
           </div>
-          <button @click="evidenceVisible = false" aria-label="关闭证据">×</button>
+          <button type="button" @click="resetEvidenceInspector" aria-label="关闭证据">×</button>
         </div>
         <div class="ev-body">
           <div v-if="selectedEvidenceSource" class="ev-selected-identity">
@@ -1096,7 +1106,7 @@ onBeforeUnmount(() => {
 
           <hr v-if="evidenceMetadata" class="ev-divider" />
           <details v-if="evidenceMessage && evidenceMetadata" class="ev-trace-details">
-            <summary>Trace Metadata · 执行信息</summary>
+            <summary>执行信息 · Trace Metadata</summary>
             <dl class="ev-exec-grid">
               <template v-for="row in traceDetails(evidenceMessage)" :key="row.label">
                 <dt>{{ row.label }}</dt>

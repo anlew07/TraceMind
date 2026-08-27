@@ -22,6 +22,7 @@ import type {
   ConsistencyRepairResponse,
   KnowledgeBaseArchiveRestoreResponse,
   KnowledgeBaseRebuildResponse,
+  RepairItemStatus,
   RepairOperationStatus,
   RebuildStatus,
 } from '@/types/dataMaintenance'
@@ -77,11 +78,11 @@ const hasRepairablePlan = computed(() => executableFindingIds.value.length > 0)
 
 const currentMaintenanceLabel = computed(() => {
   if (repairOperation.value)
-    return `Safe Repair · ${repairStatusLabel(repairOperation.value.status)}`
+    return `安全修复 · ${repairStatusLabel(repairOperation.value.status)}`
   if (audit.value) {
     return audit.value.summary.healthy
-      ? 'Consistency · Healthy'
-      : `Consistency · ${audit.value.findings.length} findings`
+      ? '一致性 · 正常'
+      : `一致性 · ${audit.value.findings.length} 个问题`
   }
   if (rebuild.value && rebuild.value.status !== 'not_started') {
     return `Derived State · ${rebuildStatusLabel(rebuild.value.status)}`
@@ -122,34 +123,47 @@ function apiMessage(error: unknown, action: 'export' | 'restore' | 'audit' | 're
     return '备份未能生成，请确认本地存储与后端服务可用。'
   }
   if (error.status === 409) return '当前已有维护操作，或所选状态已经变化。请刷新后重试。'
-  if (error.status === 404) return '维护对象不存在，请返回 Workspace 确认知识库状态。'
+  if (error.status === 404) return '维护对象不存在，请返回工作区确认知识库状态。'
   return `${action === 'audit' ? '一致性检查' : action === 'repair' ? '安全修复' : '派生状态重建'}未完成，请稍后重试。`
 }
 
 function repairStatusLabel(status: RepairOperationStatus): string {
   return {
-    planned: 'Review ready',
-    queued: 'Queued',
-    running: 'Running',
-    partially_failed: 'Partially failed',
-    failed: 'Failed',
-    succeeded: 'Completed',
+    planned: '可供确认',
+    queued: '等待执行',
+    running: '正在执行',
+    partially_failed: '部分失败',
+    failed: '失败',
+    succeeded: '已完成',
+  }[status]
+}
+
+function repairItemStatusLabel(status: RepairItemStatus): string {
+  return {
+    pending: '等待处理',
+    running: '正在执行',
+    planned: '已规划',
+    succeeded: '已完成',
+    failed: '失败',
+    skipped: '已跳过',
+    not_repairable: '不可自动修复',
+    verification_failed: '验证失败',
   }[status]
 }
 
 function rebuildStatusLabel(status: RebuildStatus): string {
   return {
-    not_started: 'Not started',
-    queued: 'Queued',
-    running: 'Running',
-    partially_failed: 'Partially failed',
-    failed: 'Failed',
-    succeeded: 'Completed',
+    not_started: '尚未开始',
+    queued: '等待执行',
+    running: '正在执行',
+    partially_failed: '部分失败',
+    failed: '失败',
+    succeeded: '已完成',
   }[status]
 }
 
 function severityLabel(severity: AuditSeverity): string {
-  return { INFO: 'Info', WARNING: 'Warning', ERROR: 'Error', CRITICAL: 'Critical' }[severity]
+  return { INFO: '信息', WARNING: '警告', ERROR: '错误', CRITICAL: '严重' }[severity]
 }
 
 function statusTone(status: RepairOperationStatus | RebuildStatus): string {
@@ -163,19 +177,19 @@ function rebuildRows(value: KnowledgeBaseRebuildResponse | null) {
   if (!value) return []
   return [
     {
-      label: 'Document versions parsed',
+      label: '已解析文档版本',
       completed: value.document_versions_parsed,
       failed: value.document_versions_failed,
       total: value.document_versions_total,
     },
     {
-      label: 'Documents indexed',
+      label: '已索引资料',
       completed: value.documents_indexed,
       failed: value.documents_failed,
       total: value.documents_total,
     },
     {
-      label: 'Knowledge entries indexed',
+      label: '已索引知识条目',
       completed: value.knowledge_entries_indexed,
       failed: value.knowledge_entries_failed,
       total: value.knowledge_entries_total,
@@ -481,12 +495,12 @@ onBeforeUnmount(() => {
       <div class="data-management-main">
         <header class="data-management-header">
           <div>
-            <RouterLink to="/" class="data-management-back">← Workspace</RouterLink>
-            <h1>Data &amp; Recovery</h1>
+            <RouterLink to="/" class="data-management-back">← 工作区</RouterLink>
+            <h1>数据与恢复</h1>
             <p>保护本地知识资产，并维护可以从 Source of Truth 重建的检索状态。</p>
           </div>
           <div class="data-management-context">
-            <span>Current Knowledge Base</span>
+            <span>当前知识库</span>
             <strong>{{ knowledgeBase?.name }}</strong>
           </div>
         </header>
@@ -494,7 +508,7 @@ onBeforeUnmount(() => {
         <section class="maintenance-section" aria-labelledby="backup-restore-heading">
           <div class="maintenance-section-heading">
             <div>
-              <h2 id="backup-restore-heading">Backup &amp; Restore</h2>
+              <h2 id="backup-restore-heading">备份与恢复</h2>
               <p>归档保存 Source of Truth；恢复不会自动建立派生检索状态。</p>
             </div>
           </div>
@@ -502,16 +516,16 @@ onBeforeUnmount(() => {
           <div class="archive-workflows">
             <article class="maintenance-task">
               <div class="maintenance-task-copy">
-                <h3>Export Archive</h3>
-                <p>保存当前 Knowledge Base 的完整本地归档。</p>
+                <h3>导出归档</h3>
+                <p>保存当前知识库的完整本地归档。</p>
               </div>
               <dl class="maintenance-facts">
                 <div>
-                  <dt>Knowledge Base</dt>
+                  <dt>知识库</dt>
                   <dd>{{ knowledgeBase?.name }}</dd>
                 </div>
                 <div>
-                  <dt>Archive format</dt>
+                  <dt>归档格式</dt>
                   <dd class="technical-value">.tracemind.zip</dd>
                 </div>
               </dl>
@@ -534,9 +548,9 @@ onBeforeUnmount(() => {
 
             <article class="maintenance-task restore-task">
               <div class="maintenance-task-copy">
-                <span class="maintenance-scope-label">Workspace-level restore</span>
-                <h3>Restore Knowledge Base</h3>
-                <p>从 TraceMind archive 恢复新的 Knowledge Base Source of Truth。</p>
+                <span class="maintenance-scope-label">Workspace-level 恢复</span>
+                <h3>恢复知识库</h3>
+                <p>从 TraceMind 归档恢复新的知识库 Source of Truth。</p>
               </div>
               <label class="archive-file-picker" :class="{ 'has-file': restoreFile }">
                 <input
@@ -549,11 +563,11 @@ onBeforeUnmount(() => {
               </label>
               <dl v-if="restoreFile" class="maintenance-facts selected-file-facts">
                 <div>
-                  <dt>File name</dt>
+                  <dt>文件名</dt>
                   <dd>{{ restoreFile.name }}</dd>
                 </div>
                 <div>
-                  <dt>File size</dt>
+                  <dt>文件大小</dt>
                   <dd>{{ formatBytes(restoreFile.size) }}</dd>
                 </div>
               </dl>
@@ -570,26 +584,26 @@ onBeforeUnmount(() => {
                 :loading="restoring"
                 @click="restoreArchive"
               >
-                {{ restoring ? '正在恢复…' : 'Restore' }}
+                {{ restoring ? '正在恢复…' : '恢复' }}
               </ElButton>
 
               <div v-if="restoreResult" class="restore-outcome" role="status">
                 <div class="maintenance-status is-warning">
                   <span class="maintenance-status-dot" aria-hidden="true"></span>
-                  <strong>Source data restored</strong>
+                  <strong>Source of Truth 已恢复</strong>
                 </div>
-                <p>Retrieval derived state still needs rebuild.</p>
+                <p>检索 Derived State 仍需重建。</p>
                 <dl class="maintenance-facts compact">
                   <div>
-                    <dt>Documents</dt>
+                    <dt>资料</dt>
                     <dd>{{ restoreResult.entity_counts.documents }}</dd>
                   </div>
                   <div>
-                    <dt>Conversations</dt>
+                    <dt>会话</dt>
                     <dd>{{ restoreResult.entity_counts.conversations }}</dd>
                   </div>
                   <div>
-                    <dt>Knowledge</dt>
+                    <dt>知识</dt>
                     <dd>{{ restoreResult.entity_counts.knowledge_entries }}</dd>
                   </div>
                 </dl>
@@ -638,10 +652,10 @@ onBeforeUnmount(() => {
         <section class="maintenance-section" aria-labelledby="consistency-heading">
           <div class="maintenance-section-heading with-action">
             <div>
-              <h2 id="consistency-heading">Consistency</h2>
+              <h2 id="consistency-heading">一致性检查</h2>
               <p>检查数据库 Source of Truth、原始文件、Chunks 与检索索引之间的一致性。</p>
               <span class="read-only-note"
-                ><span aria-hidden="true">✓</span> Read-only · 不会修改数据</span
+                ><span aria-hidden="true">✓</span> 只读 · 不会修改数据</span
               >
             </div>
             <ElButton :loading="auditing" @click="auditConsistency">
@@ -661,17 +675,17 @@ onBeforeUnmount(() => {
                 <strong>{{
                   audit.summary.healthy
                     ? audit.findings.length
-                      ? `Healthy · ${audit.findings.length} findings`
-                      : 'Healthy'
-                    : `${audit.findings.length} findings`
+                      ? `正常 · ${audit.findings.length} 个问题`
+                      : '正常'
+                    : `${audit.findings.length} 个问题`
                 }}</strong>
               </div>
-              <span>{{ audit.status === 'partial' ? 'Partial audit' : 'Completed audit' }}</span>
+              <span>{{ audit.status === 'partial' ? '部分完成' : '检查完成' }}</span>
               <time :datetime="audit.completed_at">{{ formatDate(audit.completed_at) }}</time>
             </div>
 
             <p v-if="audit.findings.length === 0" class="maintenance-empty-result">
-              未发现 consistency finding。
+              未发现一致性问题。
             </p>
 
             <div v-if="audit.findings.length" class="finding-ledger">
@@ -701,11 +715,11 @@ onBeforeUnmount(() => {
                     <span>{{ finding.entity_type }}</span>
                     <code>{{ finding.entity_id }}</code>
                     <span v-if="finding.knowledge_base_id !== knowledgeBaseId">
-                      Global / read-only finding
+                      全局 / 只读问题
                     </span>
                   </div>
                   <details v-if="Object.keys(finding.details).length" class="maintenance-detail">
-                    <summary>Finding detail</summary>
+                    <summary>问题详情</summary>
                     <dl class="maintenance-facts compact">
                       <div v-for="(value, key) in finding.details" :key="key">
                         <dt>{{ key }}</dt>
@@ -717,14 +731,14 @@ onBeforeUnmount(() => {
               </article>
 
               <div class="repair-review-actions">
-                <span>{{ selectedFindingIds.length }} selected</span>
+                <span>已选择 {{ selectedFindingIds.length }} 项</span>
                 <ElButton
                   data-testid="review-repair"
                   :disabled="selectedFindingIds.length === 0"
                   :loading="planningRepair"
                   @click="reviewSafeRepair"
                 >
-                  Review Safe Repair
+                  查看安全修复方案
                 </ElButton>
               </div>
             </div>
@@ -740,10 +754,10 @@ onBeforeUnmount(() => {
             <div v-if="repairPlan" class="repair-plan">
               <div class="repair-plan-heading">
                 <div>
-                  <h3>Safe Repair Review</h3>
+                  <h3>安全修复确认</h3>
                   <p>修复资格和动作来自后端 dry-run；仅执行 planned + repairable 项。</p>
                 </div>
-                <span class="maintenance-scope-label">Only derived state</span>
+                <span class="maintenance-scope-label">仅处理 Derived State</span>
               </div>
               <div class="repair-item-ledger">
                 <div
@@ -756,14 +770,14 @@ onBeforeUnmount(() => {
                     :class="item.repairable ? 'is-success' : 'is-warning'"
                   >
                     <span class="maintenance-status-dot" aria-hidden="true"></span>
-                    {{ item.status }}
+                    {{ repairItemStatusLabel(item.status) }}
                   </span>
                   <code>{{ item.action }}</code>
                   <span>{{ item.safe_message }}</span>
                 </div>
               </div>
               <div class="repair-review-actions">
-                <span>{{ executableFindingIds.length }} safe action(s)</span>
+                <span>{{ executableFindingIds.length }} 个安全动作</span>
                 <ElButton
                   type="primary"
                   data-testid="execute-repair"
@@ -795,7 +809,7 @@ onBeforeUnmount(() => {
                   :key="item.finding_id"
                   class="repair-item-row"
                 >
-                  <span>{{ item.status }}</span>
+                  <span>{{ repairItemStatusLabel(item.status) }}</span>
                   <code>{{ item.action }}</code>
                   <span>{{ item.safe_message }}</span>
                 </div>
@@ -807,7 +821,7 @@ onBeforeUnmount(() => {
         <section class="maintenance-section" aria-labelledby="rebuild-heading">
           <div class="maintenance-section-heading with-action">
             <div>
-              <h2 id="rebuild-heading">Rebuild Derived State</h2>
+              <h2 id="rebuild-heading">重建 Derived State</h2>
               <p>从现有 Source of Truth 重新生成 parsed chunks 和 retrieval indexes。</p>
             </div>
             <ElButton
@@ -848,7 +862,7 @@ onBeforeUnmount(() => {
               <div v-for="row in rebuildRows(rebuild)" :key="row.label" class="rebuild-row">
                 <span>{{ row.label }}</span>
                 <strong>{{ row.completed }} / {{ row.total }}</strong>
-                <span v-if="row.failed" class="rebuild-failed">{{ row.failed }} failed</span>
+                <span v-if="row.failed" class="rebuild-failed">{{ row.failed }} 个失败</span>
               </div>
             </div>
             <p v-if="rebuild.error_message" class="operation-safe-error">
@@ -863,18 +877,18 @@ onBeforeUnmount(() => {
             <section>
               <h2>Source of Truth</h2>
               <ul>
-                <li>Knowledge Base metadata</li>
-                <li>Documents、所有文档版本与存储原文件</li>
-                <li>Conversations 与 Messages</li>
-                <li>Knowledge Entries 与 Evidence snapshots</li>
+                <li>知识库元数据</li>
+                <li>资料、所有文档版本与存储原文件</li>
+                <li>会话与消息</li>
+                <li>知识条目与 Evidence 快照</li>
               </ul>
             </section>
             <section>
               <h2>Derived State</h2>
               <ul>
-                <li>Parsed chunks</li>
-                <li>Document retrieval index</li>
-                <li>Verified Knowledge retrieval index</li>
+                <li>解析后的 Chunks</li>
+                <li>资料检索索引</li>
+                <li>已验证知识检索索引</li>
                 <li>可从 Source of Truth 重新生成的数据</li>
               </ul>
             </section>
@@ -883,25 +897,25 @@ onBeforeUnmount(() => {
       </div>
 
       <aside class="data-management-inspector" aria-label="数据恢复说明">
-        <span class="inspector-eyebrow">RECOVERY INSPECTOR</span>
+        <span class="inspector-eyebrow">恢复说明</span>
         <h2>{{ knowledgeBase?.name }}</h2>
         <div class="inspector-section">
-          <span>Latest local state</span>
+          <span>最近本地状态</span>
           <strong>{{ currentMaintenanceLabel }}</strong>
         </div>
         <div class="inspector-section">
-          <span>Backup boundary</span>
-          <p>Archive 保存 Source of Truth，不把可重建索引当作永久主数据。</p>
+          <span>备份边界</span>
+        <p>归档保存 Source of Truth，不把可重建索引当作永久主数据。</p>
         </div>
         <div class="inspector-section">
-          <span>Recovery sequence</span>
+          <span>恢复顺序</span>
           <ol>
-            <li>Restore Source of Truth</li>
-            <li>Rebuild Derived State</li>
-            <li>Ready for Retrieval</li>
+            <li>恢复 Source of Truth</li>
+            <li>重建 Derived State</li>
+            <li>恢复检索可用状态</li>
           </ol>
         </div>
-        <p class="inspector-note">Restore 是 Workspace-level 能力，不绑定当前知识库 ID。</p>
+        <p class="inspector-note">恢复是 Workspace-level 能力，不绑定当前知识库 ID。</p>
       </aside>
     </div>
   </main>

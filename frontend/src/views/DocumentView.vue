@@ -105,7 +105,7 @@ function documentStatus(document: DocumentItem): DocumentStatusView {
     }
   }
   return {
-    label: 'Ready',
+    label: '可用',
     detail: `已解析并索引 ${version.indexed_chunk_count || version.chunk_count} 个 Chunk`,
     tone: 'ready',
   }
@@ -270,6 +270,10 @@ function closeInspector(): void {
   inspectedDocument.value = null
 }
 
+function handleEscape(event: KeyboardEvent): void {
+  if (event.key === 'Escape' && inspectedDocument.value) closeInspector()
+}
+
 async function confirmDelete(document: DocumentItem): Promise<void> {
   try {
     await ElMessageBox.confirm(
@@ -325,8 +329,12 @@ function formatOptionalDate(value: string | null): string {
   return value ? formatDate(value) : '—'
 }
 
-onMounted(loadPage)
+onMounted(() => {
+  window.addEventListener('keydown', handleEscape)
+  void loadPage()
+})
 onBeforeUnmount(() => {
+  window.removeEventListener('keydown', handleEscape)
   if (pollingTimer !== undefined) clearInterval(pollingTimer)
 })
 </script>
@@ -338,7 +346,7 @@ onBeforeUnmount(() => {
         <div class="document-content-grid">
           <header class="management-header">
             <div>
-              <h1>文档</h1>
+              <h1>资料</h1>
               <p>当前知识库的研究资料与可追溯来源</p>
             </div>
             <div class="header-actions">
@@ -440,7 +448,7 @@ onBeforeUnmount(() => {
 
                 <div class="doc-overflow" @click.stop @keydown.stop>
                   <ElDropdown trigger="click" :hide-on-click="true">
-                    <button class="doc-more" aria-label="文档操作">···</button>
+                    <button type="button" class="doc-more" aria-label="资料操作">···</button>
                     <template #dropdown>
                       <ElDropdownMenu>
                         <ElDropdownItem
@@ -505,14 +513,14 @@ onBeforeUnmount(() => {
 
           <div class="document-retrieval-region">
             <div>
-              <span>Advanced · Retrieval Workspace</span>
-              <p>测试当前知识库的真实召回、排序和 Evidence candidates。</p>
+              <span>高级 · 检索工作区</span>
+              <p>测试当前知识库的真实召回、排序和 Evidence 候选。</p>
             </div>
             <RouterLink
               :to="{ name: 'retrieval', params: { knowledgeBaseId } }"
               class="document-retrieval-link"
             >
-              打开 Retrieval Workspace <span aria-hidden="true">→</span>
+              打开检索工作区 <span aria-hidden="true">→</span>
             </RouterLink>
           </div>
         </div>
@@ -533,7 +541,7 @@ onBeforeUnmount(() => {
         aria-label="文档详情"
       >
         <header class="document-inspector-header">
-          <span>DOCUMENT INSPECTOR</span>
+          <span>资料详情</span>
           <button
             type="button"
             class="inspector-close"
@@ -620,7 +628,7 @@ onBeforeUnmount(() => {
         </section>
 
         <details class="document-technical-detail">
-          <summary>Technical detail</summary>
+          <summary>技术详情</summary>
           <dl class="document-facts">
             <div>
               <dt>Parser</dt>
@@ -634,15 +642,15 @@ onBeforeUnmount(() => {
               <dd>{{ inspectedDocument.latest_version.embedding_model || '—' }}</dd>
             </div>
             <div>
-              <dt>Dimension</dt>
+              <dt>维度</dt>
               <dd>{{ inspectedDocument.latest_version.embedding_dimension || '—' }}</dd>
             </div>
             <div>
-              <dt>Content hash</dt>
+              <dt>内容哈希</dt>
               <dd class="technical-value">{{ inspectedDocument.latest_version.content_hash }}</dd>
             </div>
             <div>
-              <dt>Index generation</dt>
+              <dt>索引代次</dt>
               <dd class="technical-value">
                 {{ inspectedDocument.latest_version.active_index_generation || '—' }}
               </dd>

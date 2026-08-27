@@ -1,12 +1,19 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
-import { RouterLink } from 'vue-router'
+import { useRouter } from 'vue-router'
 
 import { fetchHealth } from '@/services/health'
+import { markLandingSeen } from '@/services/landingPreference'
 
 type ServiceStatus = 'checking' | 'available' | 'unavailable'
 
 const serviceStatus = ref<ServiceStatus>('checking')
+const router = useRouter()
+
+function enterWorkspace(): void {
+  markLandingSeen()
+  void router.push('/knowledge-bases')
+}
 
 async function checkBackend(): Promise<void> {
   serviceStatus.value = 'checking'
@@ -24,12 +31,12 @@ onMounted(checkBackend)
 <template>
   <main class="landing-view">
     <div class="landing-center">
-      <p class="landing-kicker">LOCAL-FIRST · EVIDENCE-GROUNDED</p>
+      <p class="landing-kicker">本地优先 · 证据可追溯</p>
       <h1>TraceMind</h1>
       <p class="landing-desc">
         把文档、代码与研究记录组织成可检索的知识，<br />让每个回答都能回到真实来源。
       </p>
-      <RouterLink to="/" class="landing-cta">进入 Workspace →</RouterLink>
+      <button type="button" class="landing-cta" @click="enterWorkspace">进入工作区 →</button>
       <p class="landing-loop" aria-label="TraceMind 知识闭环">
         Document · Retrieval · Evidence · Answer · Knowledge
       </p>

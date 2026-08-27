@@ -106,12 +106,12 @@ onMounted(loadKnowledgeBases)
     <div class="workspace-home-inner">
       <header class="workspace-home-header">
         <div class="workspace-home-heading">
-          <span class="workspace-home-kicker">RESEARCH DESK</span>
-          <h1>Workspace</h1>
+          <span class="workspace-home-kicker">研究工作台</span>
+          <h1>工作区</h1>
           <p>选择一个知识空间，继续检索、验证证据与沉淀结论。</p>
         </div>
         <ElButton type="primary" data-testid="create-knowledge-base" @click="openCreateDialog">
-          创建 Knowledge Base
+          创建知识库
         </ElButton>
       </header>
 
@@ -130,7 +130,7 @@ onMounted(loadKnowledgeBases)
 
       <section class="workspace-spaces" :aria-busy="loading" aria-labelledby="spaces-heading">
         <div class="workspace-section-heading">
-          <h2 id="spaces-heading">Knowledge Spaces</h2>
+          <h2 id="spaces-heading">知识空间</h2>
           <span v-if="items.length">{{ items.length }} 个空间</span>
         </div>
 
@@ -142,7 +142,7 @@ onMounted(loadKnowledgeBases)
           <span class="workspace-empty-mark" aria-hidden="true">T</span>
           <h2>建立第一个知识空间</h2>
           <p>为项目、主题或长期研究创建独立空间，再导入真实资料开始追溯。</p>
-          <ElButton type="primary" @click="openCreateDialog">创建 Knowledge Base</ElButton>
+          <ElButton type="primary" @click="openCreateDialog">创建知识库</ElButton>
         </div>
 
         <div v-else class="workspace-kb-grid">
@@ -159,7 +159,7 @@ onMounted(loadKnowledgeBases)
               </div>
               <div class="workspace-kb-meta">
                 <time :datetime="kb.updated_at">更新于 {{ formatDate(kb.updated_at) }}</time>
-                <span>Continue Research →</span>
+                <span>继续研究 →</span>
               </div>
             </RouterLink>
 

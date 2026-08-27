@@ -1273,3 +1273,37 @@ API 的 parsed/indexed/failed counts，不伪造阶段或百分比。Restore 对
 repair allowlist、WebSocket/EventBus 或后端 schema 扩展。视觉继续使用锁定的 warm-paper Workbench：维护 section 以 hairline 分隔，
 amber 只表达真实维护警告，桌面 Recovery Inspector 在中窄屏收敛为单列。真实用户数据验收只允许 Export 与 read-only Audit；Restore、
 Repair 和 Rebuild 使用同构 fixture 或临时知识库，禁止故意破坏 Source of Truth。
+
+# 2026-08-26 — UI Phase 2.7 Final Stabilization & Merge Readiness
+
+本轮停止新增页面和功能，以 `feature/ui-redesign` 的真实模板、route、动态 class、测试和浏览器行为为依据进行最终收敛。
+审计发现普通 UI 文案仍混有英文，多个 Inspector 缺少统一的 Escape 关闭行为，Conversation 仍局部重定义第二套硬编码颜色，
+`main.css` 还保留已被 Workspace Home、独立 Retrieval Workspace 和 Phase 1.1.1 Conversation 完全替代的旧样式块。
+
+采用最小风险方案：普通页面标题、操作、状态和维护文案改为自然中文，保留 RAG、Semantic、Hybrid、Reranked、RRF、
+Cross-Encoder、Evidence、Execution Trace、Local-first 等稳定专业术语；Conversation、Documents、Retrieval 和 Knowledge Map
+的可关闭 Inspector 补齐 Escape 行为，不引入新的 Inspector framework。CSS 只删除经 template、component、dynamic class、route
+和 tests 共同确认无引用的旧 Home、旧 embedded Retrieval Debug 与旧 Conversation 块，并让 Conversation 复用全局设计 token；
+高风险且仍参与 cascade 的页面样式保持原状。
+
+未采用 CSS framework 迁移、全量 class 重命名、Inspector 抽象重构、自动恢复、Document Reader 或新品牌资产。Document Reader
+因缺少稳定全文/分页阅读 API 契约继续延期；Compass Logo 等待正式批准资产，二者均不是合并阻塞项。Retrieval Workspace
+继续只运行真实 Semantic/Hybrid/Reranked 检索，不执行生成；Data & Recovery 继续以 Source of Truth 与 Derived State 边界及现有
+archive/restore/audit/repair/rebuild API 为唯一功能范围。最终门禁与真实浏览器 Daily-use 结果在本轮交付报告中记录，未完成的
+浏览器覆盖不会在文档中提前写成已验证事实。
+
+最终前端门禁为 vue-tsc、ESLint、Vite production build 全部通过，Vitest 为 26 files / 170 tests passed。
+真实 Chromium 逐页覆盖 Landing、Workspace、Conversation、Documents、Retrieval、Knowledge、Knowledge Detail、Knowledge Map
+和 Data & Recovery，并在 1440/1280/1024/900/768/414/375/320px 验证无页面级横向溢出。Daily-use 使用真实数据完成
+5 轮 Conversation（Direct 与 RAG）、Citation/Evidence Inspector、Documents 搜索与 Inspector、Hybrid/Reranked、Knowledge
+Detail、Document graph node、只读 Audit 和返回 Workspace；Console/Network 未出现错误。验收发现并修复 680px 以下 Conversation
+仅声明 grid tracks 却仍保持 flex 的布局回归，修复后 320px Composer 与 MessageViewport 均完整可用。基于这些证据，本轮 UI
+达到 merge-ready；Document Reader 与 Compass Logo 仍按既定原因延期。
+
+# 2026-08-26 — UI Merge Readiness Landing Entry Fix
+
+保留已完成的 Landing，但将根路径收敛为纯本地首次入口判断：`/` 仅在
+`tracemind.landing.seen.v1` 尚未记录时进入 `/landing`，已记录时直接进入 `/knowledge-bases`；显式
+`/landing` 和所有 Knowledge Base 深层链接不受判断影响。Landing 的“进入工作区”先尝试写入 localStorage，再直接导航
+`/knowledge-bases`，读失败安全回退 Landing，写失败仍允许进入工作区。未采用全局 router guard、cookie、后端偏好字段或
+onboarding framework。

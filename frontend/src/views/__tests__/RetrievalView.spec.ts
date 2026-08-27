@@ -63,8 +63,8 @@ describe('RetrievalView', () => {
     const { wrapper, shellName } = mountView()
     await flushPromises()
 
-    expect(wrapper.text()).toContain('Retrieval Workspace')
-    expect(wrapper.text()).toContain('不调用 LLM Generation')
+    expect(wrapper.text()).toContain('检索工作区')
+    expect(wrapper.text()).toContain('不调用 LLM 生成')
     expect(wrapper.get('[data-testid="retrieval-panel"]').text()).toContain('kb-id · 1')
     expect(mockedListDocuments).toHaveBeenCalledWith('kb-id', '', 0, 100)
     expect(shellName.value).toBe('Architecture Notes')
@@ -75,7 +75,7 @@ describe('RetrievalView', () => {
     const { wrapper } = mountView()
     await flushPromises()
 
-    expect(wrapper.get('[role="alert"]').text()).toContain('Retrieval Workspace 加载失败')
+    expect(wrapper.get('[role="alert"]').text()).toContain('检索工作区加载失败')
     await wrapper.get('[role="alert"] button').trigger('click')
     await flushPromises()
 

@@ -63,13 +63,13 @@ describe('AppShell', () => {
     expect(wrapper.text()).toContain('TraceMind')
     expect(wrapper.text()).toContain('Evidence · Knowledge · Trust')
     expect(wrapper.text()).toContain('Local-first')
-    expect(wrapper.text()).toContain('Workspace')
+    expect(wrapper.text()).toContain('工作区')
     expect(wrapper.get('.global-nav-link').attributes('data-to')).toBe('/')
     expect(wrapper.text()).toContain('Page content')
     expect(wrapper.get('.brand-mark-placeholder').attributes('data-placeholder')).toBe('true')
     expect(wrapper.find('.kb-tabs').exists()).toBe(false)
     expect(wrapper.find('.mobile-navigation').exists()).toBe(false)
-    expect(wrapper.get('.mobile-shell-context').text()).toBe('Workspace')
+    expect(wrapper.get('.mobile-shell-context').text()).toBe('工作区')
     expect(wrapper.get('.mobile-local-status').attributes('aria-label')).toContain('Local-first')
   })
 
@@ -83,7 +83,7 @@ describe('AppShell', () => {
     expect(wrapper.get('.shell-context-value').text()).toBe('Project KB')
     expect(wrapper.text()).not.toContain('Retrieval')
     expect(wrapper.text()).not.toContain('Hybrid + Rerank')
-    expect(wrapper.get('.kb-tab[data-to="/knowledge-bases/kb-1/documents"]').text()).toBe('文档')
+    expect(wrapper.get('.kb-tab[data-to="/knowledge-bases/kb-1/documents"]').text()).toBe('资料')
     expect(wrapper.get('.kb-tab[data-to="/knowledge-bases/kb-1/documents"]').classes()).toContain(
       'active',
     )
@@ -106,7 +106,7 @@ describe('AppShell', () => {
     expect(wrapper.get('.shell-mobile-menu').text()).toContain('资料')
     expect(wrapper.get('.shell-mobile-menu').text()).toContain('知识')
     expect(wrapper.get('.shell-mobile-menu').text()).toContain('图谱')
-    expect(wrapper.get('.shell-mobile-menu').text()).toContain('返回 Workspace')
+    expect(wrapper.get('.shell-mobile-menu').text()).toContain('返回工作区')
     expect(wrapper.get('.shell-mobile-menu').text()).toContain('Local-first')
     expect(
       wrapper.findAll('.el-dropdown-item').filter((item) => item.classes('active')),

@@ -273,7 +273,7 @@ onUnmounted(() => window.clearTimeout(indexPollTimer))
             <h2>来源链路</h2>
             <ol class="knowledge-lineage-list">
               <li :data-state="entry.source_conversation_id ? 'available' : 'unavailable'">
-                <span>Conversation</span>
+                <span>会话</span>
                 <RouterLink
                   v-if="entry.source_conversation_id"
                   :to="`/knowledge-bases/${knowledgeBaseId}/chat?conversation=${entry.source_conversation_id}`"
@@ -284,7 +284,7 @@ onUnmounted(() => window.clearTimeout(indexPollTimer))
                 <strong v-else>来源会话已不可用</strong>
               </li>
               <li>
-                <span>Answer</span>
+                <span>回答</span>
                 <strong>原始回答快照已保留</strong>
               </li>
               <li>
@@ -292,7 +292,7 @@ onUnmounted(() => window.clearTimeout(indexPollTimer))
                 <strong>{{ entry.sources_snapshot.length }} 条证据快照</strong>
               </li>
               <li>
-                <span>Knowledge</span>
+                <span>知识</span>
                 <strong>当前知识记录</strong>
               </li>
             </ol>

@@ -203,17 +203,21 @@ describe('ConversationView', () => {
     expect(mockedList).toHaveBeenCalledWith('kb')
     expect(wrapper.get('[data-testid="conversation-c1"]').text()).toContain('First')
     expect(wrapper.get('[data-message-id="a1"]').text()).toContain('Answer with evidence')
-    expect(wrapper.get('[data-message-id="a1"] .msg-who').text()).toBe('TRACEMIND ANSWER')
+    expect(wrapper.get('[data-message-id="a1"] .msg-who').text()).toBe('TRACEMIND 回答')
     expect(wrapper.get('[data-message-id="a1"] .msg-evidence-strip').text()).toContain('[S1]')
     expect(wrapper.find('#evidence-inspector').exists()).toBe(false)
 
     await wrapper.get('[data-message-id="a1"] .cite-btn').trigger('click')
     await flushPromises()
 
-    expect(wrapper.get('.ev-head').text()).toContain('SOURCE INSPECTOR')
+    expect(wrapper.get('.ev-head').text()).toContain('来源详情')
     expect(wrapper.get('[data-testid="evidence-source-a1-S1"]').text()).toContain(
       'first source excerpt',
     )
+
+    window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }))
+    await wrapper.vm.$nextTick()
+    expect(wrapper.find('#evidence-inspector').exists()).toBe(false)
   })
 
   it('offers the existing import flow when the knowledge base has no documents', async () => {
@@ -708,7 +712,7 @@ describe('ConversationView', () => {
     await flushPromises()
     const trace = wrapper.get('[data-message-id="a1"] .msg-lineage')
     expect(trace.attributes('open')).toBeUndefined()
-    expect(trace.get('summary').text()).toContain('5 stages')
+    expect(trace.get('summary').text()).toContain('5 个阶段')
 
     await trace.get('summary').trigger('click')
     await flushPromises()
@@ -735,7 +739,7 @@ describe('ConversationView', () => {
     const wrapper = mountView()
     await flushPromises()
     const trace = wrapper.get('[data-message-id="fallback-answer"] .msg-lineage')
-    expect(trace.get('summary').text()).toContain('Rerank fallback')
+    expect(trace.get('summary').text()).toContain('Rerank 已降级')
     await trace.get('summary').trigger('click')
     await flushPromises()
 
@@ -869,7 +873,7 @@ describe('ConversationView', () => {
     await flushPromises()
     expect(wrapper.text()).toContain('CODE')
     expect(wrapper.text()).toContain('void run()')
-    expect(wrapper.get('.msg-evidence-strip').text()).toContain('2 sources')
+    expect(wrapper.get('.msg-evidence-strip').text()).toContain('2 条来源')
   })
 
   it('saves only a persisted completed assistant answer as knowledge', async () => {

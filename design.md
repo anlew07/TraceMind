@@ -95,7 +95,9 @@ Desktop application pages share this skeleton:
   create action, and no invented dashboard metrics. Tiles use real name, description, and update
   time, and open the Conversation workspace directly.
 - **Knowledge Map:** spatial canvas replaces the central document plane; shell, rail, selection, and Inspector stay consistent.
-- **Document Reader:** document tree, readable source body, highlighted evidence chunk, Source Inspector.
+- **Document Reader (deferred):** the visual direction remains a document tree, readable source body,
+  highlighted evidence chunk, and Source Inspector, but the product must not implement it until a
+  stable full-document / pagination reading API contract exists. Chunk previews are not a Reader.
 - **Landing:** a deliberate exception—a centered editorial portal with enlarged brand lockup, short product sequence, and one workspace-entry action.
 
 ## 5. Global shell
@@ -145,6 +147,9 @@ The application shell is a persistent, full-width masthead, estimated at **64–
 - Sections are separated by spacing and hairlines. Avoid nested card stacks.
 - Long excerpts remain readable and show explicit source identity.
 - A bottom action region may remain visually anchored when the page requires it.
+- Desktop Inspectors occupy a contextual side pane. At medium widths they become right overlays with
+  a shared backdrop; on mobile they are full-width panels. Close buttons are native buttons, Escape
+  closes an open Inspector, and the global mobile menu remains above Inspector layers.
 
 ## 7. Content density and grid rhythm
 
@@ -411,6 +416,8 @@ The compass logo is part of TraceMind's identity. This document specifies use, n
 - Scale changes; proportions, stroke character, and brand relationship do not.
 
 Do not redraw or generate the logo from this description. Use the approved asset when it becomes available.
+The current letter-mark is an explicit temporary placeholder; the approved Compass asset remains
+deferred and its absence is not a merge blocker.
 
 ## 17. Empty, loading, and error principles
 
@@ -452,8 +459,8 @@ The approved images establish a desktop-first workbench. Breakpoint behavior bel
 
 - **≥1280px:** persistent three-column workbench; full shell; Inspector 360–400px.
 - **960–1279px:** preserve main workspace; compact or collapsible left rail; Inspector may narrow toward 320px or open as an overlay.
-- **768–959px:** one persistent primary plane; left rail becomes a drawer; Inspector becomes an accessible side sheet or stacked detail view.
-- **<768px:** single-column reading/task flow; compact brand/current-context shell; navigation drawer; evidence Inspector becomes a full-height sheet or ordered inline region.
+- **768–959px:** one persistent primary plane; left rail becomes a drawer; Inspector becomes an accessible overlay side sheet.
+- **<768px:** single-column reading/task flow; compact brand/current-context shell; navigation drawer; Inspector becomes a full-width panel rather than entering normal page flow.
 
 At every width:
 
@@ -479,6 +486,16 @@ At every width:
 | Status | Dot/icon + text; semantic color; no color-only meaning |
 | Buttons | Deep-green primary, bordered secondary, restrained evidence action |
 | Form Controls | Warm surface, thin border, compact radius, visible focus and validation |
+
+### Product language
+
+- Product copy is Chinese-first: page titles, descriptions, actions, status, loading, empty, error,
+  confirmation, tooltip, and maintenance guidance use natural Chinese.
+- Stable professional terms may remain in English where translation would reduce precision:
+  TraceMind, RAG, Semantic, Hybrid, Reranked, RRF, Cross-Encoder, Evidence, Execution Trace,
+  Local-first, Embedding, BM25, LangGraph, LangChain, Qdrant, Direct, and API.
+- `Source of Truth` and `Derived State` may remain bilingual because they identify an explicit data
+  boundary. Ordinary actions at the same hierarchy must never mix English and Chinese.
 
 ## 21. Implementation guardrails
 

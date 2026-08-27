@@ -184,10 +184,10 @@ describe('DataManagementView', () => {
     const wrapper = mountView()
     await flushPromises()
 
-    expect(wrapper.text()).toContain('Data & Recovery')
+    expect(wrapper.text()).toContain('数据与恢复')
     expect(wrapper.text()).toContain('Research Notes')
-    expect(wrapper.text()).toContain('Read-only · 不会修改数据')
-    expect(wrapper.text()).toContain('Restore 是 Workspace-level 能力')
+    expect(wrapper.text()).toContain('只读 · 不会修改数据')
+    expect(wrapper.text()).toContain('恢复是 Workspace-level 能力')
     expect(wrapper.text()).not.toMatch(/CPU|GPU|RAM|Health Score|Cloud backup|Last backup/)
   })
 
@@ -236,8 +236,8 @@ describe('DataManagementView', () => {
     await flushPromises()
 
     expect(mockedRestore).toHaveBeenCalledWith(file)
-    expect(wrapper.text()).toContain('Source data restored')
-    expect(wrapper.text()).toContain('Retrieval derived state still needs rebuild')
+    expect(wrapper.text()).toContain('Source of Truth 已恢复')
+    expect(wrapper.text()).toContain('检索 Derived State 仍需重建')
     expect(wrapper.get('a[data-to="/knowledge-bases/restored-kb/chat"]').exists()).toBe(true)
   })
 
@@ -272,7 +272,7 @@ describe('DataManagementView', () => {
       .trigger('click')
     await flushPromises()
 
-    expect(wrapper.text()).toContain('Healthy')
+    expect(wrapper.text()).toContain('正常')
     expect(wrapper.text()).not.toContain('%')
     expect(mockedAudit).toHaveBeenCalledWith('kb-1')
   })
@@ -307,7 +307,7 @@ describe('DataManagementView', () => {
       dry_run: false,
       finding_ids: ['finding-1'],
     })
-    expect(wrapper.text()).toContain('Completed')
+    expect(wrapper.text()).toContain('已完成')
   })
 
   it('keeps global audit findings read-only in a knowledge-base repair flow', async () => {
@@ -336,7 +336,7 @@ describe('DataManagementView', () => {
     expect(
       wrapper.get('input[aria-label="选择 qdrant_audit_unavailable"]').attributes('disabled'),
     ).toBeDefined()
-    expect(wrapper.text()).toContain('Global / read-only finding')
+    expect(wrapper.text()).toContain('全局 / 只读问题')
   })
 
   it('does not enable execution when backend dry-run marks a finding not repairable', async () => {
@@ -386,7 +386,7 @@ describe('DataManagementView', () => {
     await flushPromises()
 
     expect(mockedStartRebuild).toHaveBeenCalledWith('kb-1')
-    expect(wrapper.text()).toContain('Document versions parsed')
+    expect(wrapper.text()).toContain('已解析文档版本')
     expect(wrapper.text()).toContain('3 / 3')
     expect(wrapper.text()).not.toContain('Embedding 70%')
   })

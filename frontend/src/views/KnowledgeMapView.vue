@@ -164,6 +164,10 @@ function clearGraphFocus(): void {
   graph.elements().unselect()
 }
 
+function handleEscape(event: KeyboardEvent): void {
+  if (event.key === 'Escape' && inspectorOpen.value) clearGraphFocus()
+}
+
 function focusGraphElement(id: string, isNode: boolean): void {
   if (!graph) return
   const element = graph.getElementById(id)
@@ -428,8 +432,12 @@ async function load(): Promise<void> {
 }
 
 watch([nodeFilters, edgeFilters], applyFilters, { deep: true })
-onMounted(load)
+onMounted(() => {
+  window.addEventListener('keydown', handleEscape)
+  void load()
+})
 onBeforeUnmount(() => {
+  window.removeEventListener('keydown', handleEscape)
   resizeObserver?.disconnect()
   graph?.destroy()
 })

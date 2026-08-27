@@ -32,7 +32,7 @@ const currentPageLabel = computed(() => {
   if (activeSection.value) return labels[activeSection.value]
   if (route.name === 'retrieval') return '检索'
   if (route.name === 'data-management') return '数据与恢复'
-  return route.name === 'landing' ? '产品介绍' : 'Workspace'
+  return route.name === 'landing' ? '产品介绍' : '工作区'
 })
 
 const mobileNavigation = computed(() => {
@@ -73,7 +73,7 @@ watch(kbId, () => {
 
       <div v-if="kbId" class="shell-context" aria-label="当前知识库上下文">
         <span class="shell-context-group">
-          <span class="shell-context-label">Knowledge Base</span>
+          <span class="shell-context-label">知识库</span>
           <strong class="shell-context-value">{{ shellKbName || '知识库' }}</strong>
         </span>
       </div>
@@ -89,7 +89,7 @@ watch(kbId, () => {
           :to="`/knowledge-bases/${kbId}/documents`"
           class="kb-tab"
           :class="{ active: activeSection === 'documents' }"
-          >文档</RouterLink
+          >资料</RouterLink
         >
         <RouterLink
           :to="`/knowledge-bases/${kbId}/knowledge`"
@@ -111,7 +111,7 @@ watch(kbId, () => {
           Local-first
         </span>
         <RouterLink to="/" class="global-nav-link" exact-active-class="active"
-          >Workspace</RouterLink
+          >工作区</RouterLink
         >
       </div>
 
@@ -153,7 +153,7 @@ watch(kbId, () => {
               <span>{{ item.label }}</span>
               <span v-if="activeSection === item.key" class="shell-mobile-menu-current">当前</span>
             </ElDropdownItem>
-            <ElDropdownItem divided command="/">返回 Workspace</ElDropdownItem>
+            <ElDropdownItem divided command="/">返回工作区</ElDropdownItem>
             <ElDropdownItem disabled class="shell-mobile-local-first">
               <span class="status-dot" aria-hidden="true"></span>
               <span>Local-first · 本地运行</span>

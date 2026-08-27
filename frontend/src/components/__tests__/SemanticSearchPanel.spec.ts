@@ -125,7 +125,7 @@ describe('SemanticSearchPanel retrieval workbench', () => {
     expect(mockedHybridSearch).toHaveBeenCalledWith('kb-id', 'service layer', null, 5, null)
     expect(mockedSearch).not.toHaveBeenCalled()
     expect(mockedRerankedSearch).not.toHaveBeenCalled()
-    expect(wrapper.text()).toContain('RRF score 0.7123')
+    expect(wrapper.text()).toContain('RRF 分数 0.7123')
     expect(wrapper.text()).not.toContain('%')
   })
 
@@ -138,7 +138,7 @@ describe('SemanticSearchPanel retrieval workbench', () => {
     await submit(wrapper)
 
     expect(mockedSearch).toHaveBeenCalledWith('kb-id', 'service layer', null, 5, null)
-    expect(wrapper.text()).toContain('Cosine score 0.7123')
+    expect(wrapper.text()).toContain('Cosine 分数 0.7123')
     expect(wrapper.text()).not.toContain('相似度')
   })
 
@@ -159,8 +159,8 @@ describe('SemanticSearchPanel retrieval workbench', () => {
     await submit(wrapper)
 
     expect(mockedRerankedSearch).toHaveBeenCalledWith('kb-id', 'service layer', null, 5, null)
-    expect(wrapper.text()).toContain('Retrieved #7 → Reranked #1')
-    expect(wrapper.text()).toContain('Rerank score 1.8245')
+    expect(wrapper.text()).toContain('检索 #7 → 重排 #1')
+    expect(wrapper.text()).toContain('重排分数 1.8245')
     expect(wrapper.text()).not.toContain('probability')
     expect(wrapper.text()).not.toContain('概率')
   })
@@ -216,8 +216,8 @@ describe('SemanticSearchPanel retrieval workbench', () => {
     const wrapper = mountPanel()
     await submit(wrapper, 'missing evidence')
 
-    expect(wrapper.text()).toContain('No retrieval results')
-    expect(wrapper.text()).toContain('放宽 Document scope')
+    expect(wrapper.text()).toContain('未找到检索结果')
+    expect(wrapper.text()).toContain('放宽资料范围')
     expect(wrapper.find('[role="alert"]').exists()).toBe(false)
   })
 
@@ -227,8 +227,8 @@ describe('SemanticSearchPanel retrieval workbench', () => {
     await modeButton(wrapper, 'Reranked').trigger('click')
     await submit(wrapper)
 
-    expect(wrapper.get('[role="alert"]').text()).toContain('Reranker unavailable')
-    expect(wrapper.text()).not.toContain('No retrieval results')
+    expect(wrapper.get('[role="alert"]').text()).toContain('Reranker 当前不可用')
+    expect(wrapper.text()).not.toContain('未找到检索结果')
     await wrapper.get('[role="alert"] button').trigger('click')
     expect(modeButton(wrapper, 'Hybrid').attributes('aria-checked')).toBe('true')
   })
@@ -242,16 +242,21 @@ describe('SemanticSearchPanel retrieval workbench', () => {
     await wrapper.get('.retrieval-result-select').trigger('click')
 
     const inspector = wrapper.get('#retrieval-inspector')
-    expect(inspector.text()).toContain('RESULT INSPECTOR')
+    expect(inspector.text()).toContain('检索结果详情')
     expect(inspector.text()).toContain('backend/service.py')
     expect(inspector.text()).toContain('Document service')
-    expect(inspector.text()).toContain('Lines')
+    expect(inspector.text()).toContain('行号')
     expect(inspector.text()).toContain('0.7123')
     expect(inspector.text()).not.toContain('generation-id')
     expect(inspector.text()).not.toContain('content hash')
-    expect(wrapper.get('[data-testid="document-link"]').text()).toContain('打开 Document')
+    expect(wrapper.get('[data-testid="document-link"]').text()).toContain('打开资料')
 
     await inspector.get('button[aria-label="关闭检索结果详情"]').trigger('click')
+    expect(wrapper.find('#retrieval-inspector').exists()).toBe(false)
+
+    await wrapper.get('.retrieval-result-select').trigger('click')
+    window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }))
+    await wrapper.vm.$nextTick()
     expect(wrapper.find('#retrieval-inspector').exists()).toBe(false)
   })
 

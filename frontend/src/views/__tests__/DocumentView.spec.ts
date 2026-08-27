@@ -153,13 +153,13 @@ describe('DocumentView', () => {
     const wrapper = mountView()
     await flushPromises()
 
-    expect(wrapper.text()).toContain('文档')
+    expect(wrapper.text()).toContain('资料')
     expect(wrapper.text()).toContain('sample.md')
     expect(wrapper.text()).toContain('V2')
     expect(wrapper.text()).toContain('2.0 KB')
-    expect(wrapper.text()).toContain('Ready')
+    expect(wrapper.text()).toContain('可用')
     expect(wrapper.text()).toContain('2 Chunks')
-    expect(wrapper.text()).toContain('Advanced · Retrieval Workspace')
+    expect(wrapper.text()).toContain('高级 · 检索工作区')
     expect(wrapper.text()).toContain('1 份资料')
   })
 
@@ -269,7 +269,7 @@ describe('DocumentView', () => {
   it.each([
     ['pending', '等待解析'],
     ['processing', '解析中'],
-    ['succeeded', 'Ready'],
+    ['succeeded', '可用'],
     ['failed', '解析失败'],
   ] as const)('shows the %s parse state', async (parseStatus, label) => {
     mockedList.mockResolvedValue(
@@ -285,7 +285,7 @@ describe('DocumentView', () => {
   it.each([
     ['pending', '等待索引'],
     ['processing', '索引中'],
-    ['succeeded', 'Ready'],
+    ['succeeded', '可用'],
     ['failed', '索引失败'],
   ] as const)(
     'maps the %s index state to a truthful product status',
@@ -313,7 +313,7 @@ describe('DocumentView', () => {
     await wrapper.get('.doc-select').trigger('click')
 
     const inspector = wrapper.get('#document-inspector')
-    expect(inspector.text()).toContain('DOCUMENT INSPECTOR')
+    expect(inspector.text()).toContain('资料详情')
     expect(inspector.text()).toContain('src/sample.md')
     expect(inspector.text()).toContain('本地导入')
     expect(inspector.text()).toContain('text/markdown')
@@ -324,6 +324,11 @@ describe('DocumentView', () => {
     expect(inspector.text()).not.toContain('归档')
 
     await inspector.get('button[aria-label="关闭文档详情"]').trigger('click')
+    expect(wrapper.find('#document-inspector').exists()).toBe(false)
+
+    await wrapper.get('.doc-select').trigger('click')
+    window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }))
+    await wrapper.vm.$nextTick()
     expect(wrapper.find('#document-inspector').exists()).toBe(false)
   })
 
@@ -370,7 +375,7 @@ describe('DocumentView', () => {
     await flushPromises()
 
     expect(wrapper.find('[data-testid="retrieval-debug-panel"]').exists()).toBe(false)
-    expect(wrapper.get('.document-retrieval-link').text()).toContain('打开 Retrieval Workspace')
+    expect(wrapper.get('.document-retrieval-link').text()).toContain('打开检索工作区')
   })
 
   it('starts polling for pending documents and stops after a terminal state', async () => {
@@ -426,7 +431,7 @@ describe('DocumentView', () => {
     const wrapper = mountView()
     await flushPromises()
 
-    expect(wrapper.text()).toContain('Ready')
+    expect(wrapper.text()).toContain('可用')
     const reindex = wrapper.findAll('button').find((b) => b.text() === '重建索引')
     await reindex?.trigger('click')
     await flushPromises()

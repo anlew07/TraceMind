@@ -365,6 +365,12 @@ describe('KnowledgeMapView', () => {
     await inspector.get('button[aria-label="关闭图谱详情"]').trigger('click')
     expect(wrapper.find('.knowledge-map-inspector').exists()).toBe(false)
     expect(mocks.lastCore?.byId.get('entry:entry-id')?.classes.has('map-selected')).toBe(false)
+
+    triggerGraphSelection('entry:entry-id')
+    await wrapper.vm.$nextTick()
+    window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }))
+    await wrapper.vm.$nextTick()
+    expect(wrapper.find('.knowledge-map-inspector').exists()).toBe(false)
   })
 
   it.each([

@@ -87,8 +87,9 @@ TraceMind | 当前知识库 | 问答  文档  知识  图谱 | Local-first | Wor
 
 ## Home
 
-The root route is the daily **Research Desk**, not a second landing or selector step. It lists real
-Knowledge Bases and lets the user continue directly into Conversation.
+`/knowledge-bases` is the daily **Research Desk**. The root route is a local entry decision only:
+first access redirects to the product Landing, while a locally recorded completed entry redirects
+straight to `/knowledge-bases`. This preference never intercepts deep links.
 
 Structure:
 - Workspace heading with one "Create Knowledge Base" primary action
@@ -108,7 +109,9 @@ Structure:
 **File:** `src/views/HomeView.vue`
 
 The product introduction remains available explicitly at `/landing`. It is a short editorial
-portal with one action back to `/`; it is not part of the daily entry flow.
+portal whose single action records the local first-entry preference and navigates directly to
+`/knowledge-bases`. Storage failure must not block entry. After the first entry, `/` resolves to the
+daily Workspace, while `/landing` remains manually accessible for product demos and review.
 
 ---
 
@@ -141,8 +144,8 @@ Documents are knowledge sources for search, answers, and citations.
 
 ### Page Structure
 ```
-Page Header: "Documents" + description + [Import]
-Search: [Filter by name or path…]
+Page Header: "资料" + description + [导入资料]
+Search: [按名称或路径筛选…]
 Document List: editorial resource rows
 Document Inspector: opens only after row selection
 Retrieval Tools: collapsible at bottom
@@ -153,8 +156,8 @@ Each document row shows:
 - **Filename** (without extension) + **extension** in mono
 - **Relative path** in mono, secondary color
 - **Metadata row**: version · size · chunks · updated date
-- **Product status**: one truthful status derived from current parse/index state: Ready, waiting,
-  processing, or failed. Do not invent ingestion substages or archived state.
+- **Product status**: one truthful status derived from current parse/index state: 可用、等待解析、
+  处理中或失败。Do not invent ingestion substages or archived state.
 - **Overflow** `···`: Chunks, Re-parse, Re-index, Download, Versions, Delete
 - Selecting the row opens the contextual Inspector; the overflow remains reserved for real actions
 
@@ -168,7 +171,7 @@ Each document row shows:
 - Wide desktop uses a side pane; medium widths use an overlay; narrow screens use a full-width sheet
 
 ### Import
-- Compact "Import" button in page header
+- Compact "导入资料" button in page header
 - Opens existing `DocumentUploadPanel` inline (collapsible and closed by default)
 - `?import=1` opens the same panel for the empty-KB onboarding path
 - Preserves the existing file picker, upload progress and cancellation behavior
@@ -297,7 +300,7 @@ Answer, Conversation or Knowledge entry.
 
 ```text
 Workspace header + KB context
-Query composer: Query · Mode · Scope · Limit · Run
+Query composer: 查询 · 模式 · 范围 · 数量 · 运行检索
 Optional real path-scope notice
 Retrieval Result Ledger               Result Inspector (closed by default)
 ```
@@ -353,10 +356,10 @@ DevOps console.
 ### Page structure
 
 ```text
-Data & Recovery header + current KB context        Recovery Inspector
-Backup & Restore
-Consistency Audit → selected findings → backend dry-run → Safe Repair
-Rebuild Derived State
+数据与恢复 header + current KB context             恢复详情
+备份与恢复
+一致性检查 → selected findings → backend dry-run → 安全修复
+重建 Derived State
 Source of Truth vs Derived State (collapsed)
 ```
 
@@ -380,6 +383,11 @@ Source of Truth vs Derived State (collapsed)
   at 320px and never become a wide table.
 
 **Files:** `src/views/DataManagementView.vue`, `src/services/dataMaintenance.ts`
+
+The data boundary is fixed: PostgreSQL records and stored source files are Source of Truth;
+parsed chunks and retrieval indexes are Derived State. The UI may operate only the existing archive,
+restore, audit, repair, and rebuild contracts. It must not invent resource monitoring, cloud backup,
+automatic recovery, health scores, or frontend repair policy.
 
 ## Problem & Solution Knowledge
 
@@ -407,6 +415,24 @@ Knowledge entries are durable engineering records saved from completed answers.
 ---
 
 ## Visual Language
+
+### Product Language
+
+- TraceMind UI is Chinese-first. Page titles, ordinary actions, status, loading, empty, error,
+  confirmation, tooltip, and maintenance copy use natural Chinese.
+- Professional terms may remain in English: TraceMind, RAG, Semantic, Hybrid, Reranked, RRF,
+  Cross-Encoder, Evidence, Execution Trace, Local-first, Embedding, BM25, LangGraph, LangChain,
+  Qdrant, Direct, and API.
+- `Source of Truth` and `Derived State` may be bilingual when describing the persistence boundary.
+  Peer actions at the same visual level do not mix ordinary English and Chinese.
+
+### Inspector Responsive Contract
+
+- Desktop: contextual side pane, closed until a real selection exists.
+- Medium: right overlay with the shared warm backdrop; it does not enter normal page flow.
+- Mobile: full-width panel with bounded viewport height and internal scrolling.
+- Every dismissible Inspector has a labelled native close button and closes on Escape. The global
+  mobile menu remains above the Inspector/backdrop z-index pair.
 
 ### Color Roles
 | Role | Usage |
@@ -520,3 +546,10 @@ Before completing any frontend UI work:
 - [ ] `eslint` passes
 - [ ] `vitest` passes
 - [ ] `vite build` passes
+
+## Explicit Deferrals
+
+- **Document Reader:** deferred because the current product has no stable full-document / pagination
+  reading API contract. Do not fabricate a Reader from Chunk preview data. This is not a merge blocker.
+- **Compass Logo:** the current letter-mark remains a temporary placeholder until an approved brand
+  asset exists. Do not generate, redraw, or adopt a third-party compass asset. This is not a merge blocker.

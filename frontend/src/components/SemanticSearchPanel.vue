@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ElButton } from 'element-plus'
-import { computed, ref, watch } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { RouterLink } from 'vue-router'
 
 import { ApiError } from '@/services/api'
@@ -39,8 +39,8 @@ const modeOptions: Array<{ value: SearchMode; label: string; description: string
 
 const loadingLabel = computed(() =>
   mode.value === 'reranked'
-    ? 'Running Cross-Encoder reranking…'
-    : `Running ${modeLabel()} retrieval…`,
+    ? '正在运行 Cross-Encoder 重排…'
+    : `正在运行 ${modeLabel()} 检索…`,
 )
 const selectedRank = computed(() =>
   selectedResult.value
@@ -73,9 +73,9 @@ function displayPath(result: SemanticSearchResult): string {
 function locationLabel(result: SemanticSearchResult): string {
   const parts: string[] = []
   if (result.section_title) parts.push(result.section_title)
-  if (result.page_number !== null) parts.push(`Page ${result.page_number}`)
+  if (result.page_number !== null) parts.push(`第 ${result.page_number} 页`)
   if (result.start_line !== null && result.end_line !== null) {
-    parts.push(`Lines ${result.start_line}–${result.end_line}`)
+    parts.push(`第 ${result.start_line}–${result.end_line} 行`)
   }
   parts.push(`Chunk ${result.chunk_index}`)
   return parts.join(' · ')
@@ -87,27 +87,27 @@ function excerpt(content: string): string {
 }
 
 function scoreLabel(result: SemanticSearchResult): string {
-  if (mode.value === 'semantic') return `Cosine score ${result.score.toFixed(4)}`
-  if (mode.value === 'hybrid') return `RRF score ${result.score.toFixed(4)}`
-  return `Rerank score ${(result.rerank_score ?? result.score).toFixed(4)}`
+  if (mode.value === 'semantic') return `Cosine 分数 ${result.score.toFixed(4)}`
+  if (mode.value === 'hybrid') return `RRF 分数 ${result.score.toFixed(4)}`
+  return `重排分数 ${(result.rerank_score ?? result.score).toFixed(4)}`
 }
 
 function rankingShift(result: SemanticSearchResult, finalRank: number): string {
-  if (mode.value !== 'reranked') return `Rank #${finalRank}`
+  if (mode.value !== 'reranked') return `排名 #${finalRank}`
   if (result.retrieval_rank === null || result.retrieval_rank === undefined) {
-    return `Final #${finalRank}`
+    return `最终 #${finalRank}`
   }
-  return `Retrieved #${result.retrieval_rank} → Reranked #${finalRank}`
+  return `检索 #${result.retrieval_rank} → 重排 #${finalRank}`
 }
 
 function searchError(error: unknown): string {
   if (mode.value === 'reranked' && error instanceof ApiError && error.status === 503) {
-    return 'Reranker unavailable. 本地 Cross-Encoder 当前不可用，可切换到 Hybrid 继续检查召回。'
+    return 'Reranker 当前不可用。本地 Cross-Encoder 无法运行，可切换到 Hybrid 继续检查召回。'
   }
   if (mode.value === 'reranked' && error instanceof ApiError && error.status === 422) {
     return '当前结果数量超过 Reranker 配置上限，请选择更小的 Limit。'
   }
-  return 'Retrieval unavailable. 请检查后端与索引服务后重试。'
+  return '检索服务当前不可用，请检查后端与索引服务后重试。'
 }
 
 async function search(): Promise<void> {
@@ -153,6 +153,13 @@ function inspectResult(result: SemanticSearchResult): void {
 function closeInspector(): void {
   selectedResult.value = null
 }
+
+function handleEscape(event: KeyboardEvent): void {
+  if (event.key === 'Escape' && selectedResult.value) closeInspector()
+}
+
+onMounted(() => window.addEventListener('keydown', handleEscape))
+onBeforeUnmount(() => window.removeEventListener('keydown', handleEscape))
 </script>
 
 <template>
@@ -160,7 +167,7 @@ function closeInspector(): void {
     <div class="retrieval-main-plane">
       <form class="retrieval-composer" aria-label="检索查询" @submit.prevent="search">
         <label class="retrieval-query-field">
-          <span>Query</span>
+          <span>查询</span>
           <textarea
             v-model="query"
             aria-label="检索查询"
@@ -171,7 +178,7 @@ function closeInspector(): void {
         </label>
 
         <fieldset class="retrieval-mode-control">
-          <legend>Mode</legend>
+          <legend>模式</legend>
           <div class="retrieval-mode-options" role="radiogroup" aria-label="检索模式">
             <button
               v-for="option in modeOptions"
@@ -190,16 +197,16 @@ function closeInspector(): void {
 
         <div class="retrieval-control-row">
           <label>
-            <span>Scope</span>
+            <span>范围</span>
             <select v-model="documentId" aria-label="文档范围">
-              <option value="">Entire Knowledge Base</option>
+              <option value="">当前知识库全部资料</option>
               <option v-for="document in documents" :key="document.id" :value="document.id">
                 {{ document.relative_path || document.name }}
               </option>
             </select>
           </label>
           <label>
-            <span>Limit</span>
+            <span>数量</span>
             <select v-model.number="limit" aria-label="结果数量">
               <option :value="5">5</option>
               <option :value="10">10</option>
@@ -212,19 +219,19 @@ function closeInspector(): void {
             :loading="loading"
             :disabled="!query.trim()"
           >
-            Run Retrieval
+            运行检索
           </ElButton>
         </div>
 
         <details class="retrieval-advanced-control">
-          <summary>Advanced</summary>
+          <summary>高级选项</summary>
           <label>
-            <span>Language</span>
+            <span>语言</span>
             <input
               v-model="language"
               aria-label="语言过滤"
               maxlength="32"
-              placeholder="Auto（可选 hint）"
+              placeholder="自动检测（可选）"
             />
           </label>
         </details>
@@ -236,11 +243,11 @@ function closeInspector(): void {
         data-testid="retrieval-path-scope"
       >
         <div>
-          <dt>Scoped to</dt>
+          <dt>限定路径</dt>
           <dd>{{ queryMetadata.scoped_relative_path }}</dd>
         </div>
         <div v-if="queryMetadata.semantic_query">
-          <dt>Semantic query</dt>
+          <dt>Semantic 查询</dt>
           <dd>{{ queryMetadata.semantic_query }}</dd>
         </div>
       </dl>
@@ -261,15 +268,15 @@ function closeInspector(): void {
       <section class="retrieval-results-region" aria-label="检索结果" :aria-busy="loading">
         <header class="retrieval-results-header">
           <div>
-            <h2>Retrieval Results</h2>
-            <p v-if="searched">{{ results.length }} 个 Evidence candidates · {{ modeLabel() }}</p>
+            <h2>检索结果</h2>
+            <p v-if="searched">{{ results.length }} 个 Evidence 候选 · {{ modeLabel() }}</p>
             <p v-else>运行一次真实检索后，在此检查召回内容与排序。</p>
           </div>
         </header>
 
         <div v-if="searched && results.length === 0" class="retrieval-empty">
-          <h3>No retrieval results</h3>
-          <p>当前知识空间没有找到匹配 Evidence。请更换 Query 或放宽 Document scope。</p>
+          <h3>未找到检索结果</h3>
+          <p>当前知识空间没有找到匹配 Evidence。请更换查询或放宽资料范围。</p>
         </div>
 
         <div v-else-if="results.length" class="retrieval-result-ledger">
@@ -299,7 +306,7 @@ function closeInspector(): void {
                   <span>{{ scoreLabel(result) }}</span>
                 </span>
               </span>
-              <span class="retrieval-result-action">Inspect</span>
+              <span class="retrieval-result-action">查看详情</span>
             </button>
           </article>
         </div>
@@ -321,33 +328,33 @@ function closeInspector(): void {
       aria-label="检索结果详情"
     >
       <header class="retrieval-inspector-header">
-        <span>RESULT INSPECTOR</span>
+        <span>检索结果详情</span>
         <button type="button" aria-label="关闭检索结果详情" @click="closeInspector">×</button>
       </header>
 
       <section class="retrieval-inspector-identity">
-        <span class="retrieval-evidence-marker">EVIDENCE CANDIDATE · #{{ selectedRank }}</span>
+        <span class="retrieval-evidence-marker">EVIDENCE 候选 · #{{ selectedRank }}</span>
         <h2>{{ selectedResult.document_name }}</h2>
         <p>{{ displayPath(selectedResult) }}</p>
       </section>
 
       <section class="retrieval-inspector-section">
-        <h3>Location</h3>
+        <h3>位置</h3>
         <dl class="retrieval-facts">
           <div>
-            <dt>Version</dt>
+            <dt>版本</dt>
             <dd>V{{ selectedResult.version_number }}</dd>
           </div>
           <div>
-            <dt>Section</dt>
+            <dt>章节</dt>
             <dd>{{ selectedResult.section_title || '—' }}</dd>
           </div>
           <div>
-            <dt>Page</dt>
+            <dt>页码</dt>
             <dd>{{ selectedResult.page_number ?? '—' }}</dd>
           </div>
           <div>
-            <dt>Lines</dt>
+            <dt>行号</dt>
             <dd>{{ selectedResult.start_line ?? '—' }}–{{ selectedResult.end_line ?? '—' }}</dd>
           </div>
           <div>
@@ -355,26 +362,26 @@ function closeInspector(): void {
             <dd>{{ selectedResult.chunk_index }}</dd>
           </div>
           <div>
-            <dt>Language</dt>
+            <dt>语言</dt>
             <dd>{{ selectedResult.language || '—' }}</dd>
           </div>
         </dl>
       </section>
 
       <section class="retrieval-inspector-section retrieval-inspector-content">
-        <h3>Content</h3>
+        <h3>内容</h3>
         <pre>{{ selectedResult.content }}</pre>
       </section>
 
       <section class="retrieval-inspector-section">
-        <h3>Ranking</h3>
+        <h3>排名</h3>
         <dl class="retrieval-facts">
           <div>
-            <dt>Mode</dt>
+            <dt>模式</dt>
             <dd>{{ selectedResult.ranking_mode || mode }}</dd>
           </div>
           <div>
-            <dt>Final rank</dt>
+            <dt>最终排名</dt>
             <dd>#{{ selectedRank }}</dd>
           </div>
           <div
@@ -382,7 +389,7 @@ function closeInspector(): void {
               selectedResult.retrieval_rank !== null && selectedResult.retrieval_rank !== undefined
             "
           >
-            <dt>Retrieval rank</dt>
+            <dt>检索排名</dt>
             <dd>#{{ selectedResult.retrieval_rank }}</dd>
           </div>
           <div
@@ -391,17 +398,17 @@ function closeInspector(): void {
               selectedResult.retrieval_score !== undefined
             "
           >
-            <dt>RRF score</dt>
+            <dt>RRF 分数</dt>
             <dd>{{ selectedResult.retrieval_score.toFixed(4) }}</dd>
           </div>
           <div v-if="mode === 'semantic'">
-            <dt>Cosine score</dt>
+            <dt>Cosine 分数</dt>
             <dd>{{ selectedResult.score.toFixed(4) }}</dd>
           </div>
           <div
             v-if="selectedResult.rerank_score !== null && selectedResult.rerank_score !== undefined"
           >
-            <dt>Rerank raw logit</dt>
+            <dt>重排原始 logit</dt>
             <dd>{{ selectedResult.rerank_score.toFixed(4) }}</dd>
           </div>
         </dl>
@@ -418,7 +425,7 @@ function closeInspector(): void {
             },
           }"
         >
-          打开 Document
+          打开资料
         </RouterLink>
       </div>
     </aside>

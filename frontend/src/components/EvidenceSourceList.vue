@@ -95,7 +95,7 @@ function retrievalMetadata(source: EvidenceSource): { label: string; value: stri
         </span>
       </header>
       <div class="ev-source-identity">
-        <span class="ev-field-label">SOURCE</span>
+        <span class="ev-field-label">来源</span>
         <div class="ev-src-id-row">
           <RouterLink
             v-if="
@@ -113,7 +113,7 @@ function retrievalMetadata(source: EvidenceSource): { label: string; value: stri
         </div>
       </div>
       <div class="ev-source-location">
-        <span class="ev-field-label">LOCATION</span>
+        <span class="ev-field-label">位置</span>
         <div class="ev-src-loc">
           <template v-if="isKnowledgeSource(source)">已验证知识 · 知识条目 · </template>
           <template v-else-if="source.section_title">{{ source.section_title }} · </template>
@@ -121,15 +121,15 @@ function retrievalMetadata(source: EvidenceSource): { label: string; value: stri
         </div>
       </div>
       <div class="ev-source-excerpt">
-        <span class="ev-field-label">EXCERPT</span>
+        <span class="ev-field-label">摘录</span>
         <div class="ev-src-excerpt">{{ source.content }}</div>
       </div>
       <div class="ev-source-lineage">
-        <span class="ev-field-label">LINEAGE</span>
+        <span class="ev-field-label">链路</span>
         <span>{{ snapshotMode ? '已保存证据快照' : '属于当前回答的证据集' }}</span>
       </div>
       <details v-if="retrievalMetadata(source).length" class="ev-source-diagnostics">
-        <summary>RETRIEVAL DETAIL</summary>
+        <summary>检索详情</summary>
         <dl class="ev-source-metrics">
           <template v-for="item in retrievalMetadata(source)" :key="item.label">
             <dt>{{ item.label }}</dt>

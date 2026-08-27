@@ -213,7 +213,7 @@ onMounted(async () => {
         :data-testid="`knowledge-entry-${entry.id}`"
         role="listitem"
       >
-        <button class="knowledge-row-open" @click="openEntry(entry)">
+        <button type="button" class="knowledge-row-open" @click="openEntry(entry)">
           <div class="knowledge-row-main">
             <strong>{{ entry.question }}</strong>
             <p>{{ solutionPreview(entry.solution) }}</p>

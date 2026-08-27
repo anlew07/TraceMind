@@ -30,7 +30,7 @@ async function loadPage(): Promise<void> {
     knowledgeBaseName.value = knowledgeBase.name
     documents.value = documentResponse.items
   } catch {
-    errorMessage.value = 'Retrieval Workspace 加载失败，请检查知识库或后端服务后重试。'
+    errorMessage.value = '检索工作区加载失败，请检查知识库或后端服务后重试。'
   } finally {
     loading.value = false
   }
@@ -47,13 +47,13 @@ onMounted(loadPage)
           :to="{ name: 'documents', params: { knowledgeBaseId } }"
           class="retrieval-back-link"
         >
-          ← Documents
+          ← 资料
         </RouterLink>
-        <h1>Retrieval Workspace</h1>
-        <p>验证真实召回、排序和 Evidence candidates；不调用 LLM Generation。</p>
+        <h1>检索工作区</h1>
+        <p>验证真实召回、排序和 Evidence 候选；不调用 LLM 生成。</p>
       </div>
       <div class="retrieval-page-context" aria-label="当前检索上下文">
-        <span>Knowledge Base</span>
+        <span>当前知识库</span>
         <strong>{{ knowledgeBaseName || '—' }}</strong>
       </div>
     </header>

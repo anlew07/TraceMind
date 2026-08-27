@@ -80,7 +80,7 @@ describe('DocumentVersionDialog', () => {
 
     await wrapper.setProps({ modelValue: true })
     await flushPromises()
-    expect(wrapper.text()).toContain('Version 2')
+    expect(wrapper.text()).toContain('版本 2')
     const download = wrapper.findAll('button').find((button) => button.text() === '下载')
     await download?.trigger('click')
     expect(mockedDownload).toHaveBeenCalledWith('kb-id', 'document-id', 'version-id')
