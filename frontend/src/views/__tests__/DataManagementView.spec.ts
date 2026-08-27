@@ -238,7 +238,7 @@ describe('DataManagementView', () => {
     expect(mockedRestore).toHaveBeenCalledWith(file)
     expect(wrapper.text()).toContain('Source of Truth 已恢复')
     expect(wrapper.text()).toContain('检索 Derived State 仍需重建')
-    expect(wrapper.get('a[data-to="/knowledge-bases/restored-kb/chat"]').exists()).toBe(true)
+    expect(wrapper.find('a[data-to="/knowledge-bases/restored-kb/chat"]').exists()).toBe(true)
   })
 
   it.each([
@@ -298,12 +298,12 @@ describe('DataManagementView', () => {
     await wrapper.get('[data-testid="review-repair"]').trigger('click')
     await flushPromises()
 
-    expect(mockedRepair.mock.calls[0][1].dry_run).toBe(true)
+    expect(mockedRepair.mock.calls[0]![1].dry_run).toBe(true)
     expect(wrapper.text()).toContain('index_latest_document_version')
     await wrapper.get('[data-testid="execute-repair"]').trigger('click')
     await flushPromises()
 
-    expect(mockedRepair.mock.calls[1][1]).toMatchObject({
+    expect(mockedRepair.mock.calls[1]![1]).toMatchObject({
       dry_run: false,
       finding_ids: ['finding-1'],
     })
@@ -316,7 +316,7 @@ describe('DataManagementView', () => {
       findings: [
         ...auditFinding.findings,
         {
-          ...auditFinding.findings[0],
+          ...auditFinding.findings[0]!,
           finding_id: 'global-finding',
           code: 'qdrant_audit_unavailable',
           entity_type: 'qdrant',

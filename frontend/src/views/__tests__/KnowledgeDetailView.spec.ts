@@ -196,7 +196,7 @@ describe('KnowledgeDetailView', () => {
   })
 
   it('preserves real edit and confirmed delete actions', async () => {
-    const confirm = vi.spyOn(ElMessageBox, 'confirm').mockResolvedValue('confirm')
+    const confirm = vi.spyOn(ElMessageBox, 'confirm').mockResolvedValue('confirm' as never)
     const wrapper = mountView()
     await flushPromises()
 

@@ -30,7 +30,7 @@ describe('LandingView', () => {
     mockedFetchHealth.mockResolvedValue({
       status: 'ok',
       service: 'TraceMind API',
-      version: '1.0.0',
+      version: '1.1.0',
     })
   })
 
@@ -64,7 +64,7 @@ describe('LandingView', () => {
   it('shows backend availability failure and supports retry', async () => {
     mockedFetchHealth
       .mockRejectedValueOnce(new Error('offline'))
-      .mockResolvedValueOnce({ status: 'ok', service: 'TraceMind API', version: '1.0.0' })
+      .mockResolvedValueOnce({ status: 'ok', service: 'TraceMind API', version: '1.1.0' })
     const { wrapper } = await mountView()
     await flushPromises()
 

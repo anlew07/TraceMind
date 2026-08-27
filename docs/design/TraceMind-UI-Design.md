@@ -1,7 +1,7 @@
 # TraceMind UI Design Specification
 
-> Single source of truth for TraceMind's visual language.
-> Read before modifying any frontend presentation.
+> Single source of truth for current routes, UI behavior and responsive contracts.
+> Portable Visual DNA lives in `design.md`. Read both before modifying frontend presentation.
 
 ## Product Identity
 
@@ -11,7 +11,7 @@ It is **not**:
 - an admin dashboard
 - a CRUD management system
 - a generic SaaS dashboard
-- a marketing landing page
+- a promotional SaaS marketing surface; the dedicated editorial Landing is a restrained first-entry exception
 - a ChatGPT clone
 - an IDE clone
 - a Coding Agent
@@ -23,6 +23,28 @@ It is **not**:
 Core qualities: Minimal · Precise · Technical · Calm · Traceable
 
 Core principle: Minimal clarity + Developer precision + Inspectable evidence
+
+---
+
+## Current Routes and Entry Flow
+
+The current router contract is:
+
+| Route | Current screen |
+| --- | --- |
+| `/` | Local first-entry decision: `/landing` before completion, otherwise `/knowledge-bases` |
+| `/landing` | Editorial Landing with one workspace-entry action |
+| `/knowledge-bases` | Knowledge Base Workspace / Research Desk |
+| `/knowledge-bases/:knowledgeBaseId/chat` | Conversation |
+| `/knowledge-bases/:knowledgeBaseId/documents` | Documents |
+| `/knowledge-bases/:knowledgeBaseId/retrieval` | Retrieval Workspace |
+| `/knowledge-bases/:knowledgeBaseId/knowledge` | Knowledge ledger |
+| `/knowledge-bases/:knowledgeBaseId/knowledge/:entryId` | Knowledge Detail |
+| `/knowledge-bases/:knowledgeBaseId/map` | Knowledge Map |
+| `/knowledge-bases/:knowledgeBaseId/data-management` | Data & Recovery |
+
+The root decision reads only a local landing preference and never intercepts deep links. First-time
+Quick Start documentation must point to `/`, not directly to `/knowledge-bases`.
 
 ---
 
@@ -285,7 +307,7 @@ Answer, Conversation or Knowledge entry.
 ### Real capability boundary
 
 - `Semantic`: dense retrieval against the current Qdrant cosine vector configuration
-- `Hybrid`: Dense + Qdrant BM25 combined by Qdrant RRF; the returned score is an RRF ranking score
+- `Hybrid`: Qdrant Dense + BM25 branches combined by deterministic application-side RRF; the returned score is an RRF ranking score
 - `Reranked`: Hybrid candidates followed by the local Cross-Encoder; `rerank_score` is a raw logit,
   not a probability
 - One user-selected mode runs per request; the initial mode is Hybrid

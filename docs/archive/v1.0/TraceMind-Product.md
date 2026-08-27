@@ -1,5 +1,7 @@
 # TraceMind v1.0
 
+> Historical Product Documentation：仅描述 v1.0 发布边界，不代表当前产品能力。
+
 TraceMind 是一个本地优先、面向个人长期学习与技术积累的可追溯知识系统。
 
 ## 核心使用循环

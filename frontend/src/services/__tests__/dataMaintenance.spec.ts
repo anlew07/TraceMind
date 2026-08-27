@@ -68,7 +68,7 @@ describe('dataMaintenance service', () => {
 
     await restoreKnowledgeBaseArchive(new File(['archive'], 'Project.tracemind.zip'))
 
-    const [path, init] = fetchMock.mock.calls[0]
+    const [path, init] = fetchMock.mock.calls[0]!
     expect(path).toBe(expectedApiUrl('/api/v1/knowledge-base-archives/restore'))
     expect(init?.method).toBe('POST')
     expect(init?.body).toBeInstanceOf(FormData)
@@ -95,8 +95,8 @@ describe('dataMaintenance service', () => {
       expectedApiUrl('/api/v1/knowledge-bases/kb-1/consistency-repair/repair-1'),
       expectedApiUrl('/api/v1/knowledge-bases/kb-1/consistency-repair/repair-1/retry'),
     ])
-    expect(fetchMock.mock.calls[1][1]?.body).toBe(JSON.stringify(request))
-    expect(fetchMock.mock.calls[3][1]?.method).toBe('POST')
+    expect(fetchMock.mock.calls[1]![1]?.body).toBe(JSON.stringify(request))
+    expect(fetchMock.mock.calls[3]![1]?.method).toBe('POST')
   })
 
   it('uses the latest rebuild endpoint for read, start and retry', async () => {
@@ -111,8 +111,8 @@ describe('dataMaintenance service', () => {
       expectedApiUrl('/api/v1/knowledge-bases/kb-1/rebuild'),
       expectedApiUrl('/api/v1/knowledge-bases/kb-1/rebuild/retry'),
     ])
-    expect(fetchMock.mock.calls[0][1]?.method).toBeUndefined()
-    expect(fetchMock.mock.calls[1][1]?.method).toBe('POST')
-    expect(fetchMock.mock.calls[2][1]?.method).toBe('POST')
+    expect(fetchMock.mock.calls[0]![1]?.method).toBeUndefined()
+    expect(fetchMock.mock.calls[1]![1]?.method).toBe('POST')
+    expect(fetchMock.mock.calls[2]![1]?.method).toBe('POST')
   })
 })
