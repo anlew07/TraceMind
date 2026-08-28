@@ -409,7 +409,7 @@ CPU / CUDA、模型离线缓存、dtype、batch size 与显存边界见 [Reranke
 1. 用户创建或进入 Knowledge Base，上传 PDF、DOCX、Markdown、TXT 或代码文件。
 2. FastAPI 保存原始文件并创建 Document / DocumentVersion，随后通过 Celery 异步执行文档解析、Chunk 切分和索引构建。
 3. 文档完成索引后，可以在 Retrieval Workspace 中直接检查 Dense / Hybrid / Reranked 检索结果，也可以进入 Conversation 发起 RAG 问答。
-4. 前端调用 `POST /knowledge-bases/{knowledge_base_id}/rag/stream`，FastAPI 在 `api/routes/rag.py` 中启动 LangGraph 流式执行。
+4. 前端调用 `POST /api/v1/knowledge-bases/{knowledge_base_id}/rag/stream`，FastAPI 在 `backend/app/api/routes/rag.py` 中启动 LangGraph 流式执行。
 5. LangGraph 依次完成检索范围解析、Query Rewrite、Dense + BM25 混合召回、RRF 融合和可选 Cross-Encoder Rerank，得到最终 Evidence。
 6. Evidence 被组织为受控 Context，LLM 基于真实来源流式生成回答；`pipeline`、`sources`、`token`、`no_answer`、`done` 等 SSE 事件同步推送到前端。
 7. 对已经解决的问题，用户可以进一步整理为 KnowledgeEntry；验证并完成索引后，它会与原始 Document 一起参与后续 Retrieval，形成“检索 → 解答 → 验证 → 沉淀 → 再检索”的知识闭环。
@@ -418,55 +418,55 @@ CPU / CUDA、模型离线缓存、dtype、batch size 与显存边界见 [Reranke
 
 1. **请求路由**：`route`
 
-- 明确的寒暄类问题由本地规则直接走 Direct Generation，不查询知识库。
-- 其余问题进入完整 RAG 分支，继续执行 Scope、Rewrite 和 Retrieval。
-- Direct 分支不会伪造知识库来源或 Citation。
+   - 明确的寒暄类问题由本地规则直接走 Direct Generation，不查询知识库。
+   - 其余问题进入完整 RAG 分支，继续执行 Scope、Rewrite 和 Retrieval。
+   - Direct 分支不会伪造知识库来源或 Citation。
 
-1. **检索范围解析**：`resolve_scope`
+2. **检索范围解析**：`resolve_scope`
 
-- 支持通过 Document 或文件路径限定检索范围。
-- 指定 Scope 时只查询对应文档；未指定时，从当前 Knowledge Base 中有效的 Document 与 Verified KnowledgeEntry 统一召回。
-- Scope 只限制候选来源，不改变后续混合检索流程。
+   - 支持通过 Document 或文件路径限定检索范围。
+   - 指定 Scope 时只查询对应文档；未指定时，从当前 Knowledge Base 中有效的 Document 与 Verified KnowledgeEntry 统一召回。
+   - Scope 只限制候选来源，不改变后续混合检索流程。
 
-1. **上下文查询改写**：`rewrite`
+3. **上下文查询改写**：`rewrite`
 
-- 没有 Conversation History 时直接使用当前 Query。
-- 存在上下文依赖时，由 ChatModel 判断 `keep / rewrite`，将“这个呢”“上一种方法呢”等追问改写成可独立用于检索的问题。
-- Rewrite 只用于 Retrieval，不修改用户原始问题。
-- 模型超时、调用失败或返回无效结果时自动退回原 Query，不中断后续链路。
+   - 没有 Conversation History 时直接使用当前 Query。
+   - 存在上下文依赖时，由 ChatModel 判断 `keep / rewrite`，将“这个呢”“上一种方法呢”等追问改写成可独立用于检索的问题。
+   - Rewrite 只用于 Retrieval，不修改用户原始问题。
+   - 模型超时、调用失败或返回无效结果时自动退回原 Query，不中断后续链路。
 
-1. **混合检索**：`retrieve`
+4. **混合检索**：`retrieve`
 
-- 使用 Qwen3 Embedding 对 Query 进行一次向量化。
-- Qdrant 同时执行 Dense 语义召回与 BM25 关键词召回。
-- Dense 负责语义相近内容，BM25 补充 API 名称、异常信息、代码标识符、配置项和专有名词等精确匹配场景。
-- 两路候选在应用层通过确定性 RRF（Reciprocal Rank Fusion，倒数排名融合）统一排序，得到第一阶段候选结果。
-- 同时记录 Dense / Sparse 候选数量以及 Embedding、Qdrant、Fusion 等检索耗时。
+   - 使用 Qwen3 Embedding 对 Query 进行一次向量化。
+   - Qdrant 同时执行 Dense 语义召回与 BM25 关键词召回。
+   - Dense 负责语义相近内容，BM25 补充 API 名称、异常信息、代码标识符、配置项和专有名词等精确匹配场景。
+   - 两路候选在应用层通过确定性 RRF（Reciprocal Rank Fusion，倒数排名融合）统一排序，得到第一阶段候选结果。
+   - 同时记录 Dense / Sparse 候选数量以及 Embedding、Qdrant、Fusion 等检索耗时。
 
-1. **二阶段精排**：`rerank`
+5. **二阶段精排**：`rerank`
 
-- 启用 Reranker 时，将 RRF 候选交给 Qwen3 Cross-Encoder，重新计算 Query 与候选正文之间的相关性并截取最终 Top-K。
-- Reranker 未启用时直接使用 Hybrid 结果。
-- 连接失败、超时、OOM 或服务异常时自动回退 Hybrid RRF，不让可选精排能力阻断基础 RAG。
+   - 启用 Reranker 时，将 RRF 候选交给 Qwen3 Cross-Encoder，重新计算 Query 与候选正文之间的相关性并截取最终 Top-K。
+   - Reranker 未启用时直接使用 Hybrid 结果。
+   - 连接失败、超时、OOM 或服务异常时自动回退 Hybrid RRF，不让可选精排能力阻断基础 RAG。
 
-1. **Evidence 构建与答案生成**：`prepare_context` / `generate_grounded`
+6. **Evidence 构建与答案生成**：`prepare_context` / `generate_grounded`
 
-- 最终检索结果转换为带 `[S1] / [S2] / ...` 编号的 Evidence，并在上下文长度限制内组织为 Context。
-- Evidence 保留文档版本、章节、页码、文件路径或代码行等真实来源信息。
-- 没有有效 Evidence 时进入 `no_answer`，直接返回资料不足，不让模型脱离知识库强行生成。
-- 有 Evidence 时流式生成回答，`StreamingCitationGuard` 只允许模型引用本轮真实提供的 Source ID，过滤无效 Citation。
+   - 最终检索结果转换为带 `[S1] / [S2] / ...` 编号的 Evidence，并在上下文长度限制内组织为 Context。
+   - Evidence 保留文档版本、章节、页码、文件路径或代码行等真实来源信息。
+   - 没有有效 Evidence 时进入 `no_answer`，直接返回资料不足，不让模型脱离知识库强行生成。
+   - 有 Evidence 时流式生成回答，`StreamingCitationGuard` 只允许模型引用本轮真实提供的 Source ID，过滤无效 Citation。
 
-1. **可观测追踪**
+7. **可观测追踪**
 
-- LangGraph 将执行过程映射为 `routing → query_rewrite → retrieval → rerank → evidence → generation`。
-- 各阶段记录 `started / completed / skipped / fallback / failed` 状态。
-- Execution Trace 同时保留检索模式、候选数量、Scope、Query Rewrite、Reranker Fallback 和各阶段耗时，用于定位问题发生在召回、排序、Evidence 还是最终生成。
+   - LangGraph 将执行过程映射为 `routing → query_rewrite → retrieval → rerank → evidence → generation`。
+   - 各阶段记录 `started / completed / skipped / fallback / failed` 状态。
+   - Execution Trace 同时保留检索模式、候选数量、Scope、Query Rewrite、Reranker Fallback 和各阶段耗时，用于定位问题发生在召回、排序、Evidence 还是最终生成。
 
 <p align="center">   <img src="docs/assets/readme/conversation-evidence.png" alt="Conversation Evidence" width="900">   <br>   <sub><b>Conversation & Evidence</b>：RAG 对话、执行过程与可追溯 Evidence。</sub> </p>
 
 ### 3) 文档入库链路
 
-1. 前端上传文件到 `POST /knowledge-bases/{knowledge_base_id}/documents`，后端校验文件名、扩展名和大小，并在流式写入过程中计算 SHA-256。
+1. 前端上传文件到 `POST /api/v1/knowledge-bases/{knowledge_base_id}/documents`，后端校验文件名、扩展名和大小，并在流式写入过程中计算 SHA-256。
 2. `DocumentService.import_document` 根据规范化路径识别同一逻辑 Document：
    - 内容 Hash 未变化 → 返回 `unchanged`，不重复创建版本。
    - 内容发生变化 → 创建新的 DocumentVersion，并保留历史版本。
