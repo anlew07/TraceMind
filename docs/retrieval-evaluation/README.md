@@ -1,6 +1,6 @@
 # TraceMind 固定检索评测
 
-本目录提供一套可重复运行的中文检索评测资产，用于在 Chunking、检索策略或索引实现调整前后比较 Dense 与 Hybrid 的召回质量。语料、问题、证据锚点和指标定义都固定在版本库中，避免每次人工测试临时换问题而失去可比性。
+本文负责固定检索评测资产、指标、隔离要求、运行方式和实验记录规范。它用于比较 Chunking、检索、索引或 Reranker 变化，不替代真实知识库上的回答与引用验收。
 
 > **只能把 `synthetic_retrieval_corpus_v1.md` 上传到 TraceMind。**
 >
@@ -94,6 +94,23 @@ Runner 只调用 TraceMind 已有的 Dense 与 Hybrid HTTP API，不复制 Dense
 
 同一个检索结果和同一个 Gold Evidence 都不会重复计分。`k<=0` 会被明确拒绝，空结果安全计为未命中。
 
+## 当前正式基线
+
+仓库中的 `backend/evals/retrieval/baselines/hybrid_v1.json` 是当前冻结回归基线。它使用 24 个 Case，其中 22 个可回答，结果如下：
+
+| 指标 | 基线 |
+| --- | ---: |
+| Hit@1 | 0.5909 |
+| Hit@5 | 1.0000 |
+| Recall@5 | 0.8409 |
+| MRR@5 | 0.7364 |
+| nDCG@5 | 0.6572 |
+| All-required@5 | 0.8182 |
+| P50 | 235.27 ms |
+| P95 | 375.39 ms |
+
+这些数字只用于同一语料、数据集、索引配置和隔离 Collection 下的回归比较，不代表真实知识库的普遍质量。v1.1.0 发布整理没有重新生成正式 Benchmark，因此不能把历史阶段实验或 Release Notes 中的其他观测值当作新基线。
+
 ## 保存与比较基线
 
 首次运行产生的是 baseline candidate。先人工查看 `hybrid.md`、`dense.md` 和 `comparison.md`，确认语料只上传一次、索引完整且 Gold 匹配合理，再显式复制基线：
@@ -124,9 +141,9 @@ uv run --no-sync python -m evals.retrieval.runner ^
 
 默认质量回归阈值为 Recall@5 下降超过 0.02、MRR@5 下降超过 0.03、All-required@5 下降超过 0.02、Hit@1 下降超过 0.05。P95 增加超过 50% 只产生警告。阈值可通过 Runner 参数调整，质量回归配合 `--fail-on-regression` 时进程返回非零退出码。
 
-## 在检索改造后复测
+## 实验与复测规范
 
-修改 Chunking、Parent-Child Retrieval 或 Query Rewrite 后，应使用同一份语料文件和 JSONL：
+修改 Chunking、检索融合、Query Rewrite、Embedding 或 Reranker 后，应使用同一份语料文件和 JSONL：
 
 1. 记录原有 Manifest 和 Baseline。
 2. 用新实现重新解析并索引同一个虚构语料文档。
@@ -134,6 +151,17 @@ uv run --no-sync python -m evals.retrieval.runner ^
 4. 参数冻结后运行 all 或 test split。
 5. 比较 Recall@5、MRR@5、nDCG@5、All-required@5 与延迟变化。
 6. 检查失败 Case 的文档、章节、行号、Content preview 和缺失 required Evidence。
+
+一次实验只改变一个主要变量，并记录：
+
+- 问题、假设、日期和代码版本；
+- 数据集、Collection 隔离方式、模型和完整配置；
+- 基线与变更项；
+- Retrieval 指标、引用正确性、回答质量、P50 / P95、失败率和模型成本；
+- 失败 Case、冷启动与资源约束；
+- 采用 / 不采用结论、回滚方式和遗留风险。
+
+只有需要长期复查且不能由 Baseline JSON、报告或 Git 历史表达的结论，才合并到本 README。不要为一次调参或临时运行新增长期 Markdown。
 
 ## 无答案 Case
 
@@ -143,16 +171,8 @@ uv run --no-sync python -m evals.retrieval.runner ^
 
 自动指标不能判断语义答案是否完整、文档解析是否保持排版、引用是否便于用户理解，也不能证明无答案结果足够安全。人工仍需检查多证据问题是否真的覆盖不同章节、相似概念是否被混淆、短查询是否命中偶然关键词、无答案 Top1 是否具有误导性，以及实际界面展示的文件名、章节和行号是否正确。
 
-## Qdrant collection isolation
+## Qdrant Collection 隔离
 
-The formal regression gate must run against a dedicated Qdrant collection containing only the
-fixed synthetic corpus. A knowledge-base or document payload filter is not sufficient isolation:
-Qdrant's BM25 IDF modifier derives document-frequency statistics from the entire collection, so
-unrelated user documents in the same collection can change sparse ranks even when every returned
-point is correctly filtered to the evaluation document.
+正式回归必须使用只包含固定 synthetic corpus 的独立 Qdrant Collection。仅使用 Knowledge Base 或 Document Payload Filter 不能提供充分隔离：Qdrant BM25 的 IDF 会使用整个 Collection 的文档频率，其他用户资料即使被返回过滤器排除，也可能改变 Sparse 排名。
 
-Use a disposable collection name through `QDRANT_COLLECTION_NAME`, ingest only
-`synthetic_retrieval_corpus_v1.md`, run the frozen dataset and baseline unchanged, and remove the
-collection afterwards. Never reuse the normal user collection for a release gate and never repair
-collection contamination by changing the corpus, expected evidence, baseline, thresholds, BM25,
-RRF, Dense retrieval or reranking behavior.
+通过 `QDRANT_COLLECTION_NAME` 使用一次性 Collection，只导入 `synthetic_retrieval_corpus_v1.md`，保持数据集、Baseline 和阈值不变，评测结束后再清理临时 Collection。不得在日常用户 Collection 上执行 Release Gate，也不得通过修改语料、Gold Evidence、Baseline、阈值、BM25、RRF、Dense 或 Reranker 行为来掩盖 Collection 污染。

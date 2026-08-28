@@ -1,5 +1,7 @@
 # 本地 Cross-Encoder Reranker
 
+本文负责可选本地 Cross-Encoder 的部署、资源边界、检索语义和故障降级。Reranker 不是 TraceMind 启动或基础 Hybrid Retrieval 的必需组件。
+
 ## 定位
 
 TraceMind 使用两阶段检索：

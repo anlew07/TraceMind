@@ -1,4 +1,4 @@
-# TraceMind Knowledge Design
+# TraceMind Knowledge 设计
 
 本文描述当前 KnowledgeEntry、Evidence Snapshot、验证状态、检索索引和 Knowledge Map 的稳定设计。
 

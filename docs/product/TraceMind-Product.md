@@ -39,7 +39,7 @@ KnowledgeEntry 是用户维护的长期经验，不是对话消息的别名。�
 
 回答中的 Citation 只能指向本轮真实返回的来源。Document Evidence 可包含文件名、版本、章节、页码或代码行号；Knowledge Evidence 指向经过维护的知识条目。Citation Guard 会拒绝不存在的来源编号。
 
-RAG Execution Trace 只展示阶段、状态、耗时、候选数量、检索模式与降级信息等可观测数据。它不是模型的 private chain-of-thought，也不展示内部思维链。
+RAG Execution Trace 只展示阶段、状态、耗时、候选数量、检索模式与降级信息等可观测数据，不展示模型内部推理过程。
 
 ## Local-first 与 Data Recovery
 
@@ -51,7 +51,7 @@ Restore 先恢复 Source of Truth，并明确处于尚未重建状态；Rebuild 
 
 - 面向个人、本地环境和可解释的小规模知识工作流，不是企业多租户知识平台。
 - 代码文件按普通技术文本处理，保留路径、语言和行号；不提供 AST、Symbol Scope 或调用图。
-- Knowledge Map 是确定性派生视图，不是图数据库、图检索或 GraphRAG。
+- Knowledge Map 是确定性派生视图，不是图数据库或图检索系统，也不参与回答生成。
 - PDF 只处理可提取文本层，当前不提供 OCR。
 - LLM 由 OpenAI-compatible Provider 配置；使用远程 Provider 时，问题、必要会话历史和本轮 Evidence 内容会发送给该服务。需要完全本地处理时应配置本地兼容端点。
 - Embedding 和 Reranker 默认使用本地模型；首次下载、冷启动和 CPU 推理可能产生明显等待。
@@ -63,7 +63,7 @@ TraceMind 当前不是：
 - Claude Code / Codex 类 coding agent；
 - 通用 Agent 或 Multi-Agent 平台；
 - 自动执行、自动改代码或自动操作外部系统的 Agent；
-- GraphRAG 产品或图数据库平台；
+- 图数据库或图检索平台；
 - 云同步、自动备份或企业权限管理系统。
 
 新能力必须由真实使用问题和可验证目标驱动；未来设想不能作为当前能力描述。

@@ -1,577 +1,248 @@
-# TraceMind UI Design Specification
+# TraceMind UI / UX 设计
 
-> Single source of truth for current routes, UI behavior and responsive contracts.
-> Portable Visual DNA lives in `design.md`. Read both before modifying frontend presentation.
+本文是当前路由、页面行为、响应式规则和产品视觉约束的单一事实来源。通用视觉 DNA 见仓库根目录的 [design.md](../../design.md)；修改前端表现层前应同时核对实际组件和本文件。
 
-## Product Identity
+## 1. 产品界面定位
 
-TraceMind is a **local-first, traceable personal knowledge workspace for developers.**
+TraceMind 是本地优先、证据可核验的个人知识工作区。界面应克制、清晰、适合长时间阅读，不做管理后台、通用 SaaS Dashboard、IDE、ChatGPT 仿制品或 Coding Agent 界面。
 
-It is **not**:
-- an admin dashboard
-- a CRUD management system
-- a generic SaaS dashboard
-- a promotional SaaS marketing surface; the dedicated editorial Landing is a restrained first-entry exception
-- a ChatGPT clone
-- an IDE clone
-- a Coding Agent
+核心原则：
 
-## Design Direction
+- 内容优先于装饰，Evidence 优先于状态炫技。
+- 知识对象使用可阅读的账本或资源行，不用 CRUD 表格表达。
+- 每页只保留一个主操作，次级操作进入上下文或 `···` 菜单。
+- 不用卡片包裹每个区域，不重复展示同一份来源或状态。
+- Execution Trace 只展示可观测执行事实，不展示或暗示模型私有思维过程。
 
-**TraceMind — Minimal Technical Workspace**
+## 2. 当前路由
 
-Core qualities: Minimal · Precise · Technical · Calm · Traceable
-
-Core principle: Minimal clarity + Developer precision + Inspectable evidence
-
----
-
-## Current Routes and Entry Flow
-
-The current router contract is:
-
-| Route | Current screen |
+| 路由 | 页面 |
 | --- | --- |
-| `/` | Local first-entry decision: `/landing` before completion, otherwise `/knowledge-bases` |
-| `/landing` | Editorial Landing with one workspace-entry action |
-| `/knowledge-bases` | Knowledge Base Workspace / Research Desk |
+| `/` | 首次访问进入 Landing，完成本地入口选择后进入 Workspace |
+| `/landing` | 克制的产品入口页 |
+| `/knowledge-bases` | Knowledge Base Workspace |
 | `/knowledge-bases/:knowledgeBaseId/chat` | Conversation |
 | `/knowledge-bases/:knowledgeBaseId/documents` | Documents |
 | `/knowledge-bases/:knowledgeBaseId/retrieval` | Retrieval Workspace |
-| `/knowledge-bases/:knowledgeBaseId/knowledge` | Knowledge ledger |
+| `/knowledge-bases/:knowledgeBaseId/knowledge` | Knowledge Ledger |
 | `/knowledge-bases/:knowledgeBaseId/knowledge/:entryId` | Knowledge Detail |
 | `/knowledge-bases/:knowledgeBaseId/map` | Knowledge Map |
 | `/knowledge-bases/:knowledgeBaseId/data-management` | Data & Recovery |
 
-The root decision reads only a local landing preference and never intercepts deep links. First-time
-Quick Start documentation must point to `/`, not directly to `/knowledge-bases`.
+根路由只读取本地 Landing 偏好，不拦截深层链接。首次使用说明应指向 `/`，而不是绕过入口逻辑直接指向 Workspace。
 
----
+## 3. 信息层级
 
-## Information Hierarchy
+### L1：主要内容
 
-### L1 — Primary Content (dominates visually)
-- User question
-- AI answer
-- Documents
-- Knowledge Bases
-- Search results
-- **Sources / Citations / Evidence** (first-class product capability)
+- 用户问题与回答；
+- Document、Knowledge Base 与 KnowledgeEntry；
+- 检索结果；
+- Citation、Source 与 Evidence。
 
-### L2 — Context Metadata (supports L1)
-- File path
-- Section / Page / Chunk
-- Version
-- Line range
-- Status tags
+### L2：上下文信息
 
-### L3 — Execution / Debug (discoverable but secondary)
-- Query rewrite mode
-- Retrieval mode (hybrid, reranker)
-- Reranker fallback
-- Latency
-- Path scope
-- Trace metadata
+- 文件路径、章节、页码、Chunk 与代码行范围；
+- 版本、更新时间和业务状态；
+- Knowledge 验证状态与索引可用性。
 
-**Rules:**
-- L1 dominates. L2 supports L1. L3 remains discoverable but visually secondary.
-- Sources / Evidence are **always L1**. Never demote them to metadata.
-- L3 must use progressive disclosure (collapsed by default).
+### L3：执行与调试
 
----
+- Query Rewrite、Retrieval 与 Reranker 模式；
+- fallback、latency、candidate count、scope 和 trace metadata。
 
-## Global Shell
+L1 必须占据主要视觉空间，L2 辅助理解，L3 默认折叠。Evidence 始终属于 L1，不能因为它包含技术元数据就被埋入调试区域。
 
-One compact semantic layer. No global sidebar.
+## 4. 全局框架
 
-### Compact App Bar (approximately 56–60px)
-```
+桌面端只保留一层约 58px 的紧凑 App Bar：
+
+```text
 TraceMind | 当前知识库 | 问答  文档  知识  图谱 | Local-first | Workspace
 ```
-- Brand, current KB context, KB navigation and local-first status share one bar.
-- KB name comes from page data (existing `knowledgeBaseName` ref).
-- 问答 / 文档 / 知识 / 图谱 are compact text tabs. Active state = bottom border accent.
-- Retrieval strategy is not global navigation; expose it only in Execution Trace, Inspector,
-  Settings or Retrieval Workspace.
-- No global KB selector dropdown at current stage.
-- `1px solid` bottom border. No shadow, gradient or second navigation row.
-- At 680px and below, the same 58px bar becomes one mobile layer: `TraceMind | current
-  page · current KB | Menu`. The KB name truncates with ellipsis; the four KB destinations and
-  “Return to Workspace” move into one light-dismiss dropdown. Local-first remains visible as a
-  compact status dot and is named in the menu.
-- At 768px, retain the complete desktop navigation rather than creating a mixed tablet state.
-- Workspace Home and Landing do not expose empty KB navigation; they keep only their current page
-  identity and the compact Local-first status on narrow screens.
 
-**Implementation:** `AppShell.vue` with `provide/inject` for KB name.
+- 当前知识库名称来自页面真实数据。
+- 四个知识库内目的地使用紧凑文字导航，当前项用底部强调线表示。
+- Retrieval Workspace 和 Data & Recovery 是次级入口，不加入四项主导航。
+- 不增加全局侧边栏、第二层导航或当前阶段不存在的知识库选择器。
 
----
+`680px` 及以下收敛为 `TraceMind | 当前页 · 当前知识库 | 菜单`。业务导航、返回 Workspace 与 Local-first 说明进入一个可轻触关闭的菜单；知识库名称允许省略号截断。`768px` 宽度仍使用完整桌面导航，避免混合两套布局。
 
-## Home
+所有可关闭 Inspector 支持明确的关闭按钮和 Escape。移动菜单层级高于页面 Inspector 与 backdrop。
 
-`/knowledge-bases` is the daily **Research Desk**. The root route is a local entry decision only:
-first access redirects to the product Landing, while a locally recorded completed entry redirects
-straight to `/knowledge-bases`. This preference never intercepts deep links.
+## 5. Workspace 与 Landing
 
-Structure:
-- Workspace heading with one "Create Knowledge Base" primary action
-- Knowledge Spaces grid using only `name`, optional `description`, and `updated_at`
-- Whole-space navigation to `/knowledge-bases/{id}/chat`
-- Existing edit/delete actions in a visible overflow menu
-- Empty state with one create action
-- Create success routes directly to the new Conversation workspace
+`/knowledge-bases` 是日常 Research Desk：
 
-**Anti-patterns to avoid:**
-- Dashboard metrics or invented document/conversation/activity counts
-- Large shadows
-- Gradients
-- Backend status as dominant content
-- Feature lists
+- 页面标题和“创建知识库”是唯一主操作；
+- Knowledge Space 只展示真实的名称、可选描述与更新时间；
+- 整个主体进入 Conversation，编辑和删除放入 `···`；
+- 宽屏三列，中等宽度两列，窄屏单列；
+- 不增加文档数、会话数、Owner、Activity、健康度等不存在的字段。
 
-**File:** `src/views/HomeView.vue`
+Landing 是短小的首次入口页，只有一个进入 Workspace 的主动作。写入本地偏好失败不能阻止用户进入；显式访问 `/landing` 始终可用。
 
-The product introduction remains available explicitly at `/landing`. It is a short editorial
-portal whose single action records the local first-entry preference and navigates directly to
-`/knowledge-bases`. Storage failure must not block entry. After the first entry, `/` resolves to the
-daily Workspace, while `/landing` remains manually accessible for product demos and review.
+空知识库在 Conversation 中提供“导入资料”和“仍然开始对话”两个清晰选择。前者复用 Documents 的 `?import=1` 上传流程，后者只允许真实 Direct 模式能力，不伪造 Evidence。
 
----
+## 6. Documents
 
-## Knowledge Bases
-
-Knowledge Bases are workspaces, not database rows.
-
-### Visual Pattern: Editorial Workspace Tile
-- Each KB is a flat, thin-bordered workspace tile; it is not an elevated dashboard card
-- Name + description + updated date
-- Whole-tile navigation to Conversation
-- Contextual actions (Edit, Delete) in `···` overflow dropdown
-- "Create Knowledge Base" as the single primary page action
-- Three columns on wide desktop, two around 900–1280px, one on narrow/mobile screens
-
-An empty Knowledge Base presents focused Conversation onboarding. Import opens the existing
-Documents upload flow; Direct-mode chat remains available without inventing retrieval evidence.
-
-**Anti-patterns to avoid:**
-- CRUD tables with action columns
-- Equal-weight inline buttons
-
-**File:** `src/views/KnowledgeBaseView.vue`
-
----
-
-## Documents
-
-Documents are knowledge sources for search, answers, and citations.
-
-### Page Structure
-```
-Page Header: "资料" + description + [导入资料]
-Search: [按名称或路径筛选…]
-Document List: editorial resource rows
-Document Inspector: opens only after row selection
-Retrieval Tools: collapsible at bottom
-```
-
-### Visual Pattern: Editorial Resource Row
-Each document row shows:
-- **Filename** (without extension) + **extension** in mono
-- **Relative path** in mono, secondary color
-- **Metadata row**: version · size · chunks · updated date
-- **Product status**: one truthful status derived from current parse/index state: 可用、等待解析、
-  处理中或失败。Do not invent ingestion substages or archived state.
-- **Overflow** `···`: Chunks, Re-parse, Re-index, Download, Versions, Delete
-- Selecting the row opens the contextual Inspector; the overflow remains reserved for real actions
-
-### Document Inspector
-- Closed by default and driven by the selected resource row
-- Uses only current API fields: identity/path, source, MIME/extension, size, version, chunks,
-  parse/index state and timestamps
-- Parser, embedding, content hash and index generation are technical detail and collapsed by default
-- Contextual actions reuse the existing Chunk preview, version history, download and failed-stage retry
-- No full document reader is implied until a stable parsed-document/page API exists
-- Wide desktop uses a side pane; medium widths use an overlay; narrow screens use a full-width sheet
-
-### Import
-- Compact "导入资料" button in page header
-- Opens existing `DocumentUploadPanel` inline (collapsible and closed by default)
-- `?import=1` opens the same panel for the empty-KB onboarding path
-- Preserves the existing file picker, upload progress and cancellation behavior
-
-### Retrieval Tools
-- Compact "Advanced · Retrieval Workspace" region at page bottom
-- Opens the dedicated `/knowledge-bases/{id}/retrieval` workspace
-- Does not retain a second embedded search implementation
-
-**Anti-patterns to avoid:**
-- CRUD tables
-- Permanent upload panel
-- Action button rows
-- Invented Owner, tags, archive, saved searches or storage metrics
-- A fabricated Reader assembled from chunk previews
-
-**File:** `src/views/DocumentView.vue`
-
----
-
-## Ask / Conversation
-
-Core product page. Three-area workbench at desktop (1440px), with Evidence available on demand.
-
-### Layout (approximate proportions)
-```
-Conversations (200px) | Answer (flex) | Evidence (360px)
-```
-
-### Conversation History (left)
-- "Conversations" header
-- Compact list: title + relative date
-- Selected state: accent background + left border
-- "+ New" button at bottom
-- Rename/Delete in `···` overflow (not permanent buttons)
-
-### Answer (center)
-- Use an **asymmetric conversation surface system**, not mirrored messenger bubbles.
-- User messages: compact right-aligned bubble, maximum width around 65–70%, muted sage/warm-green
-  surface, dark ink, restrained 10–14px radius, subtle border, and no visible shadow
-- Assistant messages: broad left-aligned warm-paper answer surface, maximum width around 88–94%,
-  subtle warm border, restrained radius, and reading-first Markdown width
-- Evidence, Execution Trace, Trace Detail and Promote to Knowledge remain inside the corresponding
-  Assistant answer surface as secondary sections separated by hairlines
-- Inline citation pills: `[S1]` — brick/vermilion Evidence accent, monospace, clickable
-- **Provenance row** below each answer: "Cited from N sources"
-- **No duplicate full sources below the answer.** Evidence lives in the Inspector.
-- Execution Trace stays fully expanded while streaming, then folds to a compact summary at terminal
-  state. Historical traces are folded by default and use the same trace ViewModel.
-- Execution details: collapsed `▸` summary (L3)
-
-### Evidence Inspector (right)
-- **Closed by default**, including initial entry, historical session switches and completed RAG answers
-- No source is selected automatically; clicking a citation `[S1]` selects that exact source and opens
-  the inspector
-- Desktop: right-side pane. Medium widths: right overlay/drawer without reflowing the composer or
-  MessageViewport. Mobile: full-width sheet/panel with an explicit close control.
-- Collapsible via `×` button; when closed, Answer immediately regains the available width
-- Two sections: **Sources** (L1) + **Execution** (L3)
-
-### Source/Evidence Types
-
-**Document Evidence:**
-```
-# DOCUMENT
-[S1]  filename.md
-§ Section · Chunk N
-excerpt…
-```
-
-**Code Evidence:**
-```
-<> CODE
-[S3]  ClassName.java
-src/path/to/ClassName.java
-public ReturnType methodName(Params)
-L42–58
-code excerpt…
-```
-
-**Verified Knowledge Evidence:**
-```
-KNOWLEDGE
-[S2]  Maintained question
-Verified knowledge · Solution
-excerpt…
-```
-
-- Source type distinguished by `# DOCUMENT` / `<> CODE` labels + composition
-- Verified Knowledge uses the same evidence item pattern, says `知识 / 已验证知识`, and links to
-  the maintained Knowledge detail. It never uses a file path or pretends to be a Document.
-- Not color alone
-- Code evidence: relative path + line range + code block with left accent border
-
-**Anti-patterns to avoid:**
-- Symmetric messenger bubbles or identical User/Assistant surfaces
-- Duplicated evidence (inline + inspector)
-- Hiding sources behind `<details>`
-- "GROUNDED" claims
-
-**File:** `src/views/ConversationView.vue`
-
----
-
-## Retrieval Workspace
-
-Retrieval Workspace is a developer-facing retrieval laboratory, not a second Conversation and not
-a benchmark dashboard. It stops at Retrieval / Rerank / Evidence candidates and never creates an
-Answer, Conversation or Knowledge entry.
-
-### Real capability boundary
-
-- `Semantic`: dense retrieval against the current Qdrant cosine vector configuration
-- `Hybrid`: Qdrant Dense + BM25 branches combined by deterministic application-side RRF; the returned score is an RRF ranking score
-- `Reranked`: Hybrid candidates followed by the local Cross-Encoder; `rerank_score` is a raw logit,
-  not a probability
-- One user-selected mode runs per request; the initial mode is Hybrid
-- Scope is either the entire current Knowledge Base or one real `document_id`
-- Explicit file paths may produce `path_scope_mode=exact`, `scoped_relative_path` and a path-stripped
-  `semantic_query`
-- `semantic_query` is not LLM Query Rewrite and only appears when exact path scope actually occurs
-- Limit stays compact at 5 or 10 so the default configured rerank candidate limit is respected
-- Language remains an optional Advanced hint, not a prominent invented language system
-
-### Page structure
+页面结构：
 
 ```text
-Workspace header + KB context
-Query composer: 查询 · 模式 · 范围 · 数量 · 运行检索
-Optional real path-scope notice
-Retrieval Result Ledger               Result Inspector (closed by default)
+资料 + 说明 + 导入资料
+名称或路径搜索
+Document 资源行
+按需 Document Inspector
+折叠的 Retrieval Tools 入口
 ```
 
-Each result leads with final rank, document identity and readable chunk excerpt. Location and path
-are L2. Ranking mode and raw scores are L3 but remain visible enough for comparison. Reranked rows
-use API-provided `retrieval_rank` to state `Retrieved #N → Reranked #M`; the frontend never
-reconstructs the original rank.
+每个资源行以文件名为主，随后展示相对路径、版本、大小、Chunk 数和更新时间。页面只根据真实 parse/index 状态给出一个产品状态：可用、等待解析、处理中或失败；不创造上传子阶段、归档状态或健康分。
 
-The Result Inspector follows the shared selection pattern and exposes only returned identity,
-location, full chunk content and ranking fields. It never exposes vectors, Qdrant point IDs,
-content hashes, index generations, prompts, Graph state or raw exceptions. Desktop uses a side pane;
-tablet uses an overlay; mobile uses a full-width sheet.
+点击资源行打开 Inspector，`···` 保留 Chunk、重新解析、重新索引、下载、版本和删除等真实操作。Inspector 默认关闭，只展示当前 API 已有的身份、路径、来源、MIME、版本、解析/索引状态和时间；Parser、Embedding、Content Hash 与 Generation 属于默认折叠的技术细节。
 
-The workspace is entered from Documents Advanced and is deliberately absent from the four-item
-Global Header navigation. It does not execute LangGraph, Generation, three-way Compare, evaluation
-metrics or Query Rewrite.
+当前没有稳定的整文阅读或分页 API，因此不能用 Chunk Preview 拼装虚假的 Document Reader。桌面使用侧栏，中等宽度使用 overlay，窄屏使用全宽 sheet。
 
-**Files:** `src/views/RetrievalView.vue`, `src/components/SemanticSearchPanel.vue`
+上传区域默认折叠，`?import=1` 打开同一个 `DocumentUploadPanel`。Retrieval Tools 只链接到独立 Retrieval Workspace，不保留第二套内嵌检索实现。
 
----
+## 7. Conversation、Evidence 与 Execution Trace
 
-## Citation System
-
-- One consistent citation identity: `[S1]`, `[S2]`, `[S3]`
-- Brick/vermilion Evidence-accent pill with monospace font
-- Same color for all citations (document and code)
-- Source TYPE distinguished in Evidence Inspector via labels, not citation color
-- Clicking a citation opens/focuses the Evidence Inspector
-
----
-
-## Data Management & Recovery
-
-Data Management is a secondary local-first maintenance workspace. It protects Source of Truth and
-repairs or rebuilds derived state; it is not a dashboard, Settings page, storage analytics view or
-DevOps console.
-
-### Real data boundary
-
-- Archive Source of Truth contains Knowledge Base metadata, Documents, all Document Versions and
-  stored source files, Conversations, Messages and Knowledge Entries with their provenance
-  snapshots.
-- Restore is Workspace-level (`/knowledge-base-archives/restore`) and creates the archived Knowledge
-  Base identity. It does not belong to the currently open KB even when launched from that KB's
-  maintenance page.
-- Restored Document parse/index state and verified Knowledge retrieval index state begin pending;
-  `rebuild_status=not_started` is explicit. The UI must distinguish “Source data restored” from
-  “Ready for Retrieval”.
-- Derived state consists of parsed chunks, the latest Document retrieval indexes and verified
-  Knowledge retrieval indexes. Rebuild regenerates these from existing Source of Truth.
-
-### Page structure
+宽屏工作台由 Conversation 列表、Answer 主区和按需 Evidence Inspector 组成：
 
 ```text
-数据与恢复 header + current KB context             恢复详情
-备份与恢复
-一致性检查 → selected findings → backend dry-run → 安全修复
-重建 Derived State
-Source of Truth vs Derived State (collapsed)
+Conversations 200px | Answer flexible | Evidence 360px
 ```
 
-- Entry lives in each Knowledge Space overflow menu; the four-item Global Shell navigation remains
-  unchanged.
-- Export and Audit are direct actions. Restore, Repair and Rebuild require one explicit confirmation.
-- Audit is visibly read-only and reports the API's `completed/partial`, severity counts, findings,
-  safe message and entity identity. It never invents a health score.
-- Audit findings do not expose repairability. The user may select findings for review, but only the
-  backend `dry_run` response may mark an item `repairable` and `planned`; execution sends only those
-  server-approved finding IDs.
-- Repair and Rebuild poll the existing status endpoints at a restrained interval only while queued
-  or running. Retry appears conservatively for failed or partially failed operations.
-- Rebuild progress uses only real count fields: Document Versions parsed, Documents indexed and
-  verified Knowledge Entries indexed. There are no fabricated stages or percentages.
-- Restore maps conflict, archive limit and invalid archive to distinct user guidance and never
-  exposes raw exceptions. A successful response offers explicit rebuild and navigation actions
-  without automatically redirecting.
-- Desktop uses an editorial maintenance plane with a narrow Recovery Inspector; below the workbench
-  threshold the Inspector becomes a normal single-column section. Findings and operation rows wrap
-  at 320px and never become a wide table.
+### Conversation 与 Answer
 
-**Files:** `src/views/DataManagementView.vue`, `src/services/dataMaintenance.ts`
+- 历史列表展示标题和相对时间，重命名与删除放入 `···`。
+- 用户消息使用紧凑的右对齐 muted-sage surface，最大宽度约 65%–70%。
+- Assistant 回答使用更宽的左对齐 warm-paper 阅读 surface，最大宽度约 88%–94%。
+- 两类消息保持非对称，不做镜像聊天气泡。
+- Citation 使用统一 `[S1]`、`[S2]` 身份，点击后打开对应 Evidence。
+- Evidence 摘要、Execution Trace、Trace Detail 与“保存为知识”属于对应回答的次级区块，不拆成独立 Dashboard 卡片。
 
-The data boundary is fixed: PostgreSQL records and stored source files are Source of Truth;
-parsed chunks and retrieval indexes are Derived State. The UI may operate only the existing archive,
-restore, audit, repair, and rebuild contracts. It must not invent resource monitoring, cloud backup,
-automatic recovery, health scores, or frontend repair policy.
+### Evidence Inspector
 
-## Problem & Solution Knowledge
+Inspector 在初次进入、切换历史会话、收到 Sources 和回答完成后都保持关闭，也不自动选择第一条来源。只有用户点击具体 Citation 时，才选择该来源并打开 Inspector；关闭后 Answer 立即恢复可用宽度。
 
-Knowledge entries are durable engineering records saved from completed answers.
+Document Evidence 显示文件名、章节、页码或代码行；Knowledge Evidence 显示维护后的问题和“已验证知识”，并链接到 Knowledge Detail。Knowledge 来源不能伪装成文件，来源类型也不能只靠颜色区分。
 
-- The Knowledge list uses editorial resource rows, not a CRUD table or card grid.
-- Search, validation status and tag filters remain compact and secondary to the entries.
-- A detail page gives the solution primary reading space and keeps Evidence visible as L1 content.
-- Background, root cause and failed attempts appear only when present.
-- The original conversation is linked when it still exists; immutable question, answer and source
-  snapshots remain visible after it is deleted.
-- Evidence shown on a Knowledge detail is explicitly labelled as a saved snapshot. Snapshot IDs do
-  not imply that the original Document or Knowledge source is still live; the UI only offers a live
-  source action when the API provides a current availability signal.
-- Editing changes the maintained knowledge fields, never the provenance snapshots.
-- Validation status and retrieval-index status are separate L2 metadata. A verified entry can be
-  waiting, processing, searchable or failed; failed indexing exposes one contextual retry action.
-- RAG availability is a read-only product interpretation of both states: only verified entries with
-  a current successful index are available to retrieval. Unverified and outdated entries are not
-  used in RAG, and the UI never introduces a separate “use in RAG” toggle.
-- The list is a Knowledge Ledger: question and solution lead, validation and tags follow, while
-  update time and derived indexing metadata remain visually quiet. Row-level edit/delete stay in an
-  overflow menu; the independent detail route remains the durable reading and maintenance surface.
+桌面使用右侧 pane，中等宽度使用不改变 Composer 布局的右侧 overlay，移动端使用全宽 panel。
 
----
+### Execution Trace
 
-## Visual Language
+实时生成期间 Trace 展开，终态后折叠为摘要；历史 Trace 默认折叠。只展示后端实际提供的阶段、状态、候选数、来源数、Scope、Retrieval / Reranker 模式、fallback 和耗时，不展示 Prompt、内部 Graph State、凭据、模型原始推理文本或向量。
 
-### Product Language
+## 8. Retrieval Workspace
 
-- TraceMind UI is Chinese-first. Page titles, ordinary actions, status, loading, empty, error,
-  confirmation, tooltip, and maintenance copy use natural Chinese.
-- Professional terms may remain in English: TraceMind, RAG, Semantic, Hybrid, Reranked, RRF,
-  Cross-Encoder, Evidence, Execution Trace, Local-first, Embedding, BM25, LangGraph, LangChain,
-  Qdrant, Direct, and API.
-- `Source of Truth` and `Derived State` may be bilingual when describing the persistence boundary.
-  Peer actions at the same visual level do not mix ordinary English and Chinese.
+Retrieval Workspace 是开发者检索实验台，不是第二个 Conversation 或 Benchmark Dashboard。它只执行一个用户选择的模式并停在候选 Evidence：
 
-### Inspector Responsive Contract
+- Semantic：Dense Cosine Retrieval；
+- Hybrid：Dense + BM25，经应用层确定性 RRF 融合；
+- Reranked：Hybrid 候选经过本地 Cross-Encoder 排序。
 
-- Desktop: contextual side pane, closed until a real selection exists.
-- Medium: right overlay with the shared warm backdrop; it does not enter normal page flow.
-- Mobile: full-width panel with bounded viewport height and internal scrolling.
-- Every dismissible Inspector has a labelled native close button and closes on Escape. The global
-  mobile menu remains above the Inspector/backdrop z-index pair.
+默认模式是 Hybrid，Scope 为当前 Knowledge Base 或一个真实 `document_id`，Limit 保持 5 或 10。Language 是 Advanced Hint。显式路径解析产生的 `semantic_query` 只表示去掉路径后的查询，不等同于 Conversation-aware Query Rewrite。
 
-### Color Roles
-| Role | Usage |
-|------|-------|
-| Background (`--color-bg`) | Page background, warm near-white |
-| Surface (`--color-surface`) | Cards, panels, inspector |
-| Text (`--color-text`) | Primary content |
-| Text secondary (`--color-text-secondary`) | Metadata, labels |
-| Text tertiary (`--color-text-tertiary`) | Captions, timestamps |
-| Accent (`--color-accent`) | Deep-green navigation active, focus, links, primary buttons |
-| Evidence (`--color-evidence`) | Brick/vermilion citations and source identity |
-| Border (`--color-border`) | Hairline separators |
-| Success/Warning/Error | Semantic states only |
+结果以 Ledger 展示最终 Rank、Document 身份与可读正文。RRF Score、Cosine Score 与 Reranker Raw Logit 都不能显示为概率或百分比；Reranked 使用 API 的 `retrieval_rank` 展示重排前后位置，不由前端重建。
 
-Deep green is used for navigation, focus, primary actions and links. Brick/vermilion is reserved for
-citations and Evidence identity. Muted green is used for success states.
+Result Inspector 默认关闭，只显示响应中已有的身份、位置、完整 Chunk 和排序字段。页面不执行 LangGraph、LLM Generation、三路自动比较或评测指标计算。
 
-### Typography
-- **System font stack** (no external CDN): `system-ui, 'PingFang SC', 'Microsoft YaHei UI', 'Segoe UI'`
-- **Mono stack**: `'Cascadia Code', 'JetBrains Mono', Consolas, monospace`
-- **Scale**: 24px (page titles) > 15px (reading body) > 14px (UI) > 13px (metadata) > 11px (micro)
-- No giant titles. No decorative eyebrows. No excessive uppercase.
+## 9. Knowledge
 
-### Separators
-- Hairline `1px solid` borders
-- `border-bottom` on resource rows
-- No heavy borders, no card wrappers around everything
+KnowledgeEntry 是从已完成回答沉淀的长期工程记录：
 
-### Surfaces
-- White only when a surface is actually needed
-- No card-ification of every section
-- No shadows (or minimal `0 1px 3px` for dropdowns)
-- No gradients, no glass
+- List 使用 Editorial Ledger，不使用 CRUD 表格或卡片网格；
+- Question 与 Solution 为主体，Validation、Tags、RAG 可用性、Index 状态和更新时间逐级弱化；
+- Detail 以 Solution 为主要阅读区，Background、Root Cause 与 Failed Attempts 仅在有内容时出现；
+- Evidence 明确标记为保存时快照，不能根据历史 ID 假设原 Document 仍然存在；
+- 编辑只修改维护字段，不修改 provenance snapshot；
+- Validation Status 与 Index Status 分开呈现，不增加独立“用于 RAG”开关；
+- 只有 verified 且当前索引成功的条目才显示为可检索。
 
-### Buttons
-- Primary: accent background, white text
-- Secondary: border + transparent background
-- Text: no border, no background
-- Overflow actions: `···` trigger → Element Plus Dropdown
+## 10. Knowledge Map
 
-### Metadata
-- Mono font, compact, secondary/tertiary color
-- Status pills: colored dot + label, small size
-- Timestamps: relative where practical
+Knowledge Map 是当前 PostgreSQL 数据的确定性关系视图。节点只有 Knowledge Base、Document、KnowledgeEntry 与 Tag；边只有 `contains`、`cites`、`tagged` 与 `related`。
 
----
+- Graph Canvas 是主工作面，Inspector 默认关闭，用户选择节点或边后才打开。
+- 选择后突出真实邻域，弱化无关项；关系原因只读取 API metadata。
+- Cytoscape 负责 pan、zoom、drag、selection 和现有 `cose` layout；前端不重新推导边或权重。
+- KnowledgeEntry 和 Document 进入已有详情或资料路由。
+- 只有 Knowledge Base 根节点时显示真实空态；仅有 Document 仍属于有效图内容。
+- 该页面只用于浏览关系，不参与 Retrieval，不编辑图数据，也不通过模型生成关系。
 
-## Element Plus Integration
+## 11. Data & Recovery
 
-Element Plus is an **implementation dependency**, not TraceMind's visual identity.
+Data & Recovery 是本地数据维护工作区，不是资源监控、Settings 或 DevOps Console。
 
-**Use Element Plus for:** Dialog, Dropdown, Input behavior, Button behavior, Loading, Message, Confirmation.
+- Archive / Restore 操作 Source of Truth；Restore 后必须明确区分“事实数据已恢复”和“可检索状态已重建”。
+- Audit 是检查操作，不显示虚构健康分。
+- Repair 只能执行后端 dry-run 返回为 planned 且 repairable 的 Finding ID，前端不维护修复 allowlist。
+- Repair 与 Rebuild 仅在 queued / running 时轮询；失败或部分失败时保守提供 Retry。
+- Rebuild 只展示 API 的 Document Version parsed、Document indexed 和 verified Knowledge indexed 计数，不伪造阶段或百分比。
+- Export 和 Audit 可直接执行；Restore、Repair 与 Rebuild 需要一次明确确认。
 
-**Override:** Primary color → `--color-accent`. Border radius → project tokens. Font family → project tokens.
+入口位于 Knowledge Space 的次级菜单。桌面使用维护主区和窄 Inspector，中窄屏收敛为单列；不增加 CPU、GPU、内存、Storage、Cloud Backup 或自动修复能力。
 
-**Do not:** introduce a second component framework (no Tailwind, no shadcn).
+## 12. 视觉语言
 
----
+### 语言
 
-## New Feature Rules
+普通标题、操作、状态、空态、错误与确认文案以自然中文为主。RAG、Semantic、Hybrid、Reranked、RRF、Cross-Encoder、Evidence、Execution Trace、Local-first、Embedding、BM25、LangGraph、LangChain、Qdrant 和 API 可保留英文。
 
-For every new frontend feature:
-1. Determine L1 / L2 / L3 classification for new information.
-2. Inspect analogous existing TraceMind UI first.
-3. Reuse an existing design pattern (resource row, provenance row, evidence item, etc.).
-4. Preserve global shell/navigation semantics.
-5. If introducing a genuinely reusable new UI pattern, update this document.
-6. Never create a page-specific visual language silently.
+### 颜色
 
----
+- Background：暖白页面背景；
+- Surface：只在确有层级时使用；
+- Accent：深绿，用于导航、Focus、链接和主操作；
+- Evidence：砖红 / 朱红，只用于 Citation 与来源身份；
+- Success / Warning / Error：只表达真实语义状态；
+- Border：1px hairline 分隔。
 
-## Knowledge Map
+不使用渐变、玻璃拟态、重阴影或大面积高饱和色。颜色不能成为区分来源类型或状态的唯一方式。
 
-- The graph is the dominant L1 workspace. The selected-item Inspector is also L1 but remains closed
-  until the user explicitly selects a node or edge; no item is selected automatically.
-- The only node types are the current API's Knowledge Base, KnowledgeEntry, Document and derived
-  Tag. Their restrained paper/green/vermilion/neutral treatment communicates type without turning
-  the canvas into a saturated bubble graph.
-- The only edge types are `contains`, `cites`, `tagged` and `related`. Direction follows the API's
-  `source → target`; related edges are dashed, and their shared tag/live-document reasons come only
-  from API metadata. There is no weight or inferred frontend score.
-- Selecting an item strengthens its real neighborhood and dims unrelated elements. Relationship
-  labels remain hidden by default and appear only in the selected context to protect canvas density.
-- Cytoscape core owns zoom, pan, drag, selection and the existing `cose` layout. TraceMind owns the
-  data contract, local node/edge filters, navigation and visual tokens; no wrapper, layout plugin or
-  coordinate algorithm is introduced.
-- KnowledgeEntry and Document nodes navigate to their existing detail/focused-list routes. The
-  Inspector renders only current API metadata; it never exposes graph IDs, payloads, embeddings or
-  internal state.
-- Wide desktop uses an optional right pane, medium widths use the shared overlay pattern, and mobile
-  uses a full-width panel below the Global Shell z-index. Closing it restores the full canvas.
-- A graph with only its Knowledge Base root is an empty relationship graph: show real Conversation
-  and Documents routes instead of initializing a fake canvas. Documents alone are valid graph
-  content and must never be hidden by a KnowledgeEntry-only empty check.
-- The map is a deterministic visualization of current knowledge assets, not a retrieval surface,
-  editable graph, GraphRAG UI, graph database console or AI relationship generator.
+### 字体与密度
 
-## Review Checklist
+- 系统字体：`system-ui, 'PingFang SC', 'Microsoft YaHei UI', 'Segoe UI'`；
+- 等宽字体：`'Cascadia Code', 'JetBrains Mono', Consolas, monospace`；
+- 层级建议：24px 页面标题、15px 阅读正文、14px UI、13px metadata、11px micro；
+- 不使用巨型标题、装饰性 eyebrow 或过量大写。
 
-Before completing any frontend UI work:
-- [ ] L1/L2/L3 classification is correct
-- [ ] Evidence/Sources remain L1, not buried or duplicated
-- [ ] Execution/debug uses progressive disclosure
-- [ ] No CRUD tables for knowledge objects
-- [ ] No card-heavy SaaS layouts
-- [ ] User/Assistant use distinct asymmetric conversation surfaces
-- [ ] No duplicated navigation
-- [ ] Shell layers preserved
-- [ ] Element Plus visual defaults overridden where needed
-- [ ] `vue-tsc --noEmit` passes
-- [ ] `eslint` passes
-- [ ] `vitest` passes
-- [ ] `vite build` passes
+### Element Plus
 
-## Explicit Deferrals
+Element Plus 是交互实现依赖，不是视觉身份。Dialog、Dropdown、Input、Button、Loading、Message 与 Confirmation 可复用其行为，但颜色、圆角、字体和间距应服从项目 token。不引入第二套组件框架。
 
-- **Document Reader:** deferred because the current product has no stable full-document / pagination
-  reading API contract. Do not fabricate a Reader from Chunk preview data. This is not a merge blocker.
-- **Compass Logo:** the current letter-mark remains a temporary placeholder until an approved brand
-  asset exists. Do not generate, redraw, or adopt a third-party compass asset. This is not a merge blocker.
+## 13. 响应式与 Inspector 约束
+
+- Desktop：按需侧栏，未选择真实对象时关闭。
+- Medium：右侧 overlay，不进入普通文档流，不挤压 Composer 或主阅读区。
+- Mobile：全宽 panel，限制 viewport 高度并内部滚动。
+- 所有可关闭 Inspector 都有带可访问名称的原生关闭按钮，并支持 Escape。
+- 页面在 320px 宽度仍不能产生应用级横向滚动。
+
+## 14. 新功能与评审清单
+
+新增前端能力前：
+
+1. 先判断信息属于 L1、L2 还是 L3。
+2. 检查现有页面是否已有可复用模式。
+3. 只使用真实 API 字段与真实状态。
+4. 保持 Global Shell、Evidence、Inspector 与响应式语义一致。
+5. 只有形成跨页面长期模式时才更新本文件。
+
+交付前检查：
+
+- [ ] Evidence / Sources 保持 L1，未被隐藏或重复展示。
+- [ ] Execution / Debug 使用渐进披露。
+- [ ] 知识对象未被改成 CRUD 表格或卡片堆叠。
+- [ ] User / Assistant 保持非对称阅读面。
+- [ ] 未增加重复导航、虚构字段或未实现能力。
+- [ ] Inspector 的关闭、Escape 和窄屏行为一致。
+- [ ] `npx vue-tsc --noEmit` 通过。
+- [ ] `npx eslint src/ --max-warnings 100` 通过。
+- [ ] `npx vitest run` 通过。
+- [ ] `npx vite build` 通过。
+
+## 15. 当前延期项
+
+- Document Reader：缺少稳定的整文与分页 API，不用 Chunk Preview 模拟。
+- Compass Logo：当前字母标记继续作为占位，正式资产需单独评审，不生成或采用未经批准的第三方图标。
