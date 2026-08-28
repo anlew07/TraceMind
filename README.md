@@ -357,31 +357,31 @@ CPU / CUDA、模型离线缓存、dtype、batch size 与显存边界见 [Reranke
 
 ## 目录与架构
 
-- **后端：**`**backend/**`
+- **后端：** `backend/`
   - 基于 FastAPI，核心代码位于 `backend/app/`，整体采用 API → Service → Repository / Infrastructure 的分层方式，RAG、检索、解析和异步任务保持独立模块。
-  - `**app/api/**`**：接口层**
+  - `app/api/`：**接口层**
     - 聚合 Knowledge Base、Document、Conversation、Retrieval、RAG、Knowledge、Archive / Restore 等 HTTP 与 SSE 接口，主要负责参数校验、响应转换、流式事件输出与安全错误映射。
-  - `**app/rag/**`**：RAG 执行链路**
+  - `app/rag/`：**RAG 执行链路**
     - 基于 LangGraph 组织 Route → Scope → Rewrite → Retrieve → Rerank → Context → Generate / No-answer → Finalize。
     - `graph.py / nodes.py / state.py` 分别负责工作流编排、节点实现与单次执行状态；`context.py / citations.py` 负责上下文构建和引用约束。
-  - `**app/services/**`**：核心业务编排**
+  - `app/services/`：**核心业务编排**
     - 承载文档版本、对话、KnowledgeEntry、索引发布、归档恢复、一致性检查和数据重建等核心流程。
     - 负责事务边界、跨存储补偿和任务调度，避免业务逻辑直接堆积在 API 层。
-  - `**app/parsing/**`**：文档解析与切分**
+  - `app/parsing/`：**文档解析与切分**
     - 支持 PDF、DOCX、Markdown、TXT 与常见代码文件，并保留页码、章节或代码行等来源信息。
     - `chunker.py` 负责确定性 Chunking，使相同输入能够稳定生成相同顺序和内容的 Chunk。
-  - `**app/indexing/**`**：向量索引与混合检索**
+  - `app/indexing/`：**向量索引与混合检索**
     - 封装 Qdrant Collection、Dense + BM25 双路召回、确定性 RRF、Payload Filter 等底层索引与检索能力。
     - Generation 的构建、校验与 Active 切换由 Service 层负责业务编排；`app/embedding/` 与 `app/reranker/` 分别提供 Embedding 与可选 Cross-Encoder 精排。
-  - `**app/tasks/**` **+** `**app/worker/**`**：异步任务**
+  - `app/tasks/` + `app/worker/`：**异步任务**
     - 基于 Celery + Redis 执行 Parse、Document Index、Knowledge Index、Repair 和 Rebuild，避免耗时任务阻塞 FastAPI 请求。
-  - `**app/storage/**`**：原始文件与数据恢复**
+  - `app/storage/`：**原始文件与数据恢复**
     - 管理 Original Files、Trash、Archive / Restore，并负责原子写入、安全路径和恢复过程中的文件处理。
-  - `**models/**`**、**`**repositories/**`**、**`**schemas/**`
+  - `models/`、`repositories/`、`schemas/`
     - 分别负责 SQLAlchemy 数据模型、PostgreSQL 数据访问和 Pydantic 接口模型，使数据库、业务逻辑和 HTTP 数据结构保持分离。
-  - `**integrations/**`**、**`**db/**`**、**`**core/**`**、**`**llm/**`
+  - `integrations/`、`db/`、`core/`、`llm/`
     - 统一封装 PostgreSQL、Redis、Qdrant、配置、日志和 ChatModel 等基础设施依赖。
-- **前端：**`**frontend/**`
+- **前端：** `frontend/`
   - 基于 Vue 3 + TypeScript + Vite + Element Plus 构建，围绕 Knowledge Base Workspace 组织文档、检索、对话、知识沉淀与数据恢复页面。
   - **RAG 流式交互与执行追踪**
     - `ConversationView.vue`：承载 RAG 对话、Evidence 引用和 Execution Trace，实时展示 Query Rewrite、Retrieval、Rerank、Evidence、Generation 等执行阶段。
