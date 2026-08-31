@@ -1,0 +1,20 @@
+{
+  "dataset_version": "1.1",
+  "corpus_kind": "project-realistic",
+  "files": [
+    {"relative_path": "README.md", "sha256": "261db04ab90418efcc189c9bc54ef12fe6cd9c1e4fcb0e6e7a5006bd9e87d72a", "source_type": "document"},
+    {"relative_path": "docs/development.md", "sha256": "5ad816f6b462c6d406fded77e54e60b8aa17abc139d1e9cde7936a2901de117c", "source_type": "document"},
+    {"relative_path": "docs/design/TraceMind-Knowledge-Design.md", "sha256": "870f76560a3995432fd418c8490cff4eb8b43efce36cc77ed683bda67f4d81b4", "source_type": "document"},
+    {"relative_path": "backend/app/core/config.py", "sha256": "62361c7965a9a48794b346022b2a9d7ff6725520b2e0836da317b1c405a81387", "source_type": "document"},
+    {"relative_path": "backend/app/indexing/qdrant.py", "sha256": "b22db4505002ae91d00423b218c8385a8b763da6080e9b84020ac3fb3f8a01d6", "source_type": "document"},
+    {"relative_path": "backend/app/services/document_indexing.py", "sha256": "9b7f215372eb131f13f3e2dbaec630bf2f14e5c434b7a293f6cffb4e4aad1d19", "source_type": "document"},
+    {"relative_path": "backend/app/rag/graph/nodes.py", "sha256": "3e5ad5c29c5446f2832b9b8ef25f65a6cc46d5fb3eaa8883fda4a9d6f4ffe107", "source_type": "document"},
+    {"relative_path": "backend/app/services/document_reranking.py", "sha256": "2f40dfaea79374b328431091dbcc44a9043e32120520bcedccd607e84235fa67", "source_type": "document"}
+  ],
+  "expected_question_count": 12,
+  "expected_splits": {"acceptance": 12},
+  "chunking_snapshot": {"strategy": "deterministic-single-level", "max_chars": 1800, "overlap_chars": 200},
+  "embedding_snapshot": {"model": "Qwen/Qwen3-Embedding-0.6B", "dimension": 1024},
+  "retrieval_snapshot": {"dense_prefetch": 20, "sparse_prefetch": 20, "semantic_threshold": 0.5, "top_k": 5, "fusion": "application-deterministic-rrf", "reranker_enabled": false},
+  "notes": "公开 TraceMind 源码与当前文档组成的工程真实性验收集；只在 Final Candidate 锁定后运行。"
+}

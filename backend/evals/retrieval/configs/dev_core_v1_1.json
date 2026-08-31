@@ -1,0 +1,13 @@
+[
+  {"name": "baseline-v1", "mode": "hybrid", "split": "dev", "top_k": 5, "threshold": 0.50, "dense_prefetch": 20, "sparse_prefetch": 20, "rerank_candidates": 10, "repeat": 3},
+  {"name": "dense-only", "mode": "dense", "split": "dev", "top_k": 5, "threshold": 0.50, "dense_prefetch": 20, "sparse_prefetch": 20, "rerank_candidates": 10},
+  {"name": "bm25-only", "mode": "bm25", "split": "dev", "top_k": 5, "threshold": 0.50, "dense_prefetch": 20, "sparse_prefetch": 20, "rerank_candidates": 10},
+  {"name": "reranker-candidates-5", "mode": "hybrid-reranker", "split": "dev", "top_k": 5, "threshold": 0.50, "dense_prefetch": 20, "sparse_prefetch": 20, "rerank_candidates": 5},
+  {"name": "reranker-candidates-10", "mode": "hybrid-reranker", "split": "dev", "top_k": 5, "threshold": 0.50, "dense_prefetch": 20, "sparse_prefetch": 20, "rerank_candidates": 10},
+  {"name": "reranker-candidates-15", "mode": "hybrid-reranker", "split": "dev", "top_k": 5, "threshold": 0.50, "dense_prefetch": 20, "sparse_prefetch": 20, "rerank_candidates": 15},
+  {"name": "reranker-candidates-20", "mode": "hybrid-reranker", "split": "dev", "top_k": 5, "threshold": 0.50, "dense_prefetch": 20, "sparse_prefetch": 20, "rerank_candidates": 20},
+  {"name": "top-k-3", "mode": "hybrid", "split": "dev", "top_k": 3, "threshold": 0.50, "dense_prefetch": 20, "sparse_prefetch": 20, "rerank_candidates": 10},
+  {"name": "top-k-10", "mode": "hybrid", "split": "dev", "top_k": 10, "threshold": 0.50, "dense_prefetch": 20, "sparse_prefetch": 20, "rerank_candidates": 10},
+  {"name": "threshold-040", "mode": "hybrid", "split": "dev", "top_k": 5, "threshold": 0.40, "dense_prefetch": 20, "sparse_prefetch": 20, "rerank_candidates": 10},
+  {"name": "threshold-060", "mode": "hybrid", "split": "dev", "top_k": 5, "threshold": 0.60, "dense_prefetch": 20, "sparse_prefetch": 20, "rerank_candidates": 10}
+]

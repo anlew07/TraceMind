@@ -1,0 +1,4 @@
+[
+  {"name": "threshold-045", "mode": "hybrid", "split": "dev", "top_k": 5, "threshold": 0.45, "dense_prefetch": 20, "sparse_prefetch": 20, "rerank_candidates": 10},
+  {"name": "threshold-055", "mode": "hybrid", "split": "dev", "top_k": 5, "threshold": 0.55, "dense_prefetch": 20, "sparse_prefetch": 20, "rerank_candidates": 10}
+]

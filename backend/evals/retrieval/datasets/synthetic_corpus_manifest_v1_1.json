@@ -1,0 +1,18 @@
+{
+  "dataset_version": "1.1",
+  "corpus_kind": "synthetic",
+  "files": [
+    {"relative_path": "config/retrieval.yaml", "sha256": "7e03637969008d7fe89dcc0af16774cb53b8cb761c8cda72f2c1820a1d242cbb", "source_type": "document"},
+    {"relative_path": "docs/api-contract.md", "sha256": "d67b60dbd5cf763e1bc66a4122d4e12da1692f4c94c7bd35f9b5a6ad9bd39159", "source_type": "document"},
+    {"relative_path": "docs/runtime-overview.md", "sha256": "d24869c8a858e8133902b55f1cda20bf0e206d50bdb8e945c3a8ebdb3801797f", "source_type": "document"},
+    {"relative_path": "runbooks/indexing-errors.md", "sha256": "23f038806c901f315b09ab43d758507f5e6acf67e53c2d2c82d35b800a50144f", "source_type": "document"},
+    {"relative_path": "src/retry_policy.py", "sha256": "558cc48af7719c2b62773ee1921f6be0c9e13c56ace02242ef9d3a748d051f4f", "source_type": "document"},
+    {"relative_path": "src/retry_policy_legacy.py", "sha256": "ec70d3a6ff4c696cd5e0f521327848be9fcb01f1b0516b0246b77ee830bfde9e", "source_type": "document"}
+  ],
+  "expected_question_count": 48,
+  "expected_splits": {"dev": 32, "holdout": 16},
+  "chunking_snapshot": {"strategy": "deterministic-single-level", "max_chars": 1800, "overlap_chars": 200},
+  "embedding_snapshot": {"model": "Qwen/Qwen3-Embedding-0.6B", "dimension": 1024},
+  "retrieval_snapshot": {"dense_prefetch": 20, "sparse_prefetch": 20, "semantic_threshold": 0.5, "top_k": 5, "fusion": "application-deterministic-rrf", "reranker_enabled": false},
+  "notes": "完全合成的多文档 v1.1 检索回归语料；不得上传 Dataset 或 Manifest。"
+}

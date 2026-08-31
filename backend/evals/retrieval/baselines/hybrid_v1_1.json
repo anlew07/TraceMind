@@ -1,0 +1,4322 @@
+{
+  "schema_version": "1.1",
+  "run_id": "baseline-v1",
+  "generated_at": "2026-08-29T12:09:53.969487Z",
+  "mode": "hybrid",
+  "split": "dev",
+  "config": {
+    "dataset": "evals\\retrieval\\datasets\\synthetic_retrieval_v1_1.jsonl",
+    "collection": "tracemind_retrieval_eval_v1_1_20260829_synthetic",
+    "embedding_model": "Qwen/Qwen3-Embedding-0.6B",
+    "reranker_model": "Qwen/Qwen3-Reranker-0.6B",
+    "top_k": 5,
+    "semantic_threshold": 0.5,
+    "dense_prefetch": 20,
+    "sparse_prefetch": 20,
+    "rerank_candidates": 10,
+    "repeat": 3
+  },
+  "case_count": 32,
+  "answerable_count": 30,
+  "negative_count": 2,
+  "metrics": {
+    "hit_at_1": {
+      "value": 0.7666666666666667,
+      "query_count": 30,
+      "success_count": 23
+    },
+    "hit_at_3": {
+      "value": 0.9666666666666667,
+      "query_count": 30,
+      "success_count": 29
+    },
+    "hit_at_5": {
+      "value": 1.0,
+      "query_count": 30,
+      "success_count": 30
+    },
+    "recall_at_5": {
+      "value": 1.0,
+      "query_count": 30,
+      "success_count": 30
+    },
+    "recall_at_10": {
+      "value": 1.0,
+      "query_count": 30,
+      "success_count": 30
+    },
+    "mrr_at_10": {
+      "value": 0.8638888888888889,
+      "query_count": 30,
+      "success_count": null
+    },
+    "ndcg_at_5": {
+      "value": 0.8987791715611038,
+      "query_count": 30,
+      "success_count": null
+    },
+    "ndcg_at_10": {
+      "value": 0.8987791715611038,
+      "query_count": 30,
+      "success_count": null
+    },
+    "negative_empty_result_rate": {
+      "value": 0.0,
+      "query_count": 2,
+      "success_count": 0
+    },
+    "negative_retrieval_rate": {
+      "value": 1.0,
+      "query_count": 2,
+      "success_count": 2
+    }
+  },
+  "latency": {
+    "embedding": {
+      "mean": 4658.71875,
+      "p50": 4565.0,
+      "p95": 5510.3,
+      "query_count": 32
+    },
+    "qdrant": {
+      "mean": 9.5625,
+      "p50": 8.0,
+      "p95": 20.049999999999994,
+      "query_count": 32
+    },
+    "fusion": {
+      "mean": 0.0,
+      "p50": 0.0,
+      "p95": 0.0,
+      "query_count": 32
+    },
+    "rerank": {
+      "mean": 0.0,
+      "p50": 0.0,
+      "p95": 0.0,
+      "query_count": 32
+    },
+    "total": {
+      "mean": 4681.235656245917,
+      "p50": 4587.980650016107,
+      "p95": 5531.433659992763,
+      "query_count": 32
+    }
+  },
+  "per_tag": {
+    "code": {
+      "hit_at_1": {
+        "value": 0.5714285714285714,
+        "query_count": 7,
+        "success_count": 4
+      },
+      "hit_at_3": {
+        "value": 1.0,
+        "query_count": 7,
+        "success_count": 7
+      },
+      "hit_at_5": {
+        "value": 1.0,
+        "query_count": 7,
+        "success_count": 7
+      },
+      "recall_at_5": {
+        "value": 1.0,
+        "query_count": 7,
+        "success_count": 7
+      },
+      "recall_at_10": {
+        "value": 1.0,
+        "query_count": 7,
+        "success_count": 7
+      },
+      "mrr_at_10": {
+        "value": 0.7380952380952381,
+        "query_count": 7,
+        "success_count": null
+      },
+      "ndcg_at_5": {
+        "value": 0.804418536224494,
+        "query_count": 7,
+        "success_count": null
+      },
+      "ndcg_at_10": {
+        "value": 0.804418536224494,
+        "query_count": 7,
+        "success_count": null
+      },
+      "negative_empty_result_rate": {
+        "value": 0.0,
+        "query_count": 0,
+        "success_count": 0
+      },
+      "negative_retrieval_rate": {
+        "value": 0.0,
+        "query_count": 0,
+        "success_count": 0
+      }
+    },
+    "config": {
+      "hit_at_1": {
+        "value": 1.0,
+        "query_count": 5,
+        "success_count": 5
+      },
+      "hit_at_3": {
+        "value": 1.0,
+        "query_count": 5,
+        "success_count": 5
+      },
+      "hit_at_5": {
+        "value": 1.0,
+        "query_count": 5,
+        "success_count": 5
+      },
+      "recall_at_5": {
+        "value": 1.0,
+        "query_count": 5,
+        "success_count": 5
+      },
+      "recall_at_10": {
+        "value": 1.0,
+        "query_count": 5,
+        "success_count": 5
+      },
+      "mrr_at_10": {
+        "value": 1.0,
+        "query_count": 5,
+        "success_count": 5
+      },
+      "ndcg_at_5": {
+        "value": 1.0,
+        "query_count": 5,
+        "success_count": 5
+      },
+      "ndcg_at_10": {
+        "value": 1.0,
+        "query_count": 5,
+        "success_count": 5
+      },
+      "negative_empty_result_rate": {
+        "value": 0.0,
+        "query_count": 0,
+        "success_count": 0
+      },
+      "negative_retrieval_rate": {
+        "value": 0.0,
+        "query_count": 0,
+        "success_count": 0
+      }
+    },
+    "en": {
+      "hit_at_1": {
+        "value": 0.6666666666666666,
+        "query_count": 9,
+        "success_count": 6
+      },
+      "hit_at_3": {
+        "value": 0.8888888888888888,
+        "query_count": 9,
+        "success_count": 8
+      },
+      "hit_at_5": {
+        "value": 1.0,
+        "query_count": 9,
+        "success_count": 9
+      },
+      "recall_at_5": {
+        "value": 1.0,
+        "query_count": 9,
+        "success_count": 9
+      },
+      "recall_at_10": {
+        "value": 1.0,
+        "query_count": 9,
+        "success_count": 9
+      },
+      "mrr_at_10": {
+        "value": 0.787037037037037,
+        "query_count": 9,
+        "success_count": null
+      },
+      "ndcg_at_5": {
+        "value": 0.8401784790716501,
+        "query_count": 9,
+        "success_count": null
+      },
+      "ndcg_at_10": {
+        "value": 0.8401784790716501,
+        "query_count": 9,
+        "success_count": null
+      },
+      "negative_empty_result_rate": {
+        "value": 0.0,
+        "query_count": 1,
+        "success_count": 0
+      },
+      "negative_retrieval_rate": {
+        "value": 1.0,
+        "query_count": 1,
+        "success_count": 1
+      }
+    },
+    "hard": {
+      "hit_at_1": {
+        "value": 0.5,
+        "query_count": 8,
+        "success_count": 4
+      },
+      "hit_at_3": {
+        "value": 1.0,
+        "query_count": 8,
+        "success_count": 8
+      },
+      "hit_at_5": {
+        "value": 1.0,
+        "query_count": 8,
+        "success_count": 8
+      },
+      "recall_at_5": {
+        "value": 1.0,
+        "query_count": 8,
+        "success_count": 8
+      },
+      "recall_at_10": {
+        "value": 1.0,
+        "query_count": 8,
+        "success_count": 8
+      },
+      "mrr_at_10": {
+        "value": 0.7291666666666666,
+        "query_count": 8,
+        "success_count": null
+      },
+      "ndcg_at_5": {
+        "value": 0.8002211043985326,
+        "query_count": 8,
+        "success_count": null
+      },
+      "ndcg_at_10": {
+        "value": 0.8002211043985326,
+        "query_count": 8,
+        "success_count": null
+      },
+      "negative_empty_result_rate": {
+        "value": 0.0,
+        "query_count": 2,
+        "success_count": 0
+      },
+      "negative_retrieval_rate": {
+        "value": 1.0,
+        "query_count": 2,
+        "success_count": 2
+      }
+    },
+    "keyword": {
+      "hit_at_1": {
+        "value": 0.8333333333333334,
+        "query_count": 12,
+        "success_count": 10
+      },
+      "hit_at_3": {
+        "value": 1.0,
+        "query_count": 12,
+        "success_count": 12
+      },
+      "hit_at_5": {
+        "value": 1.0,
+        "query_count": 12,
+        "success_count": 12
+      },
+      "recall_at_5": {
+        "value": 1.0,
+        "query_count": 12,
+        "success_count": 12
+      },
+      "recall_at_10": {
+        "value": 1.0,
+        "query_count": 12,
+        "success_count": 12
+      },
+      "mrr_at_10": {
+        "value": 0.9166666666666666,
+        "query_count": 12,
+        "success_count": null
+      },
+      "ndcg_at_5": {
+        "value": 0.9384882922619097,
+        "query_count": 12,
+        "success_count": null
+      },
+      "ndcg_at_10": {
+        "value": 0.9384882922619097,
+        "query_count": 12,
+        "success_count": null
+      },
+      "negative_empty_result_rate": {
+        "value": 0.0,
+        "query_count": 0,
+        "success_count": 0
+      },
+      "negative_retrieval_rate": {
+        "value": 0.0,
+        "query_count": 0,
+        "success_count": 0
+      }
+    },
+    "mixed": {
+      "hit_at_1": {
+        "value": 0.8421052631578947,
+        "query_count": 19,
+        "success_count": 16
+      },
+      "hit_at_3": {
+        "value": 1.0,
+        "query_count": 19,
+        "success_count": 19
+      },
+      "hit_at_5": {
+        "value": 1.0,
+        "query_count": 19,
+        "success_count": 19
+      },
+      "recall_at_5": {
+        "value": 1.0,
+        "query_count": 19,
+        "success_count": 19
+      },
+      "recall_at_10": {
+        "value": 1.0,
+        "query_count": 19,
+        "success_count": 19
+      },
+      "mrr_at_10": {
+        "value": 0.9122807017543859,
+        "query_count": 19,
+        "success_count": null
+      },
+      "ndcg_at_5": {
+        "value": 0.9348347109022587,
+        "query_count": 19,
+        "success_count": null
+      },
+      "ndcg_at_10": {
+        "value": 0.9348347109022587,
+        "query_count": 19,
+        "success_count": null
+      },
+      "negative_empty_result_rate": {
+        "value": 0.0,
+        "query_count": 0,
+        "success_count": 0
+      },
+      "negative_retrieval_rate": {
+        "value": 0.0,
+        "query_count": 0,
+        "success_count": 0
+      }
+    },
+    "negative": {
+      "hit_at_1": {
+        "value": 0.0,
+        "query_count": 0,
+        "success_count": 0
+      },
+      "hit_at_3": {
+        "value": 0.0,
+        "query_count": 0,
+        "success_count": 0
+      },
+      "hit_at_5": {
+        "value": 0.0,
+        "query_count": 0,
+        "success_count": 0
+      },
+      "recall_at_5": {
+        "value": 0.0,
+        "query_count": 0,
+        "success_count": 0
+      },
+      "recall_at_10": {
+        "value": 0.0,
+        "query_count": 0,
+        "success_count": 0
+      },
+      "mrr_at_10": {
+        "value": 0.0,
+        "query_count": 0,
+        "success_count": 0
+      },
+      "ndcg_at_5": {
+        "value": 0.0,
+        "query_count": 0,
+        "success_count": 0
+      },
+      "ndcg_at_10": {
+        "value": 0.0,
+        "query_count": 0,
+        "success_count": 0
+      },
+      "negative_empty_result_rate": {
+        "value": 0.0,
+        "query_count": 2,
+        "success_count": 0
+      },
+      "negative_retrieval_rate": {
+        "value": 1.0,
+        "query_count": 2,
+        "success_count": 2
+      }
+    },
+    "path": {
+      "hit_at_1": {
+        "value": 1.0,
+        "query_count": 3,
+        "success_count": 3
+      },
+      "hit_at_3": {
+        "value": 1.0,
+        "query_count": 3,
+        "success_count": 3
+      },
+      "hit_at_5": {
+        "value": 1.0,
+        "query_count": 3,
+        "success_count": 3
+      },
+      "recall_at_5": {
+        "value": 1.0,
+        "query_count": 3,
+        "success_count": 3
+      },
+      "recall_at_10": {
+        "value": 1.0,
+        "query_count": 3,
+        "success_count": 3
+      },
+      "mrr_at_10": {
+        "value": 1.0,
+        "query_count": 3,
+        "success_count": 3
+      },
+      "ndcg_at_5": {
+        "value": 1.0,
+        "query_count": 3,
+        "success_count": 3
+      },
+      "ndcg_at_10": {
+        "value": 1.0,
+        "query_count": 3,
+        "success_count": 3
+      },
+      "negative_empty_result_rate": {
+        "value": 0.0,
+        "query_count": 0,
+        "success_count": 0
+      },
+      "negative_retrieval_rate": {
+        "value": 0.0,
+        "query_count": 0,
+        "success_count": 0
+      }
+    },
+    "reranker": {
+      "hit_at_1": {
+        "value": 1.0,
+        "query_count": 2,
+        "success_count": 2
+      },
+      "hit_at_3": {
+        "value": 1.0,
+        "query_count": 2,
+        "success_count": 2
+      },
+      "hit_at_5": {
+        "value": 1.0,
+        "query_count": 2,
+        "success_count": 2
+      },
+      "recall_at_5": {
+        "value": 1.0,
+        "query_count": 2,
+        "success_count": 2
+      },
+      "recall_at_10": {
+        "value": 1.0,
+        "query_count": 2,
+        "success_count": 2
+      },
+      "mrr_at_10": {
+        "value": 1.0,
+        "query_count": 2,
+        "success_count": 2
+      },
+      "ndcg_at_5": {
+        "value": 1.0,
+        "query_count": 2,
+        "success_count": 2
+      },
+      "ndcg_at_10": {
+        "value": 1.0,
+        "query_count": 2,
+        "success_count": 2
+      },
+      "negative_empty_result_rate": {
+        "value": 0.0,
+        "query_count": 0,
+        "success_count": 0
+      },
+      "negative_retrieval_rate": {
+        "value": 0.0,
+        "query_count": 0,
+        "success_count": 0
+      }
+    },
+    "semantic": {
+      "hit_at_1": {
+        "value": 0.7777777777777778,
+        "query_count": 9,
+        "success_count": 7
+      },
+      "hit_at_3": {
+        "value": 0.8888888888888888,
+        "query_count": 9,
+        "success_count": 8
+      },
+      "hit_at_5": {
+        "value": 1.0,
+        "query_count": 9,
+        "success_count": 9
+      },
+      "recall_at_5": {
+        "value": 1.0,
+        "query_count": 9,
+        "success_count": 9
+      },
+      "recall_at_10": {
+        "value": 1.0,
+        "query_count": 9,
+        "success_count": 9
+      },
+      "mrr_at_10": {
+        "value": 0.8611111111111112,
+        "query_count": 9,
+        "success_count": null
+      },
+      "ndcg_at_5": {
+        "value": 0.8967317651243043,
+        "query_count": 9,
+        "success_count": null
+      },
+      "ndcg_at_10": {
+        "value": 0.8967317651243043,
+        "query_count": 9,
+        "success_count": null
+      },
+      "negative_empty_result_rate": {
+        "value": 0.0,
+        "query_count": 2,
+        "success_count": 0
+      },
+      "negative_retrieval_rate": {
+        "value": 1.0,
+        "query_count": 2,
+        "success_count": 2
+      }
+    },
+    "zh": {
+      "hit_at_1": {
+        "value": 0.6666666666666666,
+        "query_count": 3,
+        "success_count": 2
+      },
+      "hit_at_3": {
+        "value": 1.0,
+        "query_count": 3,
+        "success_count": 3
+      },
+      "hit_at_5": {
+        "value": 1.0,
+        "query_count": 3,
+        "success_count": 3
+      },
+      "recall_at_5": {
+        "value": 1.0,
+        "query_count": 3,
+        "success_count": 3
+      },
+      "recall_at_10": {
+        "value": 1.0,
+        "query_count": 3,
+        "success_count": 3
+      },
+      "mrr_at_10": {
+        "value": 0.8333333333333334,
+        "query_count": 3,
+        "success_count": null
+      },
+      "ndcg_at_5": {
+        "value": 0.8799697760151153,
+        "query_count": 3,
+        "success_count": null
+      },
+      "ndcg_at_10": {
+        "value": 0.8799697760151153,
+        "query_count": 3,
+        "success_count": null
+      },
+      "negative_empty_result_rate": {
+        "value": 0.0,
+        "query_count": 1,
+        "success_count": 0
+      },
+      "negative_retrieval_rate": {
+        "value": 1.0,
+        "query_count": 1,
+        "success_count": 1
+      }
+    }
+  },
+  "dense_candidate_count_mean": 6.34375,
+  "sparse_candidate_count_mean": 14.6875,
+  "context_chars_mean": 769.5625,
+  "cases": [
+    {
+      "case_id": "syn-001",
+      "query": "新索引什么时候切换成 active generation？",
+      "mode": "hybrid",
+      "tags": [
+        "zh",
+        "semantic"
+      ],
+      "answerable": true,
+      "hits": [
+        {
+          "rank": 1,
+          "score": 0.8333333333333333,
+          "retrieval_id": "349793ca-384c-49a6-84fc-4ec8c9b093e3",
+          "source_type": "document",
+          "document_name": "runtime-overview.md",
+          "relative_path": "docs/runtime-overview.md",
+          "section_title": "Generation 发布协议",
+          "start_line": 7,
+          "end_line": 7,
+          "content": "LumenDesk 的索引发布使用 generation switch。新一代向量必须全部写入并完成数量校验后，数据库才把 active_generation 指向新值。查询只读取 active_generation，因此失败的构建不会暴露半成品索引。",
+          "retrieval_score": 0.8333333333333333,
+          "rerank_score": null,
+          "retrieval_rank": 1
+        },
+        {
+          "rank": 2,
+          "score": 0.75,
+          "retrieval_id": "f0c19cd4-d38a-4a28-9028-b7770c1d3e13",
+          "source_type": "document",
+          "document_name": "runtime-overview.md",
+          "relative_path": "docs/runtime-overview.md",
+          "section_title": "Generation 发布协议",
+          "start_line": 13,
+          "end_line": 13,
+          "content": "重建时必须保持 document_id 不变，同时生成新的 index_generation。这样引用可以继续指向稳定文档，而检索只切换到已经完整发布的新索引。",
+          "retrieval_score": 0.75,
+          "rerank_score": null,
+          "retrieval_rank": 2
+        },
+        {
+          "rank": 3,
+          "score": 0.5833333333333333,
+          "retrieval_id": "5457bd5a-eb9d-4580-9bfd-7584f025b013",
+          "source_type": "document",
+          "document_name": "indexing-errors.md",
+          "relative_path": "runbooks/indexing-errors.md",
+          "section_title": "IDX-1042 Generation 数量不一致",
+          "start_line": 11,
+          "end_line": 11,
+          "content": "修复方式是删除失败 attempt_generation 的 points，然后对同一文档版本发起 force rebuild。重建成功并完成数量校验后，服务才允许切换 active generation。",
+          "retrieval_score": 0.5833333333333333,
+          "rerank_score": null,
+          "retrieval_rank": 3
+        },
+        {
+          "rank": 4,
+          "score": 0.3111111111111111,
+          "retrieval_id": "49ba93e3-92bf-4f9e-b0cb-03f1809feefd",
+          "source_type": "document",
+          "document_name": "indexing-errors.md",
+          "relative_path": "runbooks/indexing-errors.md",
+          "section_title": "IDX-1042 Generation 数量不一致",
+          "start_line": 13,
+          "end_line": 13,
+          "content": "如果清理请求失败，记录 orphan generation 并交给恢复任务重试。旧 active generation 仍可服务查询，因此清理失败与发布失败必须分开处理。",
+          "retrieval_score": 0.3111111111111111,
+          "rerank_score": null,
+          "retrieval_rank": 4
+        },
+        {
+          "rank": 5,
+          "score": 0.29166666666666663,
+          "retrieval_id": "4402269c-0496-45a6-ba35-f1932afda9a6",
+          "source_type": "document",
+          "document_name": "runtime-overview.md",
+          "relative_path": "docs/runtime-overview.md",
+          "section_title": "Generation 发布协议",
+          "start_line": 9,
+          "end_line": 9,
+          "content": "旧 generation 在新 generation 激活后进入清理队列。清理失败不会回滚已经成功的发布，但会留下可审计的 orphan generation。恢复任务按 generation 标识重试删除，而不是按知识库执行无边界清理。",
+          "retrieval_score": 0.29166666666666663,
+          "rerank_score": null,
+          "retrieval_rank": 5
+        }
+      ],
+      "matched_evidence": [
+        0
+      ],
+      "missing_required_evidence": [],
+      "metrics": {
+        "hit_at_1": 1.0,
+        "hit_at_3": 1.0,
+        "hit_at_5": 1.0,
+        "recall_at_5": 1.0,
+        "recall_at_10": 1.0,
+        "mrr_at_10": 1.0,
+        "ndcg_at_5": 1.0,
+        "ndcg_at_10": 1.0,
+        "negative_empty_result_rate": null,
+        "negative_retrieval_rate": null
+      },
+      "latency": {
+        "embedding_ms": 4425.0,
+        "qdrant_ms": 8.0,
+        "fusion_ms": 0.0,
+        "rerank_ms": 0.0,
+        "total_ms": 4444.291299965698
+      },
+      "dense_candidate_count": 9,
+      "sparse_candidate_count": 16,
+      "context_chars": 513,
+      "error": null
+    },
+    {
+      "case_id": "syn-002",
+      "query": "What is the source of truth for LumenDesk?",
+      "mode": "hybrid",
+      "tags": [
+        "en",
+        "semantic"
+      ],
+      "answerable": true,
+      "hits": [
+        {
+          "rank": 1,
+          "score": 0.5,
+          "retrieval_id": "8712e744-8f6f-4fa8-9e48-7eb2dcedbe7d",
+          "source_type": "document",
+          "document_name": "retrieval.yaml",
+          "relative_path": "config/retrieval.yaml",
+          "section_title": null,
+          "start_line": 45,
+          "end_line": 53,
+          "content": "release:\n  index_publication: generation-switch\n  source_of_truth:\n    - postgresql\n    - original-files\n  derived_state:\n    - document-chunks\n    - qdrant-index\n    - task-state",
+          "retrieval_score": 0.5,
+          "rerank_score": null,
+          "retrieval_rank": 1
+        },
+        {
+          "rank": 2,
+          "score": 0.5,
+          "retrieval_id": "da535846-d52b-4a03-9009-4a0e8961808a",
+          "source_type": "document",
+          "document_name": "api-contract.md",
+          "relative_path": "docs/api-contract.md",
+          "section_title": "LumenDesk Search API Contract",
+          "start_line": 3,
+          "end_line": 3,
+          "content": "This fictional API reference exists only for retrieval evaluation.",
+          "retrieval_score": 0.5,
+          "rerank_score": null,
+          "retrieval_rank": 2
+        },
+        {
+          "rank": 3,
+          "score": 0.5,
+          "retrieval_id": "58d45cfb-2c7c-42d1-98b8-01e85eb345b1",
+          "source_type": "document",
+          "document_name": "runtime-overview.md",
+          "relative_path": "docs/runtime-overview.md",
+          "section_title": "LumenDesk Runtime Overview",
+          "start_line": 3,
+          "end_line": 3,
+          "content": "这是一份完全虚构的运行时说明，仅用于 TraceMind 检索评测。",
+          "retrieval_score": 0.5,
+          "rerank_score": null,
+          "retrieval_rank": 3
+        },
+        {
+          "rank": 4,
+          "score": 0.3333333333333333,
+          "retrieval_id": "fb9aedad-f760-4d6e-80fc-775b5f96db57",
+          "source_type": "document",
+          "document_name": "runtime-overview.md",
+          "relative_path": "docs/runtime-overview.md",
+          "section_title": "Generation 发布协议",
+          "start_line": 11,
+          "end_line": 11,
+          "content": "数据库记录和原始上传文件共同构成 source of truth。向量点、解析块和任务状态都是 derived state，可以从原始文件与数据库元数据重新构建。",
+          "retrieval_score": 0.3333333333333333,
+          "rerank_score": null,
+          "retrieval_rank": 4
+        },
+        {
+          "rank": 5,
+          "score": 0.25,
+          "retrieval_id": "1762a074-803c-422e-947e-6d7375c51ad6",
+          "source_type": "document",
+          "document_name": "retrieval.yaml",
+          "relative_path": "config/retrieval.yaml",
+          "section_title": null,
+          "start_line": 1,
+          "end_line": 2,
+          "content": "service: lumendesk-search\nschema_version: 3",
+          "retrieval_score": 0.25,
+          "rerank_score": null,
+          "retrieval_rank": 5
+        }
+      ],
+      "matched_evidence": [
+        0
+      ],
+      "missing_required_evidence": [],
+      "metrics": {
+        "hit_at_1": 0.0,
+        "hit_at_3": 0.0,
+        "hit_at_5": 1.0,
+        "recall_at_5": 1.0,
+        "recall_at_10": 1.0,
+        "mrr_at_10": 0.25,
+        "ndcg_at_5": 0.4306765580733931,
+        "ndcg_at_10": 0.4306765580733931,
+        "negative_empty_result_rate": null,
+        "negative_retrieval_rate": null
+      },
+      "latency": {
+        "embedding_ms": 4678.0,
+        "qdrant_ms": 31.0,
+        "fusion_ms": 0.0,
+        "rerank_ms": 0.0,
+        "total_ms": 4720.241499948315
+      },
+      "dense_candidate_count": 5,
+      "sparse_candidate_count": 20,
+      "context_chars": 403,
+      "error": null
+    },
+    {
+      "case_id": "syn-003",
+      "query": "哪些状态可以从原文件和数据库重建？",
+      "mode": "hybrid",
+      "tags": [
+        "zh",
+        "semantic"
+      ],
+      "answerable": true,
+      "hits": [
+        {
+          "rank": 1,
+          "score": 0.8333333333333333,
+          "retrieval_id": "fb9aedad-f760-4d6e-80fc-775b5f96db57",
+          "source_type": "document",
+          "document_name": "runtime-overview.md",
+          "relative_path": "docs/runtime-overview.md",
+          "section_title": "Generation 发布协议",
+          "start_line": 11,
+          "end_line": 11,
+          "content": "数据库记录和原始上传文件共同构成 source of truth。向量点、解析块和任务状态都是 derived state，可以从原始文件与数据库元数据重新构建。",
+          "retrieval_score": 0.8333333333333333,
+          "rerank_score": null,
+          "retrieval_rank": 1
+        },
+        {
+          "rank": 2,
+          "score": 0.7,
+          "retrieval_id": "31728f22-4e9e-4f99-8bb9-ff190a1108f5",
+          "source_type": "document",
+          "document_name": "runtime-overview.md",
+          "relative_path": "docs/runtime-overview.md",
+          "section_title": "恢复边界",
+          "start_line": 33,
+          "end_line": 33,
+          "content": "备份必须包含 PostgreSQL 业务数据和原始文件。Redis 中的任务状态与 Qdrant Collection 不作为唯一恢复来源；恢复后可以重新解析并发布新的 generation。",
+          "retrieval_score": 0.7,
+          "rerank_score": null,
+          "retrieval_rank": 2
+        },
+        {
+          "rank": 3,
+          "score": 0.5,
+          "retrieval_id": "852ca0af-935a-4a6c-890e-4e42fbf5541b",
+          "source_type": "document",
+          "document_name": "indexing-errors.md",
+          "relative_path": "runbooks/indexing-errors.md",
+          "section_title": "IDX-2077 原始文件不可用",
+          "start_line": 19,
+          "end_line": 19,
+          "content": "首先校验备份中的文件哈希和文档版本 ID。如果备份文件正确，恢复到相同 storage_path 后重新解析；如果没有可信原文件，应停止恢复并报告数据缺口。",
+          "retrieval_score": 0.5,
+          "rerank_score": null,
+          "retrieval_rank": 3
+        },
+        {
+          "rank": 4,
+          "score": 0.3333333333333333,
+          "retrieval_id": "9f7787d9-6851-4c7c-a3d6-aed3e19d091d",
+          "source_type": "document",
+          "document_name": "indexing-errors.md",
+          "relative_path": "runbooks/indexing-errors.md",
+          "section_title": "IDX-4404 Collection Schema 不兼容",
+          "start_line": 35,
+          "end_line": 35,
+          "content": "修复时创建新的 Collection，按原文件和 PostgreSQL 元数据重建，再通过 generation 发布。不得原地猜测性修改现有向量维度，也不得复用被其他评测数据污染的 BM25 Collection。",
+          "retrieval_score": 0.3333333333333333,
+          "rerank_score": null,
+          "retrieval_rank": 4
+        },
+        {
+          "rank": 5,
+          "score": 0.29166666666666663,
+          "retrieval_id": "4087a9fe-f4ab-431c-9a42-9c2dd07d0ff9",
+          "source_type": "document",
+          "document_name": "indexing-errors.md",
+          "relative_path": "runbooks/indexing-errors.md",
+          "section_title": "IDX-2077 原始文件不可用",
+          "start_line": 21,
+          "end_line": 21,
+          "content": "禁止从 Qdrant payload 拼接出所谓原始文件。Payload 可能截断格式信息，也不能证明与数据库当前版本一致。",
+          "retrieval_score": 0.29166666666666663,
+          "rerank_score": null,
+          "retrieval_rank": 5
+        }
+      ],
+      "matched_evidence": [
+        0
+      ],
+      "missing_required_evidence": [],
+      "metrics": {
+        "hit_at_1": 1.0,
+        "hit_at_3": 1.0,
+        "hit_at_5": 1.0,
+        "recall_at_5": 1.0,
+        "recall_at_10": 1.0,
+        "mrr_at_10": 1.0,
+        "ndcg_at_5": 1.0,
+        "ndcg_at_10": 1.0,
+        "negative_empty_result_rate": null,
+        "negative_retrieval_rate": null
+      },
+      "latency": {
+        "embedding_ms": 4783.0,
+        "qdrant_ms": 7.0,
+        "fusion_ms": 0.0,
+        "rerank_ms": 0.0,
+        "total_ms": 4802.664700022433
+      },
+      "dense_candidate_count": 7,
+      "sparse_candidate_count": 18,
+      "context_chars": 425,
+      "error": null
+    },
+    {
+      "case_id": "syn-004",
+      "query": "RRF 为什么不能直接把 cosine score 和 BM25 score 相加？",
+      "mode": "hybrid",
+      "tags": [
+        "mixed",
+        "semantic",
+        "hard"
+      ],
+      "answerable": true,
+      "hits": [
+        {
+          "rank": 1,
+          "score": 1.0,
+          "retrieval_id": "72126a1a-64ef-4120-89f7-de8d3cc830a9",
+          "source_type": "document",
+          "document_name": "runtime-overview.md",
+          "relative_path": "docs/runtime-overview.md",
+          "section_title": "检索阶段",
+          "start_line": 19,
+          "end_line": 19,
+          "content": "RRF 只使用分支内名次，不把 cosine score 与 BM25 score 直接相加。相同文档块在两个分支都出现时会累积两项倒数排名分数；最终排序还使用稳定的 point id 作为平分条件。",
+          "retrieval_score": 1.0,
+          "rerank_score": null,
+          "retrieval_rank": 1
+        },
+        {
+          "rank": 2,
+          "score": 0.5333333333333333,
+          "retrieval_id": "a3322c9f-99b9-448e-98e4-5d7099732cfa",
+          "source_type": "document",
+          "document_name": "api-contract.md",
+          "relative_path": "docs/api-contract.md",
+          "section_title": "Hybrid search request",
+          "start_line": 9,
+          "end_line": 9,
+          "content": "The response field ranking_mode is hybrid. The score is an application-side reciprocal-rank-fusion value and is not a calibrated probability. Clients must not compare the score with a cosine threshold.",
+          "retrieval_score": 0.5333333333333333,
+          "rerank_score": null,
+          "retrieval_rank": 2
+        },
+        {
+          "rank": 3,
+          "score": 0.5333333333333333,
+          "retrieval_id": "8e456284-bf42-492b-a1e7-1eeef9f600d1",
+          "source_type": "document",
+          "document_name": "runtime-overview.md",
+          "relative_path": "docs/runtime-overview.md",
+          "section_title": "检索阶段",
+          "start_line": 17,
+          "end_line": 17,
+          "content": "查询先生成 Qwen3 dense embedding，同时把原始查询交给 Qdrant 的 BM25 sparse vector。Dense 和 Sparse 分支分别预取候选，应用层使用 deterministic reciprocal rank fusion 合并排名。",
+          "retrieval_score": 0.5333333333333333,
+          "rerank_score": null,
+          "retrieval_rank": 3
+        },
+        {
+          "rank": 4,
+          "score": 0.5,
+          "retrieval_id": "2e76526a-d138-41c9-bf36-daa81c945c58",
+          "source_type": "document",
+          "document_name": "api-contract.md",
+          "relative_path": "docs/api-contract.md",
+          "section_title": "Reranked search request",
+          "start_line": 17,
+          "end_line": 17,
+          "content": "The reranked score is a raw model logit, not a probability. retrieval_score preserves the preceding RRF score, retrieval_rank preserves the Hybrid position, and rerank_score contains the Cross-Encoder output.",
+          "retrieval_score": 0.5,
+          "rerank_score": null,
+          "retrieval_rank": 4
+        },
+        {
+          "rank": 5,
+          "score": 0.30952380952380953,
+          "retrieval_id": "f498d010-34f6-4105-962a-59c117528782",
+          "source_type": "document",
+          "document_name": "retrieval.yaml",
+          "relative_path": "config/retrieval.yaml",
+          "section_title": null,
+          "start_line": 16,
+          "end_line": 23,
+          "content": "retrieval:\n  mode: hybrid\n  output_limit: 5\n  semantic_score_threshold: 0.50\n  dense_prefetch_limit: 20\n  sparse_prefetch_limit: 20\n  fusion: application-deterministic-rrf\n  rrf_constant: 60",
+          "retrieval_score": 0.30952380952380953,
+          "rerank_score": null,
+          "retrieval_rank": 5
+        }
+      ],
+      "matched_evidence": [
+        0
+      ],
+      "missing_required_evidence": [],
+      "metrics": {
+        "hit_at_1": 1.0,
+        "hit_at_3": 1.0,
+        "hit_at_5": 1.0,
+        "recall_at_5": 1.0,
+        "recall_at_10": 1.0,
+        "mrr_at_10": 1.0,
+        "ndcg_at_5": 1.0,
+        "ndcg_at_10": 1.0,
+        "negative_empty_result_rate": null,
+        "negative_retrieval_rate": null
+      },
+      "latency": {
+        "embedding_ms": 5551.0,
+        "qdrant_ms": 8.0,
+        "fusion_ms": 0.0,
+        "rerank_ms": 0.0,
+        "total_ms": 5571.4070000103675
+      },
+      "dense_candidate_count": 6,
+      "sparse_candidate_count": 18,
+      "context_chars": 837,
+      "error": null
+    },
+    {
+      "case_id": "syn-005",
+      "query": "Cross-Encoder 能找回 Hybrid 候选池之外的证据吗？",
+      "mode": "hybrid",
+      "tags": [
+        "mixed",
+        "semantic",
+        "hard"
+      ],
+      "answerable": true,
+      "hits": [
+        {
+          "rank": 1,
+          "score": 1.0,
+          "retrieval_id": "1ec10919-e0be-406a-a603-a07f16c52e41",
+          "source_type": "document",
+          "document_name": "runtime-overview.md",
+          "relative_path": "docs/runtime-overview.md",
+          "section_title": "检索阶段",
+          "start_line": 21,
+          "end_line": 21,
+          "content": "Cross-Encoder Reranker 是可选阶段。它只能重排 Hybrid 已经召回的候选，不能找回候选池中不存在的证据。Reranker 不可用时，系统保留原始 Hybrid 顺序并记录 fallback。",
+          "retrieval_score": 1.0,
+          "rerank_score": null,
+          "retrieval_rank": 1
+        },
+        {
+          "rank": 2,
+          "score": 0.6666666666666666,
+          "retrieval_id": "7538f3f5-8263-407b-86f5-82c0aff878f0",
+          "source_type": "document",
+          "document_name": "api-contract.md",
+          "relative_path": "docs/api-contract.md",
+          "section_title": "Reranked search request",
+          "start_line": 15,
+          "end_line": 15,
+          "content": "POST /api/v2/workspaces/{workspace_id}/search/reranked first obtains Hybrid candidates and then calls the local Cross-Encoder. The requested output limit cannot exceed rerank_candidate_limit.",
+          "retrieval_score": 0.6666666666666666,
+          "rerank_score": null,
+          "retrieval_rank": 2
+        },
+        {
+          "rank": 3,
+          "score": 0.45,
+          "retrieval_id": "2e76526a-d138-41c9-bf36-daa81c945c58",
+          "source_type": "document",
+          "document_name": "api-contract.md",
+          "relative_path": "docs/api-contract.md",
+          "section_title": "Reranked search request",
+          "start_line": 17,
+          "end_line": 17,
+          "content": "The reranked score is a raw model logit, not a probability. retrieval_score preserves the preceding RRF score, retrieval_rank preserves the Hybrid position, and rerank_score contains the Cross-Encoder output.",
+          "retrieval_score": 0.45,
+          "rerank_score": null,
+          "retrieval_rank": 3
+        },
+        {
+          "rank": 4,
+          "score": 0.3611111111111111,
+          "retrieval_id": "a3322c9f-99b9-448e-98e4-5d7099732cfa",
+          "source_type": "document",
+          "document_name": "api-contract.md",
+          "relative_path": "docs/api-contract.md",
+          "section_title": "Hybrid search request",
+          "start_line": 9,
+          "end_line": 9,
+          "content": "The response field ranking_mode is hybrid. The score is an application-side reciprocal-rank-fusion value and is not a calibrated probability. Clients must not compare the score with a cosine threshold.",
+          "retrieval_score": 0.3611111111111111,
+          "rerank_score": null,
+          "retrieval_rank": 4
+        },
+        {
+          "rank": 5,
+          "score": 0.2,
+          "retrieval_id": "08201d78-9822-47c7-b4dc-2af0ed346576",
+          "source_type": "document",
+          "document_name": "runtime-overview.md",
+          "relative_path": "docs/runtime-overview.md",
+          "section_title": "流式回答与引用",
+          "start_line": 27,
+          "end_line": 27,
+          "content": "Execution Trace 记录路由、改写、检索、重排、证据整理和生成阶段的状态与耗时。它是可观察的执行元数据，不是模型的 Chain of Thought，也不保存隐藏推理过程。",
+          "retrieval_score": 0.2,
+          "rerank_score": null,
+          "retrieval_rank": 5
+        }
+      ],
+      "matched_evidence": [
+        0
+      ],
+      "missing_required_evidence": [],
+      "metrics": {
+        "hit_at_1": 1.0,
+        "hit_at_3": 1.0,
+        "hit_at_5": 1.0,
+        "recall_at_5": 1.0,
+        "recall_at_10": 1.0,
+        "mrr_at_10": 1.0,
+        "ndcg_at_5": 1.0,
+        "ndcg_at_10": 1.0,
+        "negative_empty_result_rate": null,
+        "negative_retrieval_rate": null
+      },
+      "latency": {
+        "embedding_ms": 5477.0,
+        "qdrant_ms": 8.0,
+        "fusion_ms": 0.0,
+        "rerank_ms": 0.0,
+        "total_ms": 5498.728199978359
+      },
+      "dense_candidate_count": 4,
+      "sparse_candidate_count": 20,
+      "context_chars": 800,
+      "error": null
+    },
+    {
+      "case_id": "syn-006",
+      "query": "流式回答如何阻止模型伪造 Citation？",
+      "mode": "hybrid",
+      "tags": [
+        "mixed",
+        "semantic"
+      ],
+      "answerable": true,
+      "hits": [
+        {
+          "rank": 1,
+          "score": 1.0,
+          "retrieval_id": "b92e1764-15c5-4e79-9422-b4a7a1d103a9",
+          "source_type": "document",
+          "document_name": "runtime-overview.md",
+          "relative_path": "docs/runtime-overview.md",
+          "section_title": "流式回答与引用",
+          "start_line": 25,
+          "end_line": 25,
+          "content": "回答通过 SSE 逐段发送。检索完成后先生成 evidence source id，模型只能引用当前请求中真实存在的 source id。流式引用守卫会丢弃不存在的 Citation 标记。",
+          "retrieval_score": 1.0,
+          "rerank_score": null,
+          "retrieval_rank": 1
+        },
+        {
+          "rank": 2,
+          "score": 0.3333333333333333,
+          "retrieval_id": "e5400ea5-22bb-43fe-82e3-cc1e5695f7ce",
+          "source_type": "document",
+          "document_name": "retrieval.yaml",
+          "relative_path": "config/retrieval.yaml",
+          "section_title": null,
+          "start_line": 40,
+          "end_line": 43,
+          "content": "evidence:\n  max_context_chars: 12000\n  require_real_source_id: true\n  allow_generated_citations: false",
+          "retrieval_score": 0.3333333333333333,
+          "rerank_score": null,
+          "retrieval_rank": 2
+        },
+        {
+          "rank": 3,
+          "score": 0.3333333333333333,
+          "retrieval_id": "08201d78-9822-47c7-b4dc-2af0ed346576",
+          "source_type": "document",
+          "document_name": "runtime-overview.md",
+          "relative_path": "docs/runtime-overview.md",
+          "section_title": "流式回答与引用",
+          "start_line": 27,
+          "end_line": 27,
+          "content": "Execution Trace 记录路由、改写、检索、重排、证据整理和生成阶段的状态与耗时。它是可观察的执行元数据，不是模型的 Chain of Thought，也不保存隐藏推理过程。",
+          "retrieval_score": 0.3333333333333333,
+          "rerank_score": null,
+          "retrieval_rank": 3
+        },
+        {
+          "rank": 4,
+          "score": 0.25,
+          "retrieval_id": "84e7b9aa-dc8c-41d5-ad88-70eb2b0b68f7",
+          "source_type": "document",
+          "document_name": "runtime-overview.md",
+          "relative_path": "docs/runtime-overview.md",
+          "section_title": "流式回答与引用",
+          "start_line": 29,
+          "end_line": 29,
+          "content": "当检索没有返回足够证据时，完整 RAG Pipeline 以 terminal_status=no_answer 结束。这个状态属于回答链路判断，不能由 Retrieval-only 的负样本空结果率替代。",
+          "retrieval_score": 0.25,
+          "rerank_score": null,
+          "retrieval_rank": 4
+        },
+        {
+          "rank": 5,
+          "score": 0.2,
+          "retrieval_id": "ef25fb91-b062-4c59-9c7d-e0fb0ec807da",
+          "source_type": "document",
+          "document_name": "indexing-errors.md",
+          "relative_path": "runbooks/indexing-errors.md",
+          "section_title": "IDX-3301 Embedding 服务繁忙",
+          "start_line": 27,
+          "end_line": 27,
+          "content": "如果达到最大尝试次数，索引状态标记为 failed，并保留之前的 active generation。操作人员应检查模型进程资源，再显式发起重建，而不是无限重试。",
+          "retrieval_score": 0.2,
+          "rerank_score": null,
+          "retrieval_rank": 5
+        }
+      ],
+      "matched_evidence": [
+        0
+      ],
+      "missing_required_evidence": [],
+      "metrics": {
+        "hit_at_1": 1.0,
+        "hit_at_3": 1.0,
+        "hit_at_5": 1.0,
+        "recall_at_5": 1.0,
+        "recall_at_10": 1.0,
+        "mrr_at_10": 1.0,
+        "ndcg_at_5": 1.0,
+        "ndcg_at_10": 1.0,
+        "negative_empty_result_rate": null,
+        "negative_retrieval_rate": null
+      },
+      "latency": {
+        "embedding_ms": 4690.0,
+        "qdrant_ms": 7.0,
+        "fusion_ms": 0.0,
+        "rerank_ms": 0.0,
+        "total_ms": 4710.5395999969915
+      },
+      "dense_candidate_count": 2,
+      "sparse_candidate_count": 4,
+      "context_chars": 473,
+      "error": null
+    },
+    {
+      "case_id": "syn-007",
+      "query": "Execution Trace 是不是 Chain of Thought？",
+      "mode": "hybrid",
+      "tags": [
+        "mixed",
+        "keyword",
+        "hard"
+      ],
+      "answerable": true,
+      "hits": [
+        {
+          "rank": 1,
+          "score": 1.0,
+          "retrieval_id": "08201d78-9822-47c7-b4dc-2af0ed346576",
+          "source_type": "document",
+          "document_name": "runtime-overview.md",
+          "relative_path": "docs/runtime-overview.md",
+          "section_title": "流式回答与引用",
+          "start_line": 27,
+          "end_line": 27,
+          "content": "Execution Trace 记录路由、改写、检索、重排、证据整理和生成阶段的状态与耗时。它是可观察的执行元数据，不是模型的 Chain of Thought，也不保存隐藏推理过程。",
+          "retrieval_score": 1.0,
+          "rerank_score": null,
+          "retrieval_rank": 1
+        },
+        {
+          "rank": 2,
+          "score": 0.3333333333333333,
+          "retrieval_id": "8712e744-8f6f-4fa8-9e48-7eb2dcedbe7d",
+          "source_type": "document",
+          "document_name": "retrieval.yaml",
+          "relative_path": "config/retrieval.yaml",
+          "section_title": null,
+          "start_line": 45,
+          "end_line": 53,
+          "content": "release:\n  index_publication: generation-switch\n  source_of_truth:\n    - postgresql\n    - original-files\n  derived_state:\n    - document-chunks\n    - qdrant-index\n    - task-state",
+          "retrieval_score": 0.3333333333333333,
+          "rerank_score": null,
+          "retrieval_rank": 2
+        },
+        {
+          "rank": 3,
+          "score": 0.3333333333333333,
+          "retrieval_id": "58d45cfb-2c7c-42d1-98b8-01e85eb345b1",
+          "source_type": "document",
+          "document_name": "runtime-overview.md",
+          "relative_path": "docs/runtime-overview.md",
+          "section_title": "LumenDesk Runtime Overview",
+          "start_line": 3,
+          "end_line": 3,
+          "content": "这是一份完全虚构的运行时说明，仅用于 TraceMind 检索评测。",
+          "retrieval_score": 0.3333333333333333,
+          "rerank_score": null,
+          "retrieval_rank": 3
+        },
+        {
+          "rank": 4,
+          "score": 0.25,
+          "retrieval_id": "4243cfe1-93c3-4c22-ba19-0ce488cbf88a",
+          "source_type": "document",
+          "document_name": "api-contract.md",
+          "relative_path": "docs/api-contract.md",
+          "section_title": "Error semantics",
+          "start_line": 33,
+          "end_line": 33,
+          "content": "Error code SEARCH_SCOPE_CONFLICT means document_id and an explicit path in the query resolve to different documents. The caller must correct the scope instead of silently broadening the search.",
+          "retrieval_score": 0.25,
+          "rerank_score": null,
+          "retrieval_rank": 4
+        },
+        {
+          "rank": 5,
+          "score": 0.2,
+          "retrieval_id": "fb9aedad-f760-4d6e-80fc-775b5f96db57",
+          "source_type": "document",
+          "document_name": "runtime-overview.md",
+          "relative_path": "docs/runtime-overview.md",
+          "section_title": "Generation 发布协议",
+          "start_line": 11,
+          "end_line": 11,
+          "content": "数据库记录和原始上传文件共同构成 source of truth。向量点、解析块和任务状态都是 derived state，可以从原始文件与数据库元数据重新构建。",
+          "retrieval_score": 0.2,
+          "rerank_score": null,
+          "retrieval_rank": 5
+        }
+      ],
+      "matched_evidence": [
+        0
+      ],
+      "missing_required_evidence": [],
+      "metrics": {
+        "hit_at_1": 1.0,
+        "hit_at_3": 1.0,
+        "hit_at_5": 1.0,
+        "recall_at_5": 1.0,
+        "recall_at_10": 1.0,
+        "mrr_at_10": 1.0,
+        "ndcg_at_5": 1.0,
+        "ndcg_at_10": 1.0,
+        "negative_empty_result_rate": null,
+        "negative_retrieval_rate": null
+      },
+      "latency": {
+        "embedding_ms": 4369.0,
+        "qdrant_ms": 7.0,
+        "fusion_ms": 0.0,
+        "rerank_ms": 0.0,
+        "total_ms": 4389.504099963233
+      },
+      "dense_candidate_count": 2,
+      "sparse_candidate_count": 5,
+      "context_chars": 579,
+      "error": null
+    },
+    {
+      "case_id": "syn-008",
+      "query": "terminal_status=no_answer 由哪一层判断？",
+      "mode": "hybrid",
+      "tags": [
+        "mixed",
+        "keyword"
+      ],
+      "answerable": true,
+      "hits": [
+        {
+          "rank": 1,
+          "score": 0.8333333333333333,
+          "retrieval_id": "beadd0c4-dae8-4f63-bd50-26f75d346d28",
+          "source_type": "document",
+          "document_name": "api-contract.md",
+          "relative_path": "docs/api-contract.md",
+          "section_title": "Streaming events",
+          "start_line": 27,
+          "end_line": 27,
+          "content": "terminal_status has two stable values: completed and no_answer. Only the complete RAG pipeline can be evaluated for No-Answer Accuracy because retrieval alone does not decide whether returned chunks provide enough answer evidence.",
+          "retrieval_score": 0.8333333333333333,
+          "rerank_score": null,
+          "retrieval_rank": 1
+        },
+        {
+          "rank": 2,
+          "score": 0.8333333333333333,
+          "retrieval_id": "84e7b9aa-dc8c-41d5-ad88-70eb2b0b68f7",
+          "source_type": "document",
+          "document_name": "runtime-overview.md",
+          "relative_path": "docs/runtime-overview.md",
+          "section_title": "流式回答与引用",
+          "start_line": 29,
+          "end_line": 29,
+          "content": "当检索没有返回足够证据时，完整 RAG Pipeline 以 terminal_status=no_answer 结束。这个状态属于回答链路判断，不能由 Retrieval-only 的负样本空结果率替代。",
+          "retrieval_score": 0.8333333333333333,
+          "rerank_score": null,
+          "retrieval_rank": 2
+        },
+        {
+          "rank": 3,
+          "score": 0.25,
+          "retrieval_id": "35ecab0e-b3e6-40a7-ad5a-97cc90126629",
+          "source_type": "document",
+          "document_name": "api-contract.md",
+          "relative_path": "docs/api-contract.md",
+          "section_title": "Streaming events",
+          "start_line": 23,
+          "end_line": 23,
+          "content": "POST /api/v2/workspaces/{workspace_id}/rag/stream returns Server-Sent Events. Pipeline events report phase and status, source events carry evidence metadata, token events carry answer text, and a final done event carries terminal_status.",
+          "retrieval_score": 0.25,
+          "rerank_score": null,
+          "retrieval_rank": 3
+        }
+      ],
+      "matched_evidence": [
+        0
+      ],
+      "missing_required_evidence": [],
+      "metrics": {
+        "hit_at_1": 0.0,
+        "hit_at_3": 1.0,
+        "hit_at_5": 1.0,
+        "recall_at_5": 1.0,
+        "recall_at_10": 1.0,
+        "mrr_at_10": 0.5,
+        "ndcg_at_5": 0.6309297535714574,
+        "ndcg_at_10": 0.6309297535714574,
+        "negative_empty_result_rate": null,
+        "negative_retrieval_rate": null
+      },
+      "latency": {
+        "embedding_ms": 4571.0,
+        "qdrant_ms": 7.0,
+        "fusion_ms": 0.0,
+        "rerank_ms": 0.0,
+        "total_ms": 4591.312600008678
+      },
+      "dense_candidate_count": 2,
+      "sparse_candidate_count": 3,
+      "context_chars": 570,
+      "error": null
+    },
+    {
+      "case_id": "syn-009",
+      "query": "hybrid search response source metadata fields",
+      "mode": "hybrid",
+      "tags": [
+        "en",
+        "keyword"
+      ],
+      "answerable": true,
+      "hits": [
+        {
+          "rank": 1,
+          "score": 1.0,
+          "retrieval_id": "25595a4a-fe43-4a59-b987-eaef26127fa0",
+          "source_type": "document",
+          "document_name": "api-contract.md",
+          "relative_path": "docs/api-contract.md",
+          "section_title": "Hybrid search request",
+          "start_line": 11,
+          "end_line": 11,
+          "content": "The response includes document_name, relative_path, section_title, start_line, end_line, and content. A source is valid only when these fields come from an indexed payload; clients must never invent a missing path or line number.",
+          "retrieval_score": 1.0,
+          "rerank_score": null,
+          "retrieval_rank": 1
+        },
+        {
+          "rank": 2,
+          "score": 0.6666666666666666,
+          "retrieval_id": "a3322c9f-99b9-448e-98e4-5d7099732cfa",
+          "source_type": "document",
+          "document_name": "api-contract.md",
+          "relative_path": "docs/api-contract.md",
+          "section_title": "Hybrid search request",
+          "start_line": 9,
+          "end_line": 9,
+          "content": "The response field ranking_mode is hybrid. The score is an application-side reciprocal-rank-fusion value and is not a calibrated probability. Clients must not compare the score with a cosine threshold.",
+          "retrieval_score": 0.6666666666666666,
+          "rerank_score": null,
+          "retrieval_rank": 2
+        },
+        {
+          "rank": 3,
+          "score": 0.4,
+          "retrieval_id": "a77456de-e8e4-423e-aaa0-4ecd6769353e",
+          "source_type": "document",
+          "document_name": "api-contract.md",
+          "relative_path": "docs/api-contract.md",
+          "section_title": "Hybrid search request",
+          "start_line": 7,
+          "end_line": 7,
+          "content": "POST /api/v2/workspaces/{workspace_id}/search/hybrid accepts query, limit, language, and optional document_id. The limit must be between 1 and 20. An explicit document_id narrows retrieval before ranking.",
+          "retrieval_score": 0.4,
+          "rerank_score": null,
+          "retrieval_rank": 3
+        },
+        {
+          "rank": 4,
+          "score": 0.3333333333333333,
+          "retrieval_id": "7538f3f5-8263-407b-86f5-82c0aff878f0",
+          "source_type": "document",
+          "document_name": "api-contract.md",
+          "relative_path": "docs/api-contract.md",
+          "section_title": "Reranked search request",
+          "start_line": 15,
+          "end_line": 15,
+          "content": "POST /api/v2/workspaces/{workspace_id}/search/reranked first obtains Hybrid candidates and then calls the local Cross-Encoder. The requested output limit cannot exceed rerank_candidate_limit.",
+          "retrieval_score": 0.3333333333333333,
+          "rerank_score": null,
+          "retrieval_rank": 4
+        },
+        {
+          "rank": 5,
+          "score": 0.3,
+          "retrieval_id": "1762a074-803c-422e-947e-6d7375c51ad6",
+          "source_type": "document",
+          "document_name": "retrieval.yaml",
+          "relative_path": "config/retrieval.yaml",
+          "section_title": null,
+          "start_line": 1,
+          "end_line": 2,
+          "content": "service: lumendesk-search\nschema_version: 3",
+          "retrieval_score": 0.3,
+          "rerank_score": null,
+          "retrieval_rank": 5
+        }
+      ],
+      "matched_evidence": [
+        0
+      ],
+      "missing_required_evidence": [],
+      "metrics": {
+        "hit_at_1": 1.0,
+        "hit_at_3": 1.0,
+        "hit_at_5": 1.0,
+        "recall_at_5": 1.0,
+        "recall_at_10": 1.0,
+        "mrr_at_10": 1.0,
+        "ndcg_at_5": 1.0,
+        "ndcg_at_10": 1.0,
+        "negative_empty_result_rate": null,
+        "negative_retrieval_rate": null
+      },
+      "latency": {
+        "embedding_ms": 4125.0,
+        "qdrant_ms": 9.0,
+        "fusion_ms": 0.0,
+        "rerank_ms": 0.0,
+        "total_ms": 4146.316200029105
+      },
+      "dense_candidate_count": 5,
+      "sparse_candidate_count": 20,
+      "context_chars": 868,
+      "error": null
+    },
+    {
+      "case_id": "syn-010",
+      "query": "retrieval_score retrieval_rank rerank_score meaning",
+      "mode": "hybrid",
+      "tags": [
+        "en",
+        "keyword",
+        "reranker"
+      ],
+      "answerable": true,
+      "hits": [
+        {
+          "rank": 1,
+          "score": 0.8333333333333333,
+          "retrieval_id": "2e76526a-d138-41c9-bf36-daa81c945c58",
+          "source_type": "document",
+          "document_name": "api-contract.md",
+          "relative_path": "docs/api-contract.md",
+          "section_title": "Reranked search request",
+          "start_line": 17,
+          "end_line": 17,
+          "content": "The reranked score is a raw model logit, not a probability. retrieval_score preserves the preceding RRF score, retrieval_rank preserves the Hybrid position, and rerank_score contains the Cross-Encoder output.",
+          "retrieval_score": 0.8333333333333333,
+          "rerank_score": null,
+          "retrieval_rank": 1
+        },
+        {
+          "rank": 2,
+          "score": 0.5833333333333333,
+          "retrieval_id": "a3322c9f-99b9-448e-98e4-5d7099732cfa",
+          "source_type": "document",
+          "document_name": "api-contract.md",
+          "relative_path": "docs/api-contract.md",
+          "section_title": "Hybrid search request",
+          "start_line": 9,
+          "end_line": 9,
+          "content": "The response field ranking_mode is hybrid. The score is an application-side reciprocal-rank-fusion value and is not a calibrated probability. Clients must not compare the score with a cosine threshold.",
+          "retrieval_score": 0.5833333333333333,
+          "rerank_score": null,
+          "retrieval_rank": 2
+        },
+        {
+          "rank": 3,
+          "score": 0.5714285714285714,
+          "retrieval_id": "ec438871-53f9-4885-8a25-c816ccd03acd",
+          "source_type": "document",
+          "document_name": "retrieval.yaml",
+          "relative_path": "config/retrieval.yaml",
+          "section_title": null,
+          "start_line": 25,
+          "end_line": 31,
+          "content": "reranker:\n  enabled: false\n  model: Qwen/Qwen3-Reranker-0.6B\n  candidate_limit: 10\n  maximum_candidates: 20\n  timeout_seconds: 12\n  fallback: hybrid",
+          "retrieval_score": 0.5714285714285714,
+          "rerank_score": null,
+          "retrieval_rank": 3
+        },
+        {
+          "rank": 4,
+          "score": 0.41666666666666663,
+          "retrieval_id": "f498d010-34f6-4105-962a-59c117528782",
+          "source_type": "document",
+          "document_name": "retrieval.yaml",
+          "relative_path": "config/retrieval.yaml",
+          "section_title": null,
+          "start_line": 16,
+          "end_line": 23,
+          "content": "retrieval:\n  mode: hybrid\n  output_limit: 5\n  semantic_score_threshold: 0.50\n  dense_prefetch_limit: 20\n  sparse_prefetch_limit: 20\n  fusion: application-deterministic-rrf\n  rrf_constant: 60",
+          "retrieval_score": 0.41666666666666663,
+          "rerank_score": null,
+          "retrieval_rank": 4
+        },
+        {
+          "rank": 5,
+          "score": 0.325,
+          "retrieval_id": "7538f3f5-8263-407b-86f5-82c0aff878f0",
+          "source_type": "document",
+          "document_name": "api-contract.md",
+          "relative_path": "docs/api-contract.md",
+          "section_title": "Reranked search request",
+          "start_line": 15,
+          "end_line": 15,
+          "content": "POST /api/v2/workspaces/{workspace_id}/search/reranked first obtains Hybrid candidates and then calls the local Cross-Encoder. The requested output limit cannot exceed rerank_candidate_limit.",
+          "retrieval_score": 0.325,
+          "rerank_score": null,
+          "retrieval_rank": 5
+        }
+      ],
+      "matched_evidence": [
+        0
+      ],
+      "missing_required_evidence": [],
+      "metrics": {
+        "hit_at_1": 1.0,
+        "hit_at_3": 1.0,
+        "hit_at_5": 1.0,
+        "recall_at_5": 1.0,
+        "recall_at_10": 1.0,
+        "mrr_at_10": 1.0,
+        "ndcg_at_5": 1.0,
+        "ndcg_at_10": 1.0,
+        "negative_empty_result_rate": null,
+        "negative_retrieval_rate": null
+      },
+      "latency": {
+        "embedding_ms": 4332.0,
+        "qdrant_ms": 8.0,
+        "fusion_ms": 0.0,
+        "rerank_ms": 0.0,
+        "total_ms": 4350.712199986447
+      },
+      "dense_candidate_count": 15,
+      "sparse_candidate_count": 20,
+      "context_chars": 938,
+      "error": null
+    },
+    {
+      "case_id": "syn-011",
+      "query": "done event latency candidate fields",
+      "mode": "hybrid",
+      "tags": [
+        "en",
+        "keyword"
+      ],
+      "answerable": true,
+      "hits": [
+        {
+          "rank": 1,
+          "score": 1.0,
+          "retrieval_id": "4983cb82-0142-4622-aac3-dd35c29b3a4c",
+          "source_type": "document",
+          "document_name": "api-contract.md",
+          "relative_path": "docs/api-contract.md",
+          "section_title": "Streaming events",
+          "start_line": 25,
+          "end_line": 25,
+          "content": "The done event may include query_rewrite_mode, query_rewrite_latency_ms, retrieval_query, embedding_latency_ms, qdrant_latency_ms, fusion_latency_ms, rerank_latency_ms, dense_candidate_count, and sparse_candidate_count.",
+          "retrieval_score": 1.0,
+          "rerank_score": null,
+          "retrieval_rank": 1
+        },
+        {
+          "rank": 2,
+          "score": 0.3333333333333333,
+          "retrieval_id": "35ecab0e-b3e6-40a7-ad5a-97cc90126629",
+          "source_type": "document",
+          "document_name": "api-contract.md",
+          "relative_path": "docs/api-contract.md",
+          "section_title": "Streaming events",
+          "start_line": 23,
+          "end_line": 23,
+          "content": "POST /api/v2/workspaces/{workspace_id}/rag/stream returns Server-Sent Events. Pipeline events report phase and status, source events carry evidence metadata, token events carry answer text, and a final done event carries terminal_status.",
+          "retrieval_score": 0.3333333333333333,
+          "rerank_score": null,
+          "retrieval_rank": 2
+        },
+        {
+          "rank": 3,
+          "score": 0.25,
+          "retrieval_id": "25595a4a-fe43-4a59-b987-eaef26127fa0",
+          "source_type": "document",
+          "document_name": "api-contract.md",
+          "relative_path": "docs/api-contract.md",
+          "section_title": "Hybrid search request",
+          "start_line": 11,
+          "end_line": 11,
+          "content": "The response includes document_name, relative_path, section_title, start_line, end_line, and content. A source is valid only when these fields come from an indexed payload; clients must never invent a missing path or line number.",
+          "retrieval_score": 0.25,
+          "rerank_score": null,
+          "retrieval_rank": 3
+        },
+        {
+          "rank": 4,
+          "score": 0.2,
+          "retrieval_id": "03952569-2492-440f-bb14-eeca7e68c08e",
+          "source_type": "document",
+          "document_name": "api-contract.md",
+          "relative_path": "docs/api-contract.md",
+          "section_title": "Error semantics",
+          "start_line": 35,
+          "end_line": 35,
+          "content": "Error code RERANKER_CANDIDATE_LIMIT means the requested output exceeds the configured candidate pool. Increasing the output limit without increasing the candidate pool is rejected deterministically.",
+          "retrieval_score": 0.2,
+          "rerank_score": null,
+          "retrieval_rank": 4
+        },
+        {
+          "rank": 5,
+          "score": 0.16666666666666666,
+          "retrieval_id": "ec438871-53f9-4885-8a25-c816ccd03acd",
+          "source_type": "document",
+          "document_name": "retrieval.yaml",
+          "relative_path": "config/retrieval.yaml",
+          "section_title": null,
+          "start_line": 25,
+          "end_line": 31,
+          "content": "reranker:\n  enabled: false\n  model: Qwen/Qwen3-Reranker-0.6B\n  candidate_limit: 10\n  maximum_candidates: 20\n  timeout_seconds: 12\n  fallback: hybrid",
+          "retrieval_score": 0.16666666666666666,
+          "rerank_score": null,
+          "retrieval_rank": 5
+        }
+      ],
+      "matched_evidence": [
+        0
+      ],
+      "missing_required_evidence": [],
+      "metrics": {
+        "hit_at_1": 1.0,
+        "hit_at_3": 1.0,
+        "hit_at_5": 1.0,
+        "recall_at_5": 1.0,
+        "recall_at_10": 1.0,
+        "mrr_at_10": 1.0,
+        "ndcg_at_5": 1.0,
+        "ndcg_at_10": 1.0,
+        "negative_empty_result_rate": null,
+        "negative_retrieval_rate": null
+      },
+      "latency": {
+        "embedding_ms": 3986.0,
+        "qdrant_ms": 7.0,
+        "fusion_ms": 0.0,
+        "rerank_ms": 0.0,
+        "total_ms": 4004.103999992367
+      },
+      "dense_candidate_count": 1,
+      "sparse_candidate_count": 6,
+      "context_chars": 1031,
+      "error": null
+    },
+    {
+      "case_id": "syn-012",
+      "query": "SEARCH_SCOPE_CONFLICT 应该怎么处理？",
+      "mode": "hybrid",
+      "tags": [
+        "mixed",
+        "keyword",
+        "path"
+      ],
+      "answerable": true,
+      "hits": [
+        {
+          "rank": 1,
+          "score": 1.0,
+          "retrieval_id": "4243cfe1-93c3-4c22-ba19-0ce488cbf88a",
+          "source_type": "document",
+          "document_name": "api-contract.md",
+          "relative_path": "docs/api-contract.md",
+          "section_title": "Error semantics",
+          "start_line": 33,
+          "end_line": 33,
+          "content": "Error code SEARCH_SCOPE_CONFLICT means document_id and an explicit path in the query resolve to different documents. The caller must correct the scope instead of silently broadening the search.",
+          "retrieval_score": 1.0,
+          "rerank_score": null,
+          "retrieval_rank": 1
+        },
+        {
+          "rank": 2,
+          "score": 0.3333333333333333,
+          "retrieval_id": "49ba93e3-92bf-4f9e-b0cb-03f1809feefd",
+          "source_type": "document",
+          "document_name": "indexing-errors.md",
+          "relative_path": "runbooks/indexing-errors.md",
+          "section_title": "IDX-1042 Generation 数量不一致",
+          "start_line": 13,
+          "end_line": 13,
+          "content": "如果清理请求失败，记录 orphan generation 并交给恢复任务重试。旧 active generation 仍可服务查询，因此清理失败与发布失败必须分开处理。",
+          "retrieval_score": 0.3333333333333333,
+          "rerank_score": null,
+          "retrieval_rank": 2
+        },
+        {
+          "rank": 3,
+          "score": 0.25,
+          "retrieval_id": "36ea32cb-8c6f-4500-bd47-e0795c0c9c36",
+          "source_type": "document",
+          "document_name": "retry_policy_legacy.py",
+          "relative_path": "src/retry_policy_legacy.py",
+          "section_title": null,
+          "start_line": 12,
+          "end_line": 14,
+          "content": "LEGACY_RETRYABLE_CODES = frozenset(\n    {\"VECTOR_TIMEOUT\", \"INVALID_SCOPE\", \"UNSUPPORTED_FORMAT\", \"UPSTREAM_429\"}\n)",
+          "retrieval_score": 0.25,
+          "rerank_score": null,
+          "retrieval_rank": 3
+        },
+        {
+          "rank": 4,
+          "score": 0.2,
+          "retrieval_id": "bceeac7b-f3df-454e-82ae-7cda5ddd44ee",
+          "source_type": "document",
+          "document_name": "retry_policy.py",
+          "relative_path": "src/retry_policy.py",
+          "section_title": null,
+          "start_line": 15,
+          "end_line": 16,
+          "content": "RETRYABLE_CODES = frozenset({\"VECTOR_TIMEOUT\", \"EMBEDDING_BUSY\", \"UPSTREAM_429\"})\nNON_RETRYABLE_CODES = frozenset({\"INVALID_SCOPE\", \"UNSUPPORTED_FORMAT\", \"CORRUPT_SOURCE\"})",
+          "retrieval_score": 0.2,
+          "rerank_score": null,
+          "retrieval_rank": 4
+        },
+        {
+          "rank": 5,
+          "score": 0.16666666666666666,
+          "retrieval_id": "f184cffa-8579-4a8a-a052-a219066e22c3",
+          "source_type": "document",
+          "document_name": "indexing-errors.md",
+          "relative_path": "runbooks/indexing-errors.md",
+          "section_title": "IDX-3301 Embedding 服务繁忙",
+          "start_line": 29,
+          "end_line": 29,
+          "content": "INVALID_SCOPE、UNSUPPORTED_FORMAT 和 CORRUPT_SOURCE 属于永久错误，不进入自动重试。旧版策略曾错误重试这些错误，当前实现已经禁止这种行为。",
+          "retrieval_score": 0.16666666666666666,
+          "rerank_score": null,
+          "retrieval_rank": 5
+        }
+      ],
+      "matched_evidence": [
+        0
+      ],
+      "missing_required_evidence": [],
+      "metrics": {
+        "hit_at_1": 1.0,
+        "hit_at_3": 1.0,
+        "hit_at_5": 1.0,
+        "recall_at_5": 1.0,
+        "recall_at_10": 1.0,
+        "mrr_at_10": 1.0,
+        "ndcg_at_5": 1.0,
+        "ndcg_at_10": 1.0,
+        "negative_empty_result_rate": null,
+        "negative_retrieval_rate": null
+      },
+      "latency": {
+        "embedding_ms": 4447.0,
+        "qdrant_ms": 7.0,
+        "fusion_ms": 0.0,
+        "rerank_ms": 0.0,
+        "total_ms": 4466.550599958282
+      },
+      "dense_candidate_count": 1,
+      "sparse_candidate_count": 14,
+      "context_chars": 657,
+      "error": null
+    },
+    {
+      "case_id": "syn-013",
+      "query": "RetryBudget 默认最多尝试几次？",
+      "mode": "hybrid",
+      "tags": [
+        "mixed",
+        "code"
+      ],
+      "answerable": true,
+      "hits": [
+        {
+          "rank": 1,
+          "score": 0.75,
+          "retrieval_id": "0a87d27f-a43c-4cb1-8b7b-1d279cb629a2",
+          "source_type": "document",
+          "document_name": "retry_policy.py",
+          "relative_path": "src/retry_policy.py",
+          "section_title": null,
+          "start_line": 7,
+          "end_line": 12,
+          "content": "@dataclass(frozen=True)\nclass RetryBudget:\n    max_attempts: int = 4\n    base_delay_ms: int = 250\n    max_delay_ms: int = 4_000\n    jitter_ratio: float = 0.20",
+          "retrieval_score": 0.75,
+          "rerank_score": null,
+          "retrieval_rank": 1
+        },
+        {
+          "rank": 2,
+          "score": 0.5,
+          "retrieval_id": "24bc171a-b3c9-40c1-877d-705790c25067",
+          "source_type": "document",
+          "document_name": "indexing-errors.md",
+          "relative_path": "runbooks/indexing-errors.md",
+          "section_title": "IDX-3301 Embedding 服务繁忙",
+          "start_line": 25,
+          "end_line": 25,
+          "content": "告警 IDX-3301 对应瞬时错误 EMBEDDING_BUSY。当前重试策略最多尝试四次，基础延迟 250 ms，使用 capped exponential backoff 和 20% jitter。",
+          "retrieval_score": 0.5,
+          "rerank_score": null,
+          "retrieval_rank": 2
+        },
+        {
+          "rank": 3,
+          "score": 0.4444444444444444,
+          "retrieval_id": "8930f975-a9e3-4ed4-9953-79c05c3bd6c8",
+          "source_type": "document",
+          "document_name": "retry_policy_legacy.py",
+          "relative_path": "src/retry_policy_legacy.py",
+          "section_title": null,
+          "start_line": 29,
+          "end_line": 34,
+          "content": "MIGRATION_NOTE = \"\"\"\nThis module is retained only to explain historical incidents. New code must use\nRetryBudget and should_retry from src/retry_policy.py. The legacy policy used eight\nretries, a fixed one-second delay, no jitter, and treated INVALID_SCOPE as retryable.\nThose choices caused synchronized retry storms and delayed permanent-error feedback.\n\"\"\"",
+          "retrieval_score": 0.4444444444444444,
+          "rerank_score": null,
+          "retrieval_rank": 3
+        },
+        {
+          "rank": 4,
+          "score": 0.39285714285714285,
+          "retrieval_id": "2abb6d84-1cb0-4b76-907b-5259415670bf",
+          "source_type": "document",
+          "document_name": "retry_policy.py",
+          "relative_path": "src/retry_policy.py",
+          "section_title": null,
+          "start_line": 33,
+          "end_line": 37,
+          "content": "def should_retry(error_code: str, attempt: int, budget: RetryBudget) -> bool:\n    \"\"\"Retry only recognized transient failures while budget remains.\"\"\"\n    if error_code in NON_RETRYABLE_CODES:\n        return False\n    return error_code in RETRYABLE_CODES and attempt < budget.max_attempts",
+          "retrieval_score": 0.39285714285714285,
+          "rerank_score": null,
+          "retrieval_rank": 4
+        },
+        {
+          "rank": 5,
+          "score": 0.38888888888888884,
+          "retrieval_id": "ef25fb91-b062-4c59-9c7d-e0fb0ec807da",
+          "source_type": "document",
+          "document_name": "indexing-errors.md",
+          "relative_path": "runbooks/indexing-errors.md",
+          "section_title": "IDX-3301 Embedding 服务繁忙",
+          "start_line": 27,
+          "end_line": 27,
+          "content": "如果达到最大尝试次数，索引状态标记为 failed，并保留之前的 active generation。操作人员应检查模型进程资源，再显式发起重建，而不是无限重试。",
+          "retrieval_score": 0.38888888888888884,
+          "rerank_score": null,
+          "retrieval_rank": 5
+        }
+      ],
+      "matched_evidence": [
+        0
+      ],
+      "missing_required_evidence": [],
+      "metrics": {
+        "hit_at_1": 1.0,
+        "hit_at_3": 1.0,
+        "hit_at_5": 1.0,
+        "recall_at_5": 1.0,
+        "recall_at_10": 1.0,
+        "mrr_at_10": 1.0,
+        "ndcg_at_5": 1.0,
+        "ndcg_at_10": 1.0,
+        "negative_empty_result_rate": null,
+        "negative_retrieval_rate": null
+      },
+      "latency": {
+        "embedding_ms": 4249.0,
+        "qdrant_ms": 8.0,
+        "fusion_ms": 0.0,
+        "rerank_ms": 0.0,
+        "total_ms": 4272.658100002445
+      },
+      "dense_candidate_count": 19,
+      "sparse_candidate_count": 8,
+      "context_chars": 988,
+      "error": null
+    },
+    {
+      "case_id": "syn-014",
+      "query": "compute_backoff_ms uses what formula before jitter?",
+      "mode": "hybrid",
+      "tags": [
+        "en",
+        "code"
+      ],
+      "answerable": true,
+      "hits": [
+        {
+          "rank": 1,
+          "score": 1.0,
+          "retrieval_id": "63fee087-c333-4339-a413-510ccea87002",
+          "source_type": "document",
+          "document_name": "retry_policy.py",
+          "relative_path": "src/retry_policy.py",
+          "section_title": null,
+          "start_line": 19,
+          "end_line": 20,
+          "content": "def compute_backoff_ms(attempt: int, budget: RetryBudget, *, random: Random) -> int:\n    \"\"\"Return capped exponential backoff with symmetric jitter.",
+          "retrieval_score": 1.0,
+          "rerank_score": null,
+          "retrieval_rank": 1
+        },
+        {
+          "rank": 2,
+          "score": 0.5833333333333333,
+          "retrieval_id": "9055a009-58b8-4a4b-903a-913ab7d1427f",
+          "source_type": "document",
+          "document_name": "retry_policy.py",
+          "relative_path": "src/retry_policy.py",
+          "section_title": null,
+          "start_line": 40,
+          "end_line": 50,
+          "content": "def next_retry_delay_ms(\n    error_code: str,\n    attempt: int,\n    budget: RetryBudget,\n    *,\n    random: Random,\n) -> int | None:\n    \"\"\"Return the delay for the next attempt, or None when retrying must stop.\"\"\"\n    if not should_retry(error_code, attempt, budget):\n        return None\n    return compute_backoff_ms(attempt, budget, random=random)",
+          "retrieval_score": 0.5833333333333333,
+          "rerank_score": null,
+          "retrieval_rank": 2
+        },
+        {
+          "rank": 3,
+          "score": 0.5333333333333333,
+          "retrieval_id": "a292f162-bcf5-4b41-860a-d96d2a6416f5",
+          "source_type": "document",
+          "document_name": "retry_policy.py",
+          "relative_path": "src/retry_policy.py",
+          "section_title": null,
+          "start_line": 22,
+          "end_line": 30,
+          "content": "    attempt is one-based. Attempt 1 waits base_delay_ms, attempt 2 waits twice that\n    value, and later attempts continue doubling until max_delay_ms is reached.\n    \"\"\"\n    if attempt < 1:\n        raise ValueError(\"attempt must be at least one\")\n    uncapped = budget.base_delay_ms * (2 ** (attempt - 1))\n    capped = min(uncapped, budget.max_delay_ms)\n    jitter = capped * budget.jitter_ratio\n    return round(random.uniform(capped - jitter, capped + jitter))",
+          "retrieval_score": 0.5333333333333333,
+          "rerank_score": null,
+          "retrieval_rank": 3
+        },
+        {
+          "rank": 4,
+          "score": 0.325,
+          "retrieval_id": "4f2335a1-7f06-408d-a1b2-c1e4318f1a9d",
+          "source_type": "document",
+          "document_name": "retry_policy_legacy.py",
+          "relative_path": "src/retry_policy_legacy.py",
+          "section_title": null,
+          "start_line": 17,
+          "end_line": 21,
+          "content": "def legacy_retry_delay_ms(attempt: int, policy: LegacyRetryPolicy) -> int:\n    \"\"\"Return the old fixed delay without jitter or exponential growth.\"\"\"\n    if attempt < 1:\n        raise ValueError(\"attempt must be at least one\")\n    return policy.fixed_delay_ms",
+          "retrieval_score": 0.325,
+          "rerank_score": null,
+          "retrieval_rank": 4
+        },
+        {
+          "rank": 5,
+          "score": 0.30952380952380953,
+          "retrieval_id": "0a87d27f-a43c-4cb1-8b7b-1d279cb629a2",
+          "source_type": "document",
+          "document_name": "retry_policy.py",
+          "relative_path": "src/retry_policy.py",
+          "section_title": null,
+          "start_line": 7,
+          "end_line": 12,
+          "content": "@dataclass(frozen=True)\nclass RetryBudget:\n    max_attempts: int = 4\n    base_delay_ms: int = 250\n    max_delay_ms: int = 4_000\n    jitter_ratio: float = 0.20",
+          "retrieval_score": 0.30952380952380953,
+          "rerank_score": null,
+          "retrieval_rank": 5
+        }
+      ],
+      "matched_evidence": [
+        0
+      ],
+      "missing_required_evidence": [],
+      "metrics": {
+        "hit_at_1": 0.0,
+        "hit_at_3": 1.0,
+        "hit_at_5": 1.0,
+        "recall_at_5": 1.0,
+        "recall_at_10": 1.0,
+        "mrr_at_10": 0.3333333333333333,
+        "ndcg_at_5": 0.5,
+        "ndcg_at_10": 0.5,
+        "negative_empty_result_rate": null,
+        "negative_retrieval_rate": null
+      },
+      "latency": {
+        "embedding_ms": 4533.0,
+        "qdrant_ms": 7.0,
+        "fusion_ms": 0.0,
+        "rerank_ms": 0.0,
+        "total_ms": 4550.147800007835
+      },
+      "dense_candidate_count": 5,
+      "sparse_candidate_count": 11,
+      "context_chars": 1378,
+      "error": null
+    },
+    {
+      "case_id": "syn-015",
+      "query": "哪些 error code 永远不应该 retry？",
+      "mode": "hybrid",
+      "tags": [
+        "mixed",
+        "code",
+        "hard"
+      ],
+      "answerable": true,
+      "hits": [
+        {
+          "rank": 1,
+          "score": 0.8333333333333333,
+          "retrieval_id": "2abb6d84-1cb0-4b76-907b-5259415670bf",
+          "source_type": "document",
+          "document_name": "retry_policy.py",
+          "relative_path": "src/retry_policy.py",
+          "section_title": null,
+          "start_line": 33,
+          "end_line": 37,
+          "content": "def should_retry(error_code: str, attempt: int, budget: RetryBudget) -> bool:\n    \"\"\"Retry only recognized transient failures while budget remains.\"\"\"\n    if error_code in NON_RETRYABLE_CODES:\n        return False\n    return error_code in RETRYABLE_CODES and attempt < budget.max_attempts",
+          "retrieval_score": 0.8333333333333333,
+          "rerank_score": null,
+          "retrieval_rank": 1
+        },
+        {
+          "rank": 2,
+          "score": 0.5833333333333333,
+          "retrieval_id": "ff00c1c1-e235-47a4-878b-beb34a3327bb",
+          "source_type": "document",
+          "document_name": "retry_policy_legacy.py",
+          "relative_path": "src/retry_policy_legacy.py",
+          "section_title": null,
+          "start_line": 24,
+          "end_line": 26,
+          "content": "def legacy_should_retry(error_code: str, attempt: int, policy: LegacyRetryPolicy) -> bool:\n    \"\"\"The legacy implementation incorrectly retries several permanent errors.\"\"\"\n    return error_code in LEGACY_RETRYABLE_CODES and attempt <= policy.retries",
+          "retrieval_score": 0.5833333333333333,
+          "rerank_score": null,
+          "retrieval_rank": 2
+        },
+        {
+          "rank": 3,
+          "score": 0.5,
+          "retrieval_id": "bceeac7b-f3df-454e-82ae-7cda5ddd44ee",
+          "source_type": "document",
+          "document_name": "retry_policy.py",
+          "relative_path": "src/retry_policy.py",
+          "section_title": null,
+          "start_line": 15,
+          "end_line": 16,
+          "content": "RETRYABLE_CODES = frozenset({\"VECTOR_TIMEOUT\", \"EMBEDDING_BUSY\", \"UPSTREAM_429\"})\nNON_RETRYABLE_CODES = frozenset({\"INVALID_SCOPE\", \"UNSUPPORTED_FORMAT\", \"CORRUPT_SOURCE\"})",
+          "retrieval_score": 0.5,
+          "rerank_score": null,
+          "retrieval_rank": 3
+        },
+        {
+          "rank": 4,
+          "score": 0.35,
+          "retrieval_id": "9055a009-58b8-4a4b-903a-913ab7d1427f",
+          "source_type": "document",
+          "document_name": "retry_policy.py",
+          "relative_path": "src/retry_policy.py",
+          "section_title": null,
+          "start_line": 40,
+          "end_line": 50,
+          "content": "def next_retry_delay_ms(\n    error_code: str,\n    attempt: int,\n    budget: RetryBudget,\n    *,\n    random: Random,\n) -> int | None:\n    \"\"\"Return the delay for the next attempt, or None when retrying must stop.\"\"\"\n    if not should_retry(error_code, attempt, budget):\n        return None\n    return compute_backoff_ms(attempt, budget, random=random)",
+          "retrieval_score": 0.35,
+          "rerank_score": null,
+          "retrieval_rank": 4
+        },
+        {
+          "rank": 5,
+          "score": 0.325,
+          "retrieval_id": "8930f975-a9e3-4ed4-9953-79c05c3bd6c8",
+          "source_type": "document",
+          "document_name": "retry_policy_legacy.py",
+          "relative_path": "src/retry_policy_legacy.py",
+          "section_title": null,
+          "start_line": 29,
+          "end_line": 34,
+          "content": "MIGRATION_NOTE = \"\"\"\nThis module is retained only to explain historical incidents. New code must use\nRetryBudget and should_retry from src/retry_policy.py. The legacy policy used eight\nretries, a fixed one-second delay, no jitter, and treated INVALID_SCOPE as retryable.\nThose choices caused synchronized retry storms and delayed permanent-error feedback.\n\"\"\"",
+          "retrieval_score": 0.325,
+          "rerank_score": null,
+          "retrieval_rank": 5
+        }
+      ],
+      "matched_evidence": [
+        0
+      ],
+      "missing_required_evidence": [],
+      "metrics": {
+        "hit_at_1": 0.0,
+        "hit_at_3": 1.0,
+        "hit_at_5": 1.0,
+        "recall_at_5": 1.0,
+        "recall_at_10": 1.0,
+        "mrr_at_10": 0.3333333333333333,
+        "ndcg_at_5": 0.5,
+        "ndcg_at_10": 0.5,
+        "negative_empty_result_rate": null,
+        "negative_retrieval_rate": null
+      },
+      "latency": {
+        "embedding_ms": 4942.0,
+        "qdrant_ms": 16.0,
+        "fusion_ms": 0.0,
+        "rerank_ms": 0.0,
+        "total_ms": 4971.640599949751
+      },
+      "dense_candidate_count": 11,
+      "sparse_candidate_count": 20,
+      "context_chars": 1419,
+      "error": null
+    },
+    {
+      "case_id": "syn-016",
+      "query": "next_retry_delay_ms 什么时候返回 None？",
+      "mode": "hybrid",
+      "tags": [
+        "mixed",
+        "code"
+      ],
+      "answerable": true,
+      "hits": [
+        {
+          "rank": 1,
+          "score": 1.0,
+          "retrieval_id": "9055a009-58b8-4a4b-903a-913ab7d1427f",
+          "source_type": "document",
+          "document_name": "retry_policy.py",
+          "relative_path": "src/retry_policy.py",
+          "section_title": null,
+          "start_line": 40,
+          "end_line": 50,
+          "content": "def next_retry_delay_ms(\n    error_code: str,\n    attempt: int,\n    budget: RetryBudget,\n    *,\n    random: Random,\n) -> int | None:\n    \"\"\"Return the delay for the next attempt, or None when retrying must stop.\"\"\"\n    if not should_retry(error_code, attempt, budget):\n        return None\n    return compute_backoff_ms(attempt, budget, random=random)",
+          "retrieval_score": 1.0,
+          "rerank_score": null,
+          "retrieval_rank": 1
+        },
+        {
+          "rank": 2,
+          "score": 0.5833333333333333,
+          "retrieval_id": "a292f162-bcf5-4b41-860a-d96d2a6416f5",
+          "source_type": "document",
+          "document_name": "retry_policy.py",
+          "relative_path": "src/retry_policy.py",
+          "section_title": null,
+          "start_line": 22,
+          "end_line": 30,
+          "content": "    attempt is one-based. Attempt 1 waits base_delay_ms, attempt 2 waits twice that\n    value, and later attempts continue doubling until max_delay_ms is reached.\n    \"\"\"\n    if attempt < 1:\n        raise ValueError(\"attempt must be at least one\")\n    uncapped = budget.base_delay_ms * (2 ** (attempt - 1))\n    capped = min(uncapped, budget.max_delay_ms)\n    jitter = capped * budget.jitter_ratio\n    return round(random.uniform(capped - jitter, capped + jitter))",
+          "retrieval_score": 0.5833333333333333,
+          "rerank_score": null,
+          "retrieval_rank": 2
+        },
+        {
+          "rank": 3,
+          "score": 0.5333333333333333,
+          "retrieval_id": "4f2335a1-7f06-408d-a1b2-c1e4318f1a9d",
+          "source_type": "document",
+          "document_name": "retry_policy_legacy.py",
+          "relative_path": "src/retry_policy_legacy.py",
+          "section_title": null,
+          "start_line": 17,
+          "end_line": 21,
+          "content": "def legacy_retry_delay_ms(attempt: int, policy: LegacyRetryPolicy) -> int:\n    \"\"\"Return the old fixed delay without jitter or exponential growth.\"\"\"\n    if attempt < 1:\n        raise ValueError(\"attempt must be at least one\")\n    return policy.fixed_delay_ms",
+          "retrieval_score": 0.5333333333333333,
+          "rerank_score": null,
+          "retrieval_rank": 3
+        },
+        {
+          "rank": 4,
+          "score": 0.3666666666666667,
+          "retrieval_id": "0a87d27f-a43c-4cb1-8b7b-1d279cb629a2",
+          "source_type": "document",
+          "document_name": "retry_policy.py",
+          "relative_path": "src/retry_policy.py",
+          "section_title": null,
+          "start_line": 7,
+          "end_line": 12,
+          "content": "@dataclass(frozen=True)\nclass RetryBudget:\n    max_attempts: int = 4\n    base_delay_ms: int = 250\n    max_delay_ms: int = 4_000\n    jitter_ratio: float = 0.20",
+          "retrieval_score": 0.3666666666666667,
+          "rerank_score": null,
+          "retrieval_rank": 4
+        },
+        {
+          "rank": 5,
+          "score": 0.35,
+          "retrieval_id": "458fa6dd-68c5-44b8-8729-4a5961b375b6",
+          "source_type": "document",
+          "document_name": "retry_policy.py",
+          "relative_path": "src/retry_policy.py",
+          "section_title": null,
+          "start_line": 57,
+          "end_line": 61,
+          "content": "def describe_policy(budget: RetryBudget) -> str:\n    return (\n        f\"max_attempts={budget.max_attempts}, base_delay_ms={budget.base_delay_ms}, \"\n        f\"max_delay_ms={budget.max_delay_ms}, jitter_ratio={budget.jitter_ratio}\"\n    )",
+          "retrieval_score": 0.35,
+          "rerank_score": null,
+          "retrieval_rank": 5
+        }
+      ],
+      "matched_evidence": [
+        0
+      ],
+      "missing_required_evidence": [],
+      "metrics": {
+        "hit_at_1": 1.0,
+        "hit_at_3": 1.0,
+        "hit_at_5": 1.0,
+        "recall_at_5": 1.0,
+        "recall_at_10": 1.0,
+        "mrr_at_10": 1.0,
+        "ndcg_at_5": 1.0,
+        "ndcg_at_10": 1.0,
+        "negative_empty_result_rate": null,
+        "negative_retrieval_rate": null
+      },
+      "latency": {
+        "embedding_ms": 4444.0,
+        "qdrant_ms": 8.0,
+        "fusion_ms": 0.0,
+        "rerank_ms": 0.0,
+        "total_ms": 4462.421299947891
+      },
+      "dense_candidate_count": 10,
+      "sparse_candidate_count": 20,
+      "context_chars": 1465,
+      "error": null
+    },
+    {
+      "case_id": "syn-017",
+      "query": "旧 retry policy 的 fixed delay 是多少？",
+      "mode": "hybrid",
+      "tags": [
+        "mixed",
+        "code",
+        "hard"
+      ],
+      "answerable": true,
+      "hits": [
+        {
+          "rank": 1,
+          "score": 1.0,
+          "retrieval_id": "4f2335a1-7f06-408d-a1b2-c1e4318f1a9d",
+          "source_type": "document",
+          "document_name": "retry_policy_legacy.py",
+          "relative_path": "src/retry_policy_legacy.py",
+          "section_title": null,
+          "start_line": 17,
+          "end_line": 21,
+          "content": "def legacy_retry_delay_ms(attempt: int, policy: LegacyRetryPolicy) -> int:\n    \"\"\"Return the old fixed delay without jitter or exponential growth.\"\"\"\n    if attempt < 1:\n        raise ValueError(\"attempt must be at least one\")\n    return policy.fixed_delay_ms",
+          "retrieval_score": 1.0,
+          "rerank_score": null,
+          "retrieval_rank": 1
+        },
+        {
+          "rank": 2,
+          "score": 0.6666666666666666,
+          "retrieval_id": "642a7d79-563b-4600-990f-d9b97b5daf69",
+          "source_type": "document",
+          "document_name": "retry_policy_legacy.py",
+          "relative_path": "src/retry_policy_legacy.py",
+          "section_title": null,
+          "start_line": 6,
+          "end_line": 9,
+          "content": "@dataclass(frozen=True)\nclass LegacyRetryPolicy:\n    retries: int = 8\n    fixed_delay_ms: int = 1_000",
+          "retrieval_score": 0.6666666666666666,
+          "rerank_score": null,
+          "retrieval_rank": 2
+        },
+        {
+          "rank": 3,
+          "score": 0.5,
+          "retrieval_id": "8930f975-a9e3-4ed4-9953-79c05c3bd6c8",
+          "source_type": "document",
+          "document_name": "retry_policy_legacy.py",
+          "relative_path": "src/retry_policy_legacy.py",
+          "section_title": null,
+          "start_line": 29,
+          "end_line": 34,
+          "content": "MIGRATION_NOTE = \"\"\"\nThis module is retained only to explain historical incidents. New code must use\nRetryBudget and should_retry from src/retry_policy.py. The legacy policy used eight\nretries, a fixed one-second delay, no jitter, and treated INVALID_SCOPE as retryable.\nThose choices caused synchronized retry storms and delayed permanent-error feedback.\n\"\"\"",
+          "retrieval_score": 0.5,
+          "rerank_score": null,
+          "retrieval_rank": 3
+        },
+        {
+          "rank": 4,
+          "score": 0.3666666666666667,
+          "retrieval_id": "0a87d27f-a43c-4cb1-8b7b-1d279cb629a2",
+          "source_type": "document",
+          "document_name": "retry_policy.py",
+          "relative_path": "src/retry_policy.py",
+          "section_title": null,
+          "start_line": 7,
+          "end_line": 12,
+          "content": "@dataclass(frozen=True)\nclass RetryBudget:\n    max_attempts: int = 4\n    base_delay_ms: int = 250\n    max_delay_ms: int = 4_000\n    jitter_ratio: float = 0.20",
+          "retrieval_score": 0.3666666666666667,
+          "rerank_score": null,
+          "retrieval_rank": 4
+        },
+        {
+          "rank": 5,
+          "score": 0.3111111111111111,
+          "retrieval_id": "458fa6dd-68c5-44b8-8729-4a5961b375b6",
+          "source_type": "document",
+          "document_name": "retry_policy.py",
+          "relative_path": "src/retry_policy.py",
+          "section_title": null,
+          "start_line": 57,
+          "end_line": 61,
+          "content": "def describe_policy(budget: RetryBudget) -> str:\n    return (\n        f\"max_attempts={budget.max_attempts}, base_delay_ms={budget.base_delay_ms}, \"\n        f\"max_delay_ms={budget.max_delay_ms}, jitter_ratio={budget.jitter_ratio}\"\n    )",
+          "retrieval_score": 0.3111111111111111,
+          "rerank_score": null,
+          "retrieval_rank": 5
+        }
+      ],
+      "matched_evidence": [
+        0
+      ],
+      "missing_required_evidence": [],
+      "metrics": {
+        "hit_at_1": 0.0,
+        "hit_at_3": 1.0,
+        "hit_at_5": 1.0,
+        "recall_at_5": 1.0,
+        "recall_at_10": 1.0,
+        "mrr_at_10": 0.5,
+        "ndcg_at_5": 0.6309297535714574,
+        "ndcg_at_10": 0.6309297535714574,
+        "negative_empty_result_rate": null,
+        "negative_retrieval_rate": null
+      },
+      "latency": {
+        "embedding_ms": 4589.0,
+        "qdrant_ms": 8.0,
+        "fusion_ms": 0.0,
+        "rerank_ms": 0.0,
+        "total_ms": 4607.180799997877
+      },
+      "dense_candidate_count": 18,
+      "sparse_candidate_count": 20,
+      "context_chars": 1112,
+      "error": null
+    },
+    {
+      "case_id": "syn-018",
+      "query": "legacy retry policy replacement module path",
+      "mode": "hybrid",
+      "tags": [
+        "en",
+        "path",
+        "code"
+      ],
+      "answerable": true,
+      "hits": [
+        {
+          "rank": 1,
+          "score": 1.0,
+          "retrieval_id": "17aee0fd-2cdd-45d7-a7dd-98a7530be52e",
+          "source_type": "document",
+          "document_name": "retry_policy_legacy.py",
+          "relative_path": "src/retry_policy_legacy.py",
+          "section_title": null,
+          "start_line": 41,
+          "end_line": 42,
+          "content": "def replacement_module() -> str:\n    return \"src/retry_policy.py\"",
+          "retrieval_score": 1.0,
+          "rerank_score": null,
+          "retrieval_rank": 1
+        },
+        {
+          "rank": 2,
+          "score": 0.5833333333333333,
+          "retrieval_id": "8930f975-a9e3-4ed4-9953-79c05c3bd6c8",
+          "source_type": "document",
+          "document_name": "retry_policy_legacy.py",
+          "relative_path": "src/retry_policy_legacy.py",
+          "section_title": null,
+          "start_line": 29,
+          "end_line": 34,
+          "content": "MIGRATION_NOTE = \"\"\"\nThis module is retained only to explain historical incidents. New code must use\nRetryBudget and should_retry from src/retry_policy.py. The legacy policy used eight\nretries, a fixed one-second delay, no jitter, and treated INVALID_SCOPE as retryable.\nThose choices caused synchronized retry storms and delayed permanent-error feedback.\n\"\"\"",
+          "retrieval_score": 0.5833333333333333,
+          "rerank_score": null,
+          "retrieval_rank": 2
+        },
+        {
+          "rank": 3,
+          "score": 0.5,
+          "retrieval_id": "206a6a4a-764c-49e7-ba90-7d65976157f5",
+          "source_type": "document",
+          "document_name": "retry_policy_legacy.py",
+          "relative_path": "src/retry_policy_legacy.py",
+          "section_title": null,
+          "start_line": 1,
+          "end_line": 1,
+          "content": "\"\"\"Deprecated LumenDesk retry policy kept as a deliberate retrieval distractor.\"\"\"",
+          "retrieval_score": 0.5,
+          "rerank_score": null,
+          "retrieval_rank": 3
+        },
+        {
+          "rank": 4,
+          "score": 0.3611111111111111,
+          "retrieval_id": "ff00c1c1-e235-47a4-878b-beb34a3327bb",
+          "source_type": "document",
+          "document_name": "retry_policy_legacy.py",
+          "relative_path": "src/retry_policy_legacy.py",
+          "section_title": null,
+          "start_line": 24,
+          "end_line": 26,
+          "content": "def legacy_should_retry(error_code: str, attempt: int, policy: LegacyRetryPolicy) -> bool:\n    \"\"\"The legacy implementation incorrectly retries several permanent errors.\"\"\"\n    return error_code in LEGACY_RETRYABLE_CODES and attempt <= policy.retries",
+          "retrieval_score": 0.3611111111111111,
+          "rerank_score": null,
+          "retrieval_rank": 4
+        },
+        {
+          "rank": 5,
+          "score": 0.325,
+          "retrieval_id": "9547e57a-cf40-478d-9df9-c2db9aa0e7cf",
+          "source_type": "document",
+          "document_name": "retry_policy_legacy.py",
+          "relative_path": "src/retry_policy_legacy.py",
+          "section_title": null,
+          "start_line": 3,
+          "end_line": 3,
+          "content": "from dataclasses import dataclass",
+          "retrieval_score": 0.325,
+          "rerank_score": null,
+          "retrieval_rank": 5
+        }
+      ],
+      "matched_evidence": [
+        0
+      ],
+      "missing_required_evidence": [],
+      "metrics": {
+        "hit_at_1": 1.0,
+        "hit_at_3": 1.0,
+        "hit_at_5": 1.0,
+        "recall_at_5": 1.0,
+        "recall_at_10": 1.0,
+        "mrr_at_10": 1.0,
+        "ndcg_at_5": 1.0,
+        "ndcg_at_10": 1.0,
+        "negative_empty_result_rate": null,
+        "negative_retrieval_rate": null
+      },
+      "latency": {
+        "embedding_ms": 4121.0,
+        "qdrant_ms": 7.0,
+        "fusion_ms": 0.0,
+        "rerank_ms": 0.0,
+        "total_ms": 4139.885300013702
+      },
+      "dense_candidate_count": 14,
+      "sparse_candidate_count": 20,
+      "context_chars": 789,
+      "error": null
+    },
+    {
+      "case_id": "syn-019",
+      "query": "semantic_score_threshold 配置值",
+      "mode": "hybrid",
+      "tags": [
+        "mixed",
+        "config",
+        "keyword"
+      ],
+      "answerable": true,
+      "hits": [
+        {
+          "rank": 1,
+          "score": 1.0,
+          "retrieval_id": "f498d010-34f6-4105-962a-59c117528782",
+          "source_type": "document",
+          "document_name": "retrieval.yaml",
+          "relative_path": "config/retrieval.yaml",
+          "section_title": null,
+          "start_line": 16,
+          "end_line": 23,
+          "content": "retrieval:\n  mode: hybrid\n  output_limit: 5\n  semantic_score_threshold: 0.50\n  dense_prefetch_limit: 20\n  sparse_prefetch_limit: 20\n  fusion: application-deterministic-rrf\n  rrf_constant: 60",
+          "retrieval_score": 1.0,
+          "rerank_score": null,
+          "retrieval_rank": 1
+        },
+        {
+          "rank": 2,
+          "score": 0.5,
+          "retrieval_id": "2e76526a-d138-41c9-bf36-daa81c945c58",
+          "source_type": "document",
+          "document_name": "api-contract.md",
+          "relative_path": "docs/api-contract.md",
+          "section_title": "Reranked search request",
+          "start_line": 17,
+          "end_line": 17,
+          "content": "The reranked score is a raw model logit, not a probability. retrieval_score preserves the preceding RRF score, retrieval_rank preserves the Hybrid position, and rerank_score contains the Cross-Encoder output.",
+          "retrieval_score": 0.5,
+          "rerank_score": null,
+          "retrieval_rank": 2
+        },
+        {
+          "rank": 3,
+          "score": 0.3333333333333333,
+          "retrieval_id": "a3322c9f-99b9-448e-98e4-5d7099732cfa",
+          "source_type": "document",
+          "document_name": "api-contract.md",
+          "relative_path": "docs/api-contract.md",
+          "section_title": "Hybrid search request",
+          "start_line": 9,
+          "end_line": 9,
+          "content": "The response field ranking_mode is hybrid. The score is an application-side reciprocal-rank-fusion value and is not a calibrated probability. Clients must not compare the score with a cosine threshold.",
+          "retrieval_score": 0.3333333333333333,
+          "rerank_score": null,
+          "retrieval_rank": 3
+        },
+        {
+          "rank": 4,
+          "score": 0.25,
+          "retrieval_id": "5fa31b4d-24cb-4aab-9425-4eed23f82d00",
+          "source_type": "document",
+          "document_name": "indexing-errors.md",
+          "relative_path": "runbooks/indexing-errors.md",
+          "section_title": "IDX-4404 Collection Schema 不兼容",
+          "start_line": 33,
+          "end_line": 33,
+          "content": "告警 IDX-4404 表示 Dense vector dimension、distance、Sparse vector 或 payload index 与当前配置不一致。服务必须拒绝在不兼容 Collection 上继续 upsert。",
+          "retrieval_score": 0.25,
+          "rerank_score": null,
+          "retrieval_rank": 4
+        },
+        {
+          "rank": 5,
+          "score": 0.2,
+          "retrieval_id": "349793ca-384c-49a6-84fc-4ec8c9b093e3",
+          "source_type": "document",
+          "document_name": "runtime-overview.md",
+          "relative_path": "docs/runtime-overview.md",
+          "section_title": "Generation 发布协议",
+          "start_line": 7,
+          "end_line": 7,
+          "content": "LumenDesk 的索引发布使用 generation switch。新一代向量必须全部写入并完成数量校验后，数据库才把 active_generation 指向新值。查询只读取 active_generation，因此失败的构建不会暴露半成品索引。",
+          "retrieval_score": 0.2,
+          "rerank_score": null,
+          "retrieval_rank": 5
+        }
+      ],
+      "matched_evidence": [
+        0
+      ],
+      "missing_required_evidence": [],
+      "metrics": {
+        "hit_at_1": 1.0,
+        "hit_at_3": 1.0,
+        "hit_at_5": 1.0,
+        "recall_at_5": 1.0,
+        "recall_at_10": 1.0,
+        "mrr_at_10": 1.0,
+        "ndcg_at_5": 1.0,
+        "ndcg_at_10": 1.0,
+        "negative_empty_result_rate": null,
+        "negative_retrieval_rate": null
+      },
+      "latency": {
+        "embedding_ms": 4219.0,
+        "qdrant_ms": 7.0,
+        "fusion_ms": 0.0,
+        "rerank_ms": 0.0,
+        "total_ms": 4238.123600021936
+      },
+      "dense_candidate_count": 2,
+      "sparse_candidate_count": 6,
+      "context_chars": 844,
+      "error": null
+    },
+    {
+      "case_id": "syn-020",
+      "query": "Dense 和 Sparse 默认 prefetch limit 各是多少？",
+      "mode": "hybrid",
+      "tags": [
+        "mixed",
+        "config"
+      ],
+      "answerable": true,
+      "hits": [
+        {
+          "rank": 1,
+          "score": 1.0,
+          "retrieval_id": "f498d010-34f6-4105-962a-59c117528782",
+          "source_type": "document",
+          "document_name": "retrieval.yaml",
+          "relative_path": "config/retrieval.yaml",
+          "section_title": null,
+          "start_line": 16,
+          "end_line": 23,
+          "content": "retrieval:\n  mode: hybrid\n  output_limit: 5\n  semantic_score_threshold: 0.50\n  dense_prefetch_limit: 20\n  sparse_prefetch_limit: 20\n  fusion: application-deterministic-rrf\n  rrf_constant: 60",
+          "retrieval_score": 1.0,
+          "rerank_score": null,
+          "retrieval_rank": 1
+        },
+        {
+          "rank": 2,
+          "score": 0.6666666666666666,
+          "retrieval_id": "8e456284-bf42-492b-a1e7-1eeef9f600d1",
+          "source_type": "document",
+          "document_name": "runtime-overview.md",
+          "relative_path": "docs/runtime-overview.md",
+          "section_title": "检索阶段",
+          "start_line": 17,
+          "end_line": 17,
+          "content": "查询先生成 Qwen3 dense embedding，同时把原始查询交给 Qdrant 的 BM25 sparse vector。Dense 和 Sparse 分支分别预取候选，应用层使用 deterministic reciprocal rank fusion 合并排名。",
+          "retrieval_score": 0.6666666666666666,
+          "rerank_score": null,
+          "retrieval_rank": 2
+        },
+        {
+          "rank": 3,
+          "score": 0.25,
+          "retrieval_id": "5fa31b4d-24cb-4aab-9425-4eed23f82d00",
+          "source_type": "document",
+          "document_name": "indexing-errors.md",
+          "relative_path": "runbooks/indexing-errors.md",
+          "section_title": "IDX-4404 Collection Schema 不兼容",
+          "start_line": 33,
+          "end_line": 33,
+          "content": "告警 IDX-4404 表示 Dense vector dimension、distance、Sparse vector 或 payload index 与当前配置不一致。服务必须拒绝在不兼容 Collection 上继续 upsert。",
+          "retrieval_score": 0.25,
+          "rerank_score": null,
+          "retrieval_rank": 3
+        },
+        {
+          "rank": 4,
+          "score": 0.2,
+          "retrieval_id": "4983cb82-0142-4622-aac3-dd35c29b3a4c",
+          "source_type": "document",
+          "document_name": "api-contract.md",
+          "relative_path": "docs/api-contract.md",
+          "section_title": "Streaming events",
+          "start_line": 25,
+          "end_line": 25,
+          "content": "The done event may include query_rewrite_mode, query_rewrite_latency_ms, retrieval_query, embedding_latency_ms, qdrant_latency_ms, fusion_latency_ms, rerank_latency_ms, dense_candidate_count, and sparse_candidate_count.",
+          "retrieval_score": 0.2,
+          "rerank_score": null,
+          "retrieval_rank": 4
+        },
+        {
+          "rank": 5,
+          "score": 0.16666666666666666,
+          "retrieval_id": "fb9aedad-f760-4d6e-80fc-775b5f96db57",
+          "source_type": "document",
+          "document_name": "runtime-overview.md",
+          "relative_path": "docs/runtime-overview.md",
+          "section_title": "Generation 发布协议",
+          "start_line": 11,
+          "end_line": 11,
+          "content": "数据库记录和原始上传文件共同构成 source of truth。向量点、解析块和任务状态都是 derived state，可以从原始文件与数据库元数据重新构建。",
+          "retrieval_score": 0.16666666666666666,
+          "rerank_score": null,
+          "retrieval_rank": 5
+        }
+      ],
+      "matched_evidence": [
+        0
+      ],
+      "missing_required_evidence": [],
+      "metrics": {
+        "hit_at_1": 1.0,
+        "hit_at_3": 1.0,
+        "hit_at_5": 1.0,
+        "recall_at_5": 1.0,
+        "recall_at_10": 1.0,
+        "mrr_at_10": 1.0,
+        "ndcg_at_5": 1.0,
+        "ndcg_at_10": 1.0,
+        "negative_empty_result_rate": null,
+        "negative_retrieval_rate": null
+      },
+      "latency": {
+        "embedding_ms": 4559.0,
+        "qdrant_ms": 14.0,
+        "fusion_ms": 0.0,
+        "rerank_ms": 0.0,
+        "total_ms": 4584.648700023536
+      },
+      "dense_candidate_count": 2,
+      "sparse_candidate_count": 20,
+      "context_chars": 747,
+      "error": null
+    },
+    {
+      "case_id": "syn-021",
+      "query": "single-level chunking 默认大小和 overlap",
+      "mode": "hybrid",
+      "tags": [
+        "mixed",
+        "config"
+      ],
+      "answerable": true,
+      "hits": [
+        {
+          "rank": 1,
+          "score": 1.0,
+          "retrieval_id": "762788ac-bb9a-41b8-934b-07c298f1dd30",
+          "source_type": "document",
+          "document_name": "retrieval.yaml",
+          "relative_path": "config/retrieval.yaml",
+          "section_title": null,
+          "start_line": 10,
+          "end_line": 14,
+          "content": "chunking:\n  strategy: deterministic-single-level\n  max_chars: 1800\n  overlap_chars: 200\n  exclude_heading_chunks: true",
+          "retrieval_score": 1.0,
+          "rerank_score": null,
+          "retrieval_rank": 1
+        },
+        {
+          "rank": 2,
+          "score": 0.3333333333333333,
+          "retrieval_id": "fb9aedad-f760-4d6e-80fc-775b5f96db57",
+          "source_type": "document",
+          "document_name": "runtime-overview.md",
+          "relative_path": "docs/runtime-overview.md",
+          "section_title": "Generation 发布协议",
+          "start_line": 11,
+          "end_line": 11,
+          "content": "数据库记录和原始上传文件共同构成 source of truth。向量点、解析块和任务状态都是 derived state，可以从原始文件与数据库元数据重新构建。",
+          "retrieval_score": 0.3333333333333333,
+          "rerank_score": null,
+          "retrieval_rank": 2
+        },
+        {
+          "rank": 3,
+          "score": 0.25,
+          "retrieval_id": "24bc171a-b3c9-40c1-877d-705790c25067",
+          "source_type": "document",
+          "document_name": "indexing-errors.md",
+          "relative_path": "runbooks/indexing-errors.md",
+          "section_title": "IDX-3301 Embedding 服务繁忙",
+          "start_line": 25,
+          "end_line": 25,
+          "content": "告警 IDX-3301 对应瞬时错误 EMBEDDING_BUSY。当前重试策略最多尝试四次，基础延迟 250 ms，使用 capped exponential backoff 和 20% jitter。",
+          "retrieval_score": 0.25,
+          "rerank_score": null,
+          "retrieval_rank": 3
+        },
+        {
+          "rank": 4,
+          "score": 0.2,
+          "retrieval_id": "b82f63c3-241a-4b88-a512-ebde44b2c04b",
+          "source_type": "document",
+          "document_name": "runtime-overview.md",
+          "relative_path": "docs/runtime-overview.md",
+          "section_title": "恢复边界",
+          "start_line": 35,
+          "end_line": 35,
+          "content": "恢复验证至少检查文件哈希、文档版本、active generation 和引用定位。任何验证失败都应停止切换，不得用不完整恢复覆盖当前可用数据。",
+          "retrieval_score": 0.2,
+          "rerank_score": null,
+          "retrieval_rank": 4
+        },
+        {
+          "rank": 5,
+          "score": 0.16666666666666666,
+          "retrieval_id": "f184cffa-8579-4a8a-a052-a219066e22c3",
+          "source_type": "document",
+          "document_name": "indexing-errors.md",
+          "relative_path": "runbooks/indexing-errors.md",
+          "section_title": "IDX-3301 Embedding 服务繁忙",
+          "start_line": 29,
+          "end_line": 29,
+          "content": "INVALID_SCOPE、UNSUPPORTED_FORMAT 和 CORRUPT_SOURCE 属于永久错误，不进入自动重试。旧版策略曾错误重试这些错误，当前实现已经禁止这种行为。",
+          "retrieval_score": 0.16666666666666666,
+          "rerank_score": null,
+          "retrieval_rank": 5
+        }
+      ],
+      "matched_evidence": [
+        0
+      ],
+      "missing_required_evidence": [],
+      "metrics": {
+        "hit_at_1": 1.0,
+        "hit_at_3": 1.0,
+        "hit_at_5": 1.0,
+        "recall_at_5": 1.0,
+        "recall_at_10": 1.0,
+        "mrr_at_10": 1.0,
+        "ndcg_at_5": 1.0,
+        "ndcg_at_10": 1.0,
+        "negative_empty_result_rate": null,
+        "negative_retrieval_rate": null
+      },
+      "latency": {
+        "embedding_ms": 4321.0,
+        "qdrant_ms": 7.0,
+        "fusion_ms": 0.0,
+        "rerank_ms": 0.0,
+        "total_ms": 4338.633800041862
+      },
+      "dense_candidate_count": 1,
+      "sparse_candidate_count": 10,
+      "context_chars": 465,
+      "error": null
+    },
+    {
+      "case_id": "syn-022",
+      "query": "reranker candidate_limit maximum_candidates enabled",
+      "mode": "hybrid",
+      "tags": [
+        "en",
+        "config",
+        "reranker"
+      ],
+      "answerable": true,
+      "hits": [
+        {
+          "rank": 1,
+          "score": 0.8333333333333333,
+          "retrieval_id": "ec438871-53f9-4885-8a25-c816ccd03acd",
+          "source_type": "document",
+          "document_name": "retrieval.yaml",
+          "relative_path": "config/retrieval.yaml",
+          "section_title": null,
+          "start_line": 25,
+          "end_line": 31,
+          "content": "reranker:\n  enabled: false\n  model: Qwen/Qwen3-Reranker-0.6B\n  candidate_limit: 10\n  maximum_candidates: 20\n  timeout_seconds: 12\n  fallback: hybrid",
+          "retrieval_score": 0.8333333333333333,
+          "rerank_score": null,
+          "retrieval_rank": 1
+        },
+        {
+          "rank": 2,
+          "score": 0.8333333333333333,
+          "retrieval_id": "03952569-2492-440f-bb14-eeca7e68c08e",
+          "source_type": "document",
+          "document_name": "api-contract.md",
+          "relative_path": "docs/api-contract.md",
+          "section_title": "Error semantics",
+          "start_line": 35,
+          "end_line": 35,
+          "content": "Error code RERANKER_CANDIDATE_LIMIT means the requested output exceeds the configured candidate pool. Increasing the output limit without increasing the candidate pool is rejected deterministically.",
+          "retrieval_score": 0.8333333333333333,
+          "rerank_score": null,
+          "retrieval_rank": 2
+        },
+        {
+          "rank": 3,
+          "score": 0.5,
+          "retrieval_id": "7538f3f5-8263-407b-86f5-82c0aff878f0",
+          "source_type": "document",
+          "document_name": "api-contract.md",
+          "relative_path": "docs/api-contract.md",
+          "section_title": "Reranked search request",
+          "start_line": 15,
+          "end_line": 15,
+          "content": "POST /api/v2/workspaces/{workspace_id}/search/reranked first obtains Hybrid candidates and then calls the local Cross-Encoder. The requested output limit cannot exceed rerank_candidate_limit.",
+          "retrieval_score": 0.5,
+          "rerank_score": null,
+          "retrieval_rank": 3
+        },
+        {
+          "rank": 4,
+          "score": 0.3666666666666667,
+          "retrieval_id": "ec1183cb-0cef-42f2-abe1-5c09df22b869",
+          "source_type": "document",
+          "document_name": "retrieval.yaml",
+          "relative_path": "config/retrieval.yaml",
+          "section_title": null,
+          "start_line": 33,
+          "end_line": 38,
+          "content": "query_rewrite:\n  enabled_for_conversation_history: true\n  maximum_history_turns: 6\n  timeout_seconds: 8\n  maximum_query_chars: 500\n  fallback: original-query",
+          "retrieval_score": 0.3666666666666667,
+          "rerank_score": null,
+          "retrieval_rank": 4
+        },
+        {
+          "rank": 5,
+          "score": 0.325,
+          "retrieval_id": "1ec10919-e0be-406a-a603-a07f16c52e41",
+          "source_type": "document",
+          "document_name": "runtime-overview.md",
+          "relative_path": "docs/runtime-overview.md",
+          "section_title": "检索阶段",
+          "start_line": 21,
+          "end_line": 21,
+          "content": "Cross-Encoder Reranker 是可选阶段。它只能重排 Hybrid 已经召回的候选，不能找回候选池中不存在的证据。Reranker 不可用时，系统保留原始 Hybrid 顺序并记录 fallback。",
+          "retrieval_score": 0.325,
+          "rerank_score": null,
+          "retrieval_rank": 5
+        }
+      ],
+      "matched_evidence": [
+        0
+      ],
+      "missing_required_evidence": [],
+      "metrics": {
+        "hit_at_1": 1.0,
+        "hit_at_3": 1.0,
+        "hit_at_5": 1.0,
+        "recall_at_5": 1.0,
+        "recall_at_10": 1.0,
+        "mrr_at_10": 1.0,
+        "ndcg_at_5": 1.0,
+        "ndcg_at_10": 1.0,
+        "negative_empty_result_rate": null,
+        "negative_retrieval_rate": null
+      },
+      "latency": {
+        "embedding_ms": 4243.0,
+        "qdrant_ms": 9.0,
+        "fusion_ms": 0.0,
+        "rerank_ms": 0.0,
+        "total_ms": 4264.746900007594
+      },
+      "dense_candidate_count": 6,
+      "sparse_candidate_count": 9,
+      "context_chars": 802,
+      "error": null
+    },
+    {
+      "case_id": "syn-023",
+      "query": "query rewrite 失败后用什么 query？",
+      "mode": "hybrid",
+      "tags": [
+        "mixed",
+        "config",
+        "semantic"
+      ],
+      "answerable": true,
+      "hits": [
+        {
+          "rank": 1,
+          "score": 0.8333333333333333,
+          "retrieval_id": "ec1183cb-0cef-42f2-abe1-5c09df22b869",
+          "source_type": "document",
+          "document_name": "retrieval.yaml",
+          "relative_path": "config/retrieval.yaml",
+          "section_title": null,
+          "start_line": 33,
+          "end_line": 38,
+          "content": "query_rewrite:\n  enabled_for_conversation_history: true\n  maximum_history_turns: 6\n  timeout_seconds: 8\n  maximum_query_chars: 500\n  fallback: original-query",
+          "retrieval_score": 0.8333333333333333,
+          "rerank_score": null,
+          "retrieval_rank": 1
+        },
+        {
+          "rank": 2,
+          "score": 0.5,
+          "retrieval_id": "4983cb82-0142-4622-aac3-dd35c29b3a4c",
+          "source_type": "document",
+          "document_name": "api-contract.md",
+          "relative_path": "docs/api-contract.md",
+          "section_title": "Streaming events",
+          "start_line": 25,
+          "end_line": 25,
+          "content": "The done event may include query_rewrite_mode, query_rewrite_latency_ms, retrieval_query, embedding_latency_ms, qdrant_latency_ms, fusion_latency_ms, rerank_latency_ms, dense_candidate_count, and sparse_candidate_count.",
+          "retrieval_score": 0.5,
+          "rerank_score": null,
+          "retrieval_rank": 2
+        },
+        {
+          "rank": 3,
+          "score": 0.25,
+          "retrieval_id": "b82f63c3-241a-4b88-a512-ebde44b2c04b",
+          "source_type": "document",
+          "document_name": "runtime-overview.md",
+          "relative_path": "docs/runtime-overview.md",
+          "section_title": "恢复边界",
+          "start_line": 35,
+          "end_line": 35,
+          "content": "恢复验证至少检查文件哈希、文档版本、active generation 和引用定位。任何验证失败都应停止切换，不得用不完整恢复覆盖当前可用数据。",
+          "retrieval_score": 0.25,
+          "rerank_score": null,
+          "retrieval_rank": 3
+        },
+        {
+          "rank": 4,
+          "score": 0.2,
+          "retrieval_id": "5457bd5a-eb9d-4580-9bfd-7584f025b013",
+          "source_type": "document",
+          "document_name": "indexing-errors.md",
+          "relative_path": "runbooks/indexing-errors.md",
+          "section_title": "IDX-1042 Generation 数量不一致",
+          "start_line": 11,
+          "end_line": 11,
+          "content": "修复方式是删除失败 attempt_generation 的 points，然后对同一文档版本发起 force rebuild。重建成功并完成数量校验后，服务才允许切换 active generation。",
+          "retrieval_score": 0.2,
+          "rerank_score": null,
+          "retrieval_rank": 4
+        },
+        {
+          "rank": 5,
+          "score": 0.16666666666666666,
+          "retrieval_id": "349793ca-384c-49a6-84fc-4ec8c9b093e3",
+          "source_type": "document",
+          "document_name": "runtime-overview.md",
+          "relative_path": "docs/runtime-overview.md",
+          "section_title": "Generation 发布协议",
+          "start_line": 7,
+          "end_line": 7,
+          "content": "LumenDesk 的索引发布使用 generation switch。新一代向量必须全部写入并完成数量校验后，数据库才把 active_generation 指向新值。查询只读取 active_generation，因此失败的构建不会暴露半成品索引。",
+          "retrieval_score": 0.16666666666666666,
+          "rerank_score": null,
+          "retrieval_rank": 5
+        }
+      ],
+      "matched_evidence": [
+        0
+      ],
+      "missing_required_evidence": [],
+      "metrics": {
+        "hit_at_1": 1.0,
+        "hit_at_3": 1.0,
+        "hit_at_5": 1.0,
+        "recall_at_5": 1.0,
+        "recall_at_10": 1.0,
+        "mrr_at_10": 1.0,
+        "ndcg_at_5": 1.0,
+        "ndcg_at_10": 1.0,
+        "negative_empty_result_rate": null,
+        "negative_retrieval_rate": null
+      },
+      "latency": {
+        "embedding_ms": 4583.0,
+        "qdrant_ms": 7.0,
+        "fusion_ms": 0.0,
+        "rerank_ms": 0.0,
+        "total_ms": 4605.123200046364
+      },
+      "dense_candidate_count": 1,
+      "sparse_candidate_count": 16,
+      "context_chars": 677,
+      "error": null
+    },
+    {
+      "case_id": "syn-024",
+      "query": "恢复时哪些是 source of truth，哪些可以重建？",
+      "mode": "hybrid",
+      "tags": [
+        "zh",
+        "semantic",
+        "hard"
+      ],
+      "answerable": true,
+      "hits": [
+        {
+          "rank": 1,
+          "score": 1.0,
+          "retrieval_id": "fb9aedad-f760-4d6e-80fc-775b5f96db57",
+          "source_type": "document",
+          "document_name": "runtime-overview.md",
+          "relative_path": "docs/runtime-overview.md",
+          "section_title": "Generation 发布协议",
+          "start_line": 11,
+          "end_line": 11,
+          "content": "数据库记录和原始上传文件共同构成 source of truth。向量点、解析块和任务状态都是 derived state，可以从原始文件与数据库元数据重新构建。",
+          "retrieval_score": 1.0,
+          "rerank_score": null,
+          "retrieval_rank": 1
+        },
+        {
+          "rank": 2,
+          "score": 0.5,
+          "retrieval_id": "31728f22-4e9e-4f99-8bb9-ff190a1108f5",
+          "source_type": "document",
+          "document_name": "runtime-overview.md",
+          "relative_path": "docs/runtime-overview.md",
+          "section_title": "恢复边界",
+          "start_line": 33,
+          "end_line": 33,
+          "content": "备份必须包含 PostgreSQL 业务数据和原始文件。Redis 中的任务状态与 Qdrant Collection 不作为唯一恢复来源；恢复后可以重新解析并发布新的 generation。",
+          "retrieval_score": 0.5,
+          "rerank_score": null,
+          "retrieval_rank": 2
+        },
+        {
+          "rank": 3,
+          "score": 0.47619047619047616,
+          "retrieval_id": "f0c19cd4-d38a-4a28-9028-b7770c1d3e13",
+          "source_type": "document",
+          "document_name": "runtime-overview.md",
+          "relative_path": "docs/runtime-overview.md",
+          "section_title": "Generation 发布协议",
+          "start_line": 13,
+          "end_line": 13,
+          "content": "重建时必须保持 document_id 不变，同时生成新的 index_generation。这样引用可以继续指向稳定文档，而检索只切换到已经完整发布的新索引。",
+          "retrieval_score": 0.47619047619047616,
+          "rerank_score": null,
+          "retrieval_rank": 3
+        },
+        {
+          "rank": 4,
+          "score": 0.41666666666666663,
+          "retrieval_id": "8712e744-8f6f-4fa8-9e48-7eb2dcedbe7d",
+          "source_type": "document",
+          "document_name": "retrieval.yaml",
+          "relative_path": "config/retrieval.yaml",
+          "section_title": null,
+          "start_line": 45,
+          "end_line": 53,
+          "content": "release:\n  index_publication: generation-switch\n  source_of_truth:\n    - postgresql\n    - original-files\n  derived_state:\n    - document-chunks\n    - qdrant-index\n    - task-state",
+          "retrieval_score": 0.41666666666666663,
+          "rerank_score": null,
+          "retrieval_rank": 4
+        },
+        {
+          "rank": 5,
+          "score": 0.3333333333333333,
+          "retrieval_id": "b82f63c3-241a-4b88-a512-ebde44b2c04b",
+          "source_type": "document",
+          "document_name": "runtime-overview.md",
+          "relative_path": "docs/runtime-overview.md",
+          "section_title": "恢复边界",
+          "start_line": 35,
+          "end_line": 35,
+          "content": "恢复验证至少检查文件哈希、文档版本、active generation 和引用定位。任何验证失败都应停止切换，不得用不完整恢复覆盖当前可用数据。",
+          "retrieval_score": 0.3333333333333333,
+          "rerank_score": null,
+          "retrieval_rank": 5
+        }
+      ],
+      "matched_evidence": [
+        0,
+        1
+      ],
+      "missing_required_evidence": [],
+      "metrics": {
+        "hit_at_1": 0.0,
+        "hit_at_3": 1.0,
+        "hit_at_5": 1.0,
+        "recall_at_5": 1.0,
+        "recall_at_10": 1.0,
+        "mrr_at_10": 0.5,
+        "ndcg_at_5": 0.639909328045346,
+        "ndcg_at_10": 0.639909328045346,
+        "negative_empty_result_rate": null,
+        "negative_retrieval_rate": null
+      },
+      "latency": {
+        "embedding_ms": 5169.0,
+        "qdrant_ms": 8.0,
+        "fusion_ms": 0.0,
+        "rerank_ms": 0.0,
+        "total_ms": 5189.844499982428
+      },
+      "dense_candidate_count": 7,
+      "sparse_candidate_count": 20,
+      "context_chars": 508,
+      "error": null
+    },
+    {
+      "case_id": "syn-025",
+      "query": "IDX-1042 数量不一致时能否激活新 generation？",
+      "mode": "hybrid",
+      "tags": [
+        "mixed",
+        "keyword",
+        "hard"
+      ],
+      "answerable": true,
+      "hits": [
+        {
+          "rank": 1,
+          "score": 0.8333333333333333,
+          "retrieval_id": "5381ada2-18f3-4059-852d-2d7da8a2db6f",
+          "source_type": "document",
+          "document_name": "indexing-errors.md",
+          "relative_path": "runbooks/indexing-errors.md",
+          "section_title": "IDX-1042 Generation 数量不一致",
+          "start_line": 7,
+          "end_line": 7,
+          "content": "告警 IDX-1042 表示写入 Qdrant 的 point count 与本次解析得到的 chunk count 不一致。发布流程必须保持旧 active generation，不得激活数量不完整的新 generation。",
+          "retrieval_score": 0.8333333333333333,
+          "rerank_score": null,
+          "retrieval_rank": 1
+        },
+        {
+          "rank": 2,
+          "score": 0.8333333333333333,
+          "retrieval_id": "5457bd5a-eb9d-4580-9bfd-7584f025b013",
+          "source_type": "document",
+          "document_name": "indexing-errors.md",
+          "relative_path": "runbooks/indexing-errors.md",
+          "section_title": "IDX-1042 Generation 数量不一致",
+          "start_line": 11,
+          "end_line": 11,
+          "content": "修复方式是删除失败 attempt_generation 的 points，然后对同一文档版本发起 force rebuild。重建成功并完成数量校验后，服务才允许切换 active generation。",
+          "retrieval_score": 0.8333333333333333,
+          "rerank_score": null,
+          "retrieval_rank": 2
+        },
+        {
+          "rank": 3,
+          "score": 0.5,
+          "retrieval_id": "bcddc983-3b48-42c4-ae5f-6760a9eb58b4",
+          "source_type": "document",
+          "document_name": "indexing-errors.md",
+          "relative_path": "runbooks/indexing-errors.md",
+          "section_title": "IDX-1042 Generation 数量不一致",
+          "start_line": 9,
+          "end_line": 9,
+          "content": "排查顺序是：确认解析块数量、读取 attempt_generation、按该 generation 精确统计 Qdrant points、检查批量 upsert 日志。不要删除整个 Collection，也不要修改数据库计数来绕过验证。",
+          "retrieval_score": 0.5,
+          "rerank_score": null,
+          "retrieval_rank": 3
+        },
+        {
+          "rank": 4,
+          "score": 0.4,
+          "retrieval_id": "49ba93e3-92bf-4f9e-b0cb-03f1809feefd",
+          "source_type": "document",
+          "document_name": "indexing-errors.md",
+          "relative_path": "runbooks/indexing-errors.md",
+          "section_title": "IDX-1042 Generation 数量不一致",
+          "start_line": 13,
+          "end_line": 13,
+          "content": "如果清理请求失败，记录 orphan generation 并交给恢复任务重试。旧 active generation 仍可服务查询，因此清理失败与发布失败必须分开处理。",
+          "retrieval_score": 0.4,
+          "rerank_score": null,
+          "retrieval_rank": 4
+        },
+        {
+          "rank": 5,
+          "score": 0.29166666666666663,
+          "retrieval_id": "9f7787d9-6851-4c7c-a3d6-aed3e19d091d",
+          "source_type": "document",
+          "document_name": "indexing-errors.md",
+          "relative_path": "runbooks/indexing-errors.md",
+          "section_title": "IDX-4404 Collection Schema 不兼容",
+          "start_line": 35,
+          "end_line": 35,
+          "content": "修复时创建新的 Collection，按原文件和 PostgreSQL 元数据重建，再通过 generation 发布。不得原地猜测性修改现有向量维度，也不得复用被其他评测数据污染的 BM25 Collection。",
+          "retrieval_score": 0.29166666666666663,
+          "rerank_score": null,
+          "retrieval_rank": 5
+        }
+      ],
+      "matched_evidence": [
+        0
+      ],
+      "missing_required_evidence": [],
+      "metrics": {
+        "hit_at_1": 1.0,
+        "hit_at_3": 1.0,
+        "hit_at_5": 1.0,
+        "recall_at_5": 1.0,
+        "recall_at_10": 1.0,
+        "mrr_at_10": 1.0,
+        "ndcg_at_5": 1.0,
+        "ndcg_at_10": 1.0,
+        "negative_empty_result_rate": null,
+        "negative_retrieval_rate": null
+      },
+      "latency": {
+        "embedding_ms": 5279.0,
+        "qdrant_ms": 9.0,
+        "fusion_ms": 0.0,
+        "rerank_ms": 0.0,
+        "total_ms": 5300.323600007687
+      },
+      "dense_candidate_count": 11,
+      "sparse_candidate_count": 20,
+      "context_chars": 528,
+      "error": null
+    },
+    {
+      "case_id": "syn-026",
+      "query": "IDX-2077 可以从 Qdrant payload 恢复原文件吗？",
+      "mode": "hybrid",
+      "tags": [
+        "mixed",
+        "keyword"
+      ],
+      "answerable": true,
+      "hits": [
+        {
+          "rank": 1,
+          "score": 0.8333333333333333,
+          "retrieval_id": "4087a9fe-f4ab-431c-9a42-9c2dd07d0ff9",
+          "source_type": "document",
+          "document_name": "indexing-errors.md",
+          "relative_path": "runbooks/indexing-errors.md",
+          "section_title": "IDX-2077 原始文件不可用",
+          "start_line": 21,
+          "end_line": 21,
+          "content": "禁止从 Qdrant payload 拼接出所谓原始文件。Payload 可能截断格式信息，也不能证明与数据库当前版本一致。",
+          "retrieval_score": 0.8333333333333333,
+          "rerank_score": null,
+          "retrieval_rank": 1
+        },
+        {
+          "rank": 2,
+          "score": 0.75,
+          "retrieval_id": "852ca0af-935a-4a6c-890e-4e42fbf5541b",
+          "source_type": "document",
+          "document_name": "indexing-errors.md",
+          "relative_path": "runbooks/indexing-errors.md",
+          "section_title": "IDX-2077 原始文件不可用",
+          "start_line": 19,
+          "end_line": 19,
+          "content": "首先校验备份中的文件哈希和文档版本 ID。如果备份文件正确，恢复到相同 storage_path 后重新解析；如果没有可信原文件，应停止恢复并报告数据缺口。",
+          "retrieval_score": 0.75,
+          "rerank_score": null,
+          "retrieval_rank": 2
+        },
+        {
+          "rank": 3,
+          "score": 0.45,
+          "retrieval_id": "31728f22-4e9e-4f99-8bb9-ff190a1108f5",
+          "source_type": "document",
+          "document_name": "runtime-overview.md",
+          "relative_path": "docs/runtime-overview.md",
+          "section_title": "恢复边界",
+          "start_line": 33,
+          "end_line": 33,
+          "content": "备份必须包含 PostgreSQL 业务数据和原始文件。Redis 中的任务状态与 Qdrant Collection 不作为唯一恢复来源；恢复后可以重新解析并发布新的 generation。",
+          "retrieval_score": 0.45,
+          "rerank_score": null,
+          "retrieval_rank": 3
+        },
+        {
+          "rank": 4,
+          "score": 0.38596491228070173,
+          "retrieval_id": "9cab2211-0fd5-48a5-98b3-388448f481f1",
+          "source_type": "document",
+          "document_name": "indexing-errors.md",
+          "relative_path": "runbooks/indexing-errors.md",
+          "section_title": "IDX-2077 原始文件不可用",
+          "start_line": 17,
+          "end_line": 17,
+          "content": "告警 IDX-2077 表示数据库存在文档版本，但 storage_path 对应的原始文件无法读取。由于原始文件属于 source of truth，系统不能仅凭旧 chunk 或向量点重新发布索引。",
+          "retrieval_score": 0.38596491228070173,
+          "rerank_score": null,
+          "retrieval_rank": 4
+        },
+        {
+          "rank": 5,
+          "score": 0.26785714285714285,
+          "retrieval_id": "5381ada2-18f3-4059-852d-2d7da8a2db6f",
+          "source_type": "document",
+          "document_name": "indexing-errors.md",
+          "relative_path": "runbooks/indexing-errors.md",
+          "section_title": "IDX-1042 Generation 数量不一致",
+          "start_line": 7,
+          "end_line": 7,
+          "content": "告警 IDX-1042 表示写入 Qdrant 的 point count 与本次解析得到的 chunk count 不一致。发布流程必须保持旧 active generation，不得激活数量不完整的新 generation。",
+          "retrieval_score": 0.26785714285714285,
+          "rerank_score": null,
+          "retrieval_rank": 5
+        }
+      ],
+      "matched_evidence": [
+        0
+      ],
+      "missing_required_evidence": [],
+      "metrics": {
+        "hit_at_1": 1.0,
+        "hit_at_3": 1.0,
+        "hit_at_5": 1.0,
+        "recall_at_5": 1.0,
+        "recall_at_10": 1.0,
+        "mrr_at_10": 1.0,
+        "ndcg_at_5": 1.0,
+        "ndcg_at_10": 1.0,
+        "negative_empty_result_rate": null,
+        "negative_retrieval_rate": null
+      },
+      "latency": {
+        "embedding_ms": 6056.0,
+        "qdrant_ms": 10.0,
+        "fusion_ms": 0.0,
+        "rerank_ms": 0.0,
+        "total_ms": 6079.700300004333
+      },
+      "dense_candidate_count": 8,
+      "sparse_candidate_count": 20,
+      "context_chars": 451,
+      "error": null
+    },
+    {
+      "case_id": "syn-027",
+      "query": "IDX-3301 的 backoff 和 jitter 策略",
+      "mode": "hybrid",
+      "tags": [
+        "mixed",
+        "keyword",
+        "semantic"
+      ],
+      "answerable": true,
+      "hits": [
+        {
+          "rank": 1,
+          "score": 0.8333333333333333,
+          "retrieval_id": "24bc171a-b3c9-40c1-877d-705790c25067",
+          "source_type": "document",
+          "document_name": "indexing-errors.md",
+          "relative_path": "runbooks/indexing-errors.md",
+          "section_title": "IDX-3301 Embedding 服务繁忙",
+          "start_line": 25,
+          "end_line": 25,
+          "content": "告警 IDX-3301 对应瞬时错误 EMBEDDING_BUSY。当前重试策略最多尝试四次，基础延迟 250 ms，使用 capped exponential backoff 和 20% jitter。",
+          "retrieval_score": 0.8333333333333333,
+          "rerank_score": null,
+          "retrieval_rank": 1
+        },
+        {
+          "rank": 2,
+          "score": 0.75,
+          "retrieval_id": "63fee087-c333-4339-a413-510ccea87002",
+          "source_type": "document",
+          "document_name": "retry_policy.py",
+          "relative_path": "src/retry_policy.py",
+          "section_title": null,
+          "start_line": 19,
+          "end_line": 20,
+          "content": "def compute_backoff_ms(attempt: int, budget: RetryBudget, *, random: Random) -> int:\n    \"\"\"Return capped exponential backoff with symmetric jitter.",
+          "retrieval_score": 0.75,
+          "rerank_score": null,
+          "retrieval_rank": 2
+        },
+        {
+          "rank": 3,
+          "score": 0.3333333333333333,
+          "retrieval_id": "f184cffa-8579-4a8a-a052-a219066e22c3",
+          "source_type": "document",
+          "document_name": "indexing-errors.md",
+          "relative_path": "runbooks/indexing-errors.md",
+          "section_title": "IDX-3301 Embedding 服务繁忙",
+          "start_line": 29,
+          "end_line": 29,
+          "content": "INVALID_SCOPE、UNSUPPORTED_FORMAT 和 CORRUPT_SOURCE 属于永久错误，不进入自动重试。旧版策略曾错误重试这些错误，当前实现已经禁止这种行为。",
+          "retrieval_score": 0.3333333333333333,
+          "rerank_score": null,
+          "retrieval_rank": 3
+        },
+        {
+          "rank": 4,
+          "score": 0.31666666666666665,
+          "retrieval_id": "a292f162-bcf5-4b41-860a-d96d2a6416f5",
+          "source_type": "document",
+          "document_name": "retry_policy.py",
+          "relative_path": "src/retry_policy.py",
+          "section_title": null,
+          "start_line": 22,
+          "end_line": 30,
+          "content": "    attempt is one-based. Attempt 1 waits base_delay_ms, attempt 2 waits twice that\n    value, and later attempts continue doubling until max_delay_ms is reached.\n    \"\"\"\n    if attempt < 1:\n        raise ValueError(\"attempt must be at least one\")\n    uncapped = budget.base_delay_ms * (2 ** (attempt - 1))\n    capped = min(uncapped, budget.max_delay_ms)\n    jitter = capped * budget.jitter_ratio\n    return round(random.uniform(capped - jitter, capped + jitter))",
+          "retrieval_score": 0.31666666666666665,
+          "rerank_score": null,
+          "retrieval_rank": 4
+        },
+        {
+          "rank": 5,
+          "score": 0.27692307692307694,
+          "retrieval_id": "ef25fb91-b062-4c59-9c7d-e0fb0ec807da",
+          "source_type": "document",
+          "document_name": "indexing-errors.md",
+          "relative_path": "runbooks/indexing-errors.md",
+          "section_title": "IDX-3301 Embedding 服务繁忙",
+          "start_line": 27,
+          "end_line": 27,
+          "content": "如果达到最大尝试次数，索引状态标记为 failed，并保留之前的 active generation。操作人员应检查模型进程资源，再显式发起重建，而不是无限重试。",
+          "retrieval_score": 0.27692307692307694,
+          "rerank_score": null,
+          "retrieval_rank": 5
+        }
+      ],
+      "matched_evidence": [
+        0
+      ],
+      "missing_required_evidence": [],
+      "metrics": {
+        "hit_at_1": 1.0,
+        "hit_at_3": 1.0,
+        "hit_at_5": 1.0,
+        "recall_at_5": 1.0,
+        "recall_at_10": 1.0,
+        "mrr_at_10": 1.0,
+        "ndcg_at_5": 1.0,
+        "ndcg_at_10": 1.0,
+        "negative_empty_result_rate": null,
+        "negative_retrieval_rate": null
+      },
+      "latency": {
+        "embedding_ms": 5272.0,
+        "qdrant_ms": 25.0,
+        "fusion_ms": 0.0,
+        "rerank_ms": 0.0,
+        "total_ms": 5310.938799986616
+      },
+      "dense_candidate_count": 4,
+      "sparse_candidate_count": 20,
+      "context_chars": 886,
+      "error": null
+    },
+    {
+      "case_id": "syn-028",
+      "query": "IDX-4404 collection schema incompatible remediation",
+      "mode": "hybrid",
+      "tags": [
+        "en",
+        "keyword",
+        "hard"
+      ],
+      "answerable": true,
+      "hits": [
+        {
+          "rank": 1,
+          "score": 1.0,
+          "retrieval_id": "5fa31b4d-24cb-4aab-9425-4eed23f82d00",
+          "source_type": "document",
+          "document_name": "indexing-errors.md",
+          "relative_path": "runbooks/indexing-errors.md",
+          "section_title": "IDX-4404 Collection Schema 不兼容",
+          "start_line": 33,
+          "end_line": 33,
+          "content": "告警 IDX-4404 表示 Dense vector dimension、distance、Sparse vector 或 payload index 与当前配置不一致。服务必须拒绝在不兼容 Collection 上继续 upsert。",
+          "retrieval_score": 1.0,
+          "rerank_score": null,
+          "retrieval_rank": 1
+        },
+        {
+          "rank": 2,
+          "score": 0.6666666666666666,
+          "retrieval_id": "9f7787d9-6851-4c7c-a3d6-aed3e19d091d",
+          "source_type": "document",
+          "document_name": "indexing-errors.md",
+          "relative_path": "runbooks/indexing-errors.md",
+          "section_title": "IDX-4404 Collection Schema 不兼容",
+          "start_line": 35,
+          "end_line": 35,
+          "content": "修复时创建新的 Collection，按原文件和 PostgreSQL 元数据重建，再通过 generation 发布。不得原地猜测性修改现有向量维度，也不得复用被其他评测数据污染的 BM25 Collection。",
+          "retrieval_score": 0.6666666666666666,
+          "rerank_score": null,
+          "retrieval_rank": 2
+        },
+        {
+          "rank": 3,
+          "score": 0.5,
+          "retrieval_id": "bcddc983-3b48-42c4-ae5f-6760a9eb58b4",
+          "source_type": "document",
+          "document_name": "indexing-errors.md",
+          "relative_path": "runbooks/indexing-errors.md",
+          "section_title": "IDX-1042 Generation 数量不一致",
+          "start_line": 9,
+          "end_line": 9,
+          "content": "排查顺序是：确认解析块数量、读取 attempt_generation、按该 generation 精确统计 Qdrant points、检查批量 upsert 日志。不要删除整个 Collection，也不要修改数据库计数来绕过验证。",
+          "retrieval_score": 0.5,
+          "rerank_score": null,
+          "retrieval_rank": 3
+        },
+        {
+          "rank": 4,
+          "score": 0.325,
+          "retrieval_id": "5381ada2-18f3-4059-852d-2d7da8a2db6f",
+          "source_type": "document",
+          "document_name": "indexing-errors.md",
+          "relative_path": "runbooks/indexing-errors.md",
+          "section_title": "IDX-1042 Generation 数量不一致",
+          "start_line": 7,
+          "end_line": 7,
+          "content": "告警 IDX-1042 表示写入 Qdrant 的 point count 与本次解析得到的 chunk count 不一致。发布流程必须保持旧 active generation，不得激活数量不完整的新 generation。",
+          "retrieval_score": 0.325,
+          "rerank_score": null,
+          "retrieval_rank": 4
+        },
+        {
+          "rank": 5,
+          "score": 0.24358974358974358,
+          "retrieval_id": "5457bd5a-eb9d-4580-9bfd-7584f025b013",
+          "source_type": "document",
+          "document_name": "indexing-errors.md",
+          "relative_path": "runbooks/indexing-errors.md",
+          "section_title": "IDX-1042 Generation 数量不一致",
+          "start_line": 11,
+          "end_line": 11,
+          "content": "修复方式是删除失败 attempt_generation 的 points，然后对同一文档版本发起 force rebuild。重建成功并完成数量校验后，服务才允许切换 active generation。",
+          "retrieval_score": 0.24358974358974358,
+          "rerank_score": null,
+          "retrieval_rank": 5
+        }
+      ],
+      "matched_evidence": [
+        0
+      ],
+      "missing_required_evidence": [],
+      "metrics": {
+        "hit_at_1": 0.0,
+        "hit_at_3": 1.0,
+        "hit_at_5": 1.0,
+        "recall_at_5": 1.0,
+        "recall_at_10": 1.0,
+        "mrr_at_10": 0.5,
+        "ndcg_at_5": 0.6309297535714574,
+        "ndcg_at_10": 0.6309297535714574,
+        "negative_empty_result_rate": null,
+        "negative_retrieval_rate": null
+      },
+      "latency": {
+        "embedding_ms": 5103.0,
+        "qdrant_ms": 9.0,
+        "fusion_ms": 0.0,
+        "rerank_ms": 0.0,
+        "total_ms": 5126.743300003
+      },
+      "dense_candidate_count": 6,
+      "sparse_candidate_count": 14,
+      "context_chars": 562,
+      "error": null
+    },
+    {
+      "case_id": "syn-029",
+      "query": "src/retry_policy.py 里的 RetryBudget",
+      "mode": "hybrid",
+      "tags": [
+        "mixed",
+        "path",
+        "code"
+      ],
+      "answerable": true,
+      "hits": [
+        {
+          "rank": 1,
+          "score": 1.0,
+          "retrieval_id": "0a87d27f-a43c-4cb1-8b7b-1d279cb629a2",
+          "source_type": "document",
+          "document_name": "retry_policy.py",
+          "relative_path": "src/retry_policy.py",
+          "section_title": null,
+          "start_line": 7,
+          "end_line": 12,
+          "content": "@dataclass(frozen=True)\nclass RetryBudget:\n    max_attempts: int = 4\n    base_delay_ms: int = 250\n    max_delay_ms: int = 4_000\n    jitter_ratio: float = 0.20",
+          "retrieval_score": 1.0,
+          "rerank_score": null,
+          "retrieval_rank": 1
+        },
+        {
+          "rank": 2,
+          "score": 0.5333333333333333,
+          "retrieval_id": "2abb6d84-1cb0-4b76-907b-5259415670bf",
+          "source_type": "document",
+          "document_name": "retry_policy.py",
+          "relative_path": "src/retry_policy.py",
+          "section_title": null,
+          "start_line": 33,
+          "end_line": 37,
+          "content": "def should_retry(error_code: str, attempt: int, budget: RetryBudget) -> bool:\n    \"\"\"Retry only recognized transient failures while budget remains.\"\"\"\n    if error_code in NON_RETRYABLE_CODES:\n        return False\n    return error_code in RETRYABLE_CODES and attempt < budget.max_attempts",
+          "retrieval_score": 0.5333333333333333,
+          "rerank_score": null,
+          "retrieval_rank": 2
+        },
+        {
+          "rank": 3,
+          "score": 0.5,
+          "retrieval_id": "458fa6dd-68c5-44b8-8729-4a5961b375b6",
+          "source_type": "document",
+          "document_name": "retry_policy.py",
+          "relative_path": "src/retry_policy.py",
+          "section_title": null,
+          "start_line": 57,
+          "end_line": 61,
+          "content": "def describe_policy(budget: RetryBudget) -> str:\n    return (\n        f\"max_attempts={budget.max_attempts}, base_delay_ms={budget.base_delay_ms}, \"\n        f\"max_delay_ms={budget.max_delay_ms}, jitter_ratio={budget.jitter_ratio}\"\n    )",
+          "retrieval_score": 0.5,
+          "rerank_score": null,
+          "retrieval_rank": 3
+        },
+        {
+          "rank": 4,
+          "score": 0.4583333333333333,
+          "retrieval_id": "63fee087-c333-4339-a413-510ccea87002",
+          "source_type": "document",
+          "document_name": "retry_policy.py",
+          "relative_path": "src/retry_policy.py",
+          "section_title": null,
+          "start_line": 19,
+          "end_line": 20,
+          "content": "def compute_backoff_ms(attempt: int, budget: RetryBudget, *, random: Random) -> int:\n    \"\"\"Return capped exponential backoff with symmetric jitter.",
+          "retrieval_score": 0.4583333333333333,
+          "rerank_score": null,
+          "retrieval_rank": 4
+        },
+        {
+          "rank": 5,
+          "score": 0.3333333333333333,
+          "retrieval_id": "9055a009-58b8-4a4b-903a-913ab7d1427f",
+          "source_type": "document",
+          "document_name": "retry_policy.py",
+          "relative_path": "src/retry_policy.py",
+          "section_title": null,
+          "start_line": 40,
+          "end_line": 50,
+          "content": "def next_retry_delay_ms(\n    error_code: str,\n    attempt: int,\n    budget: RetryBudget,\n    *,\n    random: Random,\n) -> int | None:\n    \"\"\"Return the delay for the next attempt, or None when retrying must stop.\"\"\"\n    if not should_retry(error_code, attempt, budget):\n        return None\n    return compute_backoff_ms(attempt, budget, random=random)",
+          "retrieval_score": 0.3333333333333333,
+          "rerank_score": null,
+          "retrieval_rank": 5
+        }
+      ],
+      "matched_evidence": [
+        0
+      ],
+      "missing_required_evidence": [],
+      "metrics": {
+        "hit_at_1": 1.0,
+        "hit_at_3": 1.0,
+        "hit_at_5": 1.0,
+        "recall_at_5": 1.0,
+        "recall_at_10": 1.0,
+        "mrr_at_10": 1.0,
+        "ndcg_at_5": 1.0,
+        "ndcg_at_10": 1.0,
+        "negative_empty_result_rate": null,
+        "negative_retrieval_rate": null
+      },
+      "latency": {
+        "embedding_ms": 3724.0,
+        "qdrant_ms": 8.0,
+        "fusion_ms": 0.0,
+        "rerank_ms": 0.0,
+        "total_ms": 3748.7425000290386
+      },
+      "dense_candidate_count": 10,
+      "sparse_candidate_count": 5,
+      "context_chars": 1179,
+      "error": null
+    },
+    {
+      "case_id": "syn-030",
+      "query": "dense embedding + BM25 sparse + deterministic RRF",
+      "mode": "hybrid",
+      "tags": [
+        "en",
+        "mixed",
+        "keyword"
+      ],
+      "answerable": true,
+      "hits": [
+        {
+          "rank": 1,
+          "score": 1.0,
+          "retrieval_id": "8e456284-bf42-492b-a1e7-1eeef9f600d1",
+          "source_type": "document",
+          "document_name": "runtime-overview.md",
+          "relative_path": "docs/runtime-overview.md",
+          "section_title": "检索阶段",
+          "start_line": 17,
+          "end_line": 17,
+          "content": "查询先生成 Qwen3 dense embedding，同时把原始查询交给 Qdrant 的 BM25 sparse vector。Dense 和 Sparse 分支分别预取候选，应用层使用 deterministic reciprocal rank fusion 合并排名。",
+          "retrieval_score": 1.0,
+          "rerank_score": null,
+          "retrieval_rank": 1
+        },
+        {
+          "rank": 2,
+          "score": 0.5833333333333333,
+          "retrieval_id": "f498d010-34f6-4105-962a-59c117528782",
+          "source_type": "document",
+          "document_name": "retrieval.yaml",
+          "relative_path": "config/retrieval.yaml",
+          "section_title": null,
+          "start_line": 16,
+          "end_line": 23,
+          "content": "retrieval:\n  mode: hybrid\n  output_limit: 5\n  semantic_score_threshold: 0.50\n  dense_prefetch_limit: 20\n  sparse_prefetch_limit: 20\n  fusion: application-deterministic-rrf\n  rrf_constant: 60",
+          "retrieval_score": 0.5833333333333333,
+          "rerank_score": null,
+          "retrieval_rank": 2
+        },
+        {
+          "rank": 3,
+          "score": 0.5333333333333333,
+          "retrieval_id": "72126a1a-64ef-4120-89f7-de8d3cc830a9",
+          "source_type": "document",
+          "document_name": "runtime-overview.md",
+          "relative_path": "docs/runtime-overview.md",
+          "section_title": "检索阶段",
+          "start_line": 19,
+          "end_line": 19,
+          "content": "RRF 只使用分支内名次，不把 cosine score 与 BM25 score 直接相加。相同文档块在两个分支都出现时会累积两项倒数排名分数；最终排序还使用稳定的 point id 作为平分条件。",
+          "retrieval_score": 0.5333333333333333,
+          "rerank_score": null,
+          "retrieval_rank": 3
+        },
+        {
+          "rank": 4,
+          "score": 0.30000000000000004,
+          "retrieval_id": "f5050304-e639-4b18-9458-25200f9fc0ed",
+          "source_type": "document",
+          "document_name": "retrieval.yaml",
+          "relative_path": "config/retrieval.yaml",
+          "section_title": null,
+          "start_line": 4,
+          "end_line": 8,
+          "content": "embedding:\n  model: Qwen/Qwen3-Embedding-0.6B\n  dimension: 1024\n  query_device: auto\n  batch_size: 16",
+          "retrieval_score": 0.30000000000000004,
+          "rerank_score": null,
+          "retrieval_rank": 4
+        },
+        {
+          "rank": 5,
+          "score": 0.25,
+          "retrieval_id": "4983cb82-0142-4622-aac3-dd35c29b3a4c",
+          "source_type": "document",
+          "document_name": "api-contract.md",
+          "relative_path": "docs/api-contract.md",
+          "section_title": "Streaming events",
+          "start_line": 25,
+          "end_line": 25,
+          "content": "The done event may include query_rewrite_mode, query_rewrite_latency_ms, retrieval_query, embedding_latency_ms, qdrant_latency_ms, fusion_latency_ms, rerank_latency_ms, dense_candidate_count, and sparse_candidate_count.",
+          "retrieval_score": 0.25,
+          "rerank_score": null,
+          "retrieval_rank": 5
+        }
+      ],
+      "matched_evidence": [
+        0
+      ],
+      "missing_required_evidence": [],
+      "metrics": {
+        "hit_at_1": 1.0,
+        "hit_at_3": 1.0,
+        "hit_at_5": 1.0,
+        "recall_at_5": 1.0,
+        "recall_at_10": 1.0,
+        "mrr_at_10": 1.0,
+        "ndcg_at_5": 1.0,
+        "ndcg_at_10": 1.0,
+        "negative_empty_result_rate": null,
+        "negative_retrieval_rate": null
+      },
+      "latency": {
+        "embedding_ms": 4737.0,
+        "qdrant_ms": 8.0,
+        "fusion_ms": 0.0,
+        "rerank_ms": 0.0,
+        "total_ms": 4757.698600005824
+      },
+      "dense_candidate_count": 5,
+      "sparse_candidate_count": 14,
+      "context_chars": 748,
+      "error": null
+    },
+    {
+      "case_id": "syn-031",
+      "query": "LumenDesk 的 GraphRAG 社区发现算法如何配置？",
+      "mode": "hybrid",
+      "tags": [
+        "zh",
+        "semantic",
+        "negative",
+        "hard"
+      ],
+      "answerable": false,
+      "hits": [
+        {
+          "rank": 1,
+          "score": 0.6666666666666666,
+          "retrieval_id": "1762a074-803c-422e-947e-6d7375c51ad6",
+          "source_type": "document",
+          "document_name": "retrieval.yaml",
+          "relative_path": "config/retrieval.yaml",
+          "section_title": null,
+          "start_line": 1,
+          "end_line": 2,
+          "content": "service: lumendesk-search\nschema_version: 3",
+          "retrieval_score": 0.6666666666666666,
+          "rerank_score": null,
+          "retrieval_rank": 1
+        },
+        {
+          "rank": 2,
+          "score": 0.5,
+          "retrieval_id": "5fa31b4d-24cb-4aab-9425-4eed23f82d00",
+          "source_type": "document",
+          "document_name": "indexing-errors.md",
+          "relative_path": "runbooks/indexing-errors.md",
+          "section_title": "IDX-4404 Collection Schema 不兼容",
+          "start_line": 33,
+          "end_line": 33,
+          "content": "告警 IDX-4404 表示 Dense vector dimension、distance、Sparse vector 或 payload index 与当前配置不一致。服务必须拒绝在不兼容 Collection 上继续 upsert。",
+          "retrieval_score": 0.5,
+          "rerank_score": null,
+          "retrieval_rank": 2
+        },
+        {
+          "rank": 3,
+          "score": 0.3333333333333333,
+          "retrieval_id": "ca492b05-df96-43d6-af6c-ccfc19572b82",
+          "source_type": "document",
+          "document_name": "api-contract.md",
+          "relative_path": "docs/api-contract.md",
+          "section_title": "Reranked search request",
+          "start_line": 19,
+          "end_line": 19,
+          "content": "If the local reranker is unavailable, the full RAG workflow may fall back to Hybrid. The standalone reranked search endpoint instead reports service unavailable so diagnostic callers can distinguish fallback from a successful rerank.",
+          "retrieval_score": 0.3333333333333333,
+          "rerank_score": null,
+          "retrieval_rank": 3
+        },
+        {
+          "rank": 4,
+          "score": 0.3333333333333333,
+          "retrieval_id": "349793ca-384c-49a6-84fc-4ec8c9b093e3",
+          "source_type": "document",
+          "document_name": "runtime-overview.md",
+          "relative_path": "docs/runtime-overview.md",
+          "section_title": "Generation 发布协议",
+          "start_line": 7,
+          "end_line": 7,
+          "content": "LumenDesk 的索引发布使用 generation switch。新一代向量必须全部写入并完成数量校验后，数据库才把 active_generation 指向新值。查询只读取 active_generation，因此失败的构建不会暴露半成品索引。",
+          "retrieval_score": 0.3333333333333333,
+          "rerank_score": null,
+          "retrieval_rank": 4
+        },
+        {
+          "rank": 5,
+          "score": 0.3111111111111111,
+          "retrieval_id": "da535846-d52b-4a03-9009-4a0e8961808a",
+          "source_type": "document",
+          "document_name": "api-contract.md",
+          "relative_path": "docs/api-contract.md",
+          "section_title": "LumenDesk Search API Contract",
+          "start_line": 3,
+          "end_line": 3,
+          "content": "This fictional API reference exists only for retrieval evaluation.",
+          "retrieval_score": 0.3111111111111111,
+          "rerank_score": null,
+          "retrieval_rank": 5
+        }
+      ],
+      "matched_evidence": [],
+      "missing_required_evidence": [],
+      "metrics": {
+        "hit_at_1": null,
+        "hit_at_3": null,
+        "hit_at_5": null,
+        "recall_at_5": null,
+        "recall_at_10": null,
+        "mrr_at_10": null,
+        "ndcg_at_5": null,
+        "ndcg_at_10": null,
+        "negative_empty_result_rate": 0.0,
+        "negative_retrieval_rate": 1.0
+      },
+      "latency": {
+        "embedding_ms": 5150.0,
+        "qdrant_ms": 9.0,
+        "fusion_ms": 0.0,
+        "rerank_ms": 0.0,
+        "total_ms": 5171.722999948543
+      },
+      "dense_candidate_count": 4,
+      "sparse_candidate_count": 20,
+      "context_chars": 587,
+      "error": null
+    },
+    {
+      "case_id": "syn-032",
+      "query": "Which autonomous agent plans indexing repair tools?",
+      "mode": "hybrid",
+      "tags": [
+        "en",
+        "semantic",
+        "negative",
+        "hard"
+      ],
+      "answerable": false,
+      "hits": [
+        {
+          "rank": 1,
+          "score": 0.5,
+          "retrieval_id": "a6872566-9d2b-40fe-ba0d-62a7cb75423c",
+          "source_type": "document",
+          "document_name": "indexing-errors.md",
+          "relative_path": "runbooks/indexing-errors.md",
+          "section_title": "LumenDesk Indexing Error Runbook",
+          "start_line": 3,
+          "end_line": 3,
+          "content": "本文件完全虚构，仅作为检索评测中的故障手册。",
+          "retrieval_score": 0.5,
+          "rerank_score": null,
+          "retrieval_rank": 1
+        },
+        {
+          "rank": 2,
+          "score": 0.3333333333333333,
+          "retrieval_id": "24bc171a-b3c9-40c1-877d-705790c25067",
+          "source_type": "document",
+          "document_name": "indexing-errors.md",
+          "relative_path": "runbooks/indexing-errors.md",
+          "section_title": "IDX-3301 Embedding 服务繁忙",
+          "start_line": 25,
+          "end_line": 25,
+          "content": "告警 IDX-3301 对应瞬时错误 EMBEDDING_BUSY。当前重试策略最多尝试四次，基础延迟 250 ms，使用 capped exponential backoff 和 20% jitter。",
+          "retrieval_score": 0.3333333333333333,
+          "rerank_score": null,
+          "retrieval_rank": 2
+        },
+        {
+          "rank": 3,
+          "score": 0.25,
+          "retrieval_id": "4087a9fe-f4ab-431c-9a42-9c2dd07d0ff9",
+          "source_type": "document",
+          "document_name": "indexing-errors.md",
+          "relative_path": "runbooks/indexing-errors.md",
+          "section_title": "IDX-2077 原始文件不可用",
+          "start_line": 21,
+          "end_line": 21,
+          "content": "禁止从 Qdrant payload 拼接出所谓原始文件。Payload 可能截断格式信息，也不能证明与数据库当前版本一致。",
+          "retrieval_score": 0.25,
+          "rerank_score": null,
+          "retrieval_rank": 3
+        },
+        {
+          "rank": 4,
+          "score": 0.2,
+          "retrieval_id": "f184cffa-8579-4a8a-a052-a219066e22c3",
+          "source_type": "document",
+          "document_name": "indexing-errors.md",
+          "relative_path": "runbooks/indexing-errors.md",
+          "section_title": "IDX-3301 Embedding 服务繁忙",
+          "start_line": 29,
+          "end_line": 29,
+          "content": "INVALID_SCOPE、UNSUPPORTED_FORMAT 和 CORRUPT_SOURCE 属于永久错误，不进入自动重试。旧版策略曾错误重试这些错误，当前实现已经禁止这种行为。",
+          "retrieval_score": 0.2,
+          "rerank_score": null,
+          "retrieval_rank": 4
+        },
+        {
+          "rank": 5,
+          "score": 0.16666666666666666,
+          "retrieval_id": "5fa31b4d-24cb-4aab-9425-4eed23f82d00",
+          "source_type": "document",
+          "document_name": "indexing-errors.md",
+          "relative_path": "runbooks/indexing-errors.md",
+          "section_title": "IDX-4404 Collection Schema 不兼容",
+          "start_line": 33,
+          "end_line": 33,
+          "content": "告警 IDX-4404 表示 Dense vector dimension、distance、Sparse vector 或 payload index 与当前配置不一致。服务必须拒绝在不兼容 Collection 上继续 upsert。",
+          "retrieval_score": 0.16666666666666666,
+          "rerank_score": null,
+          "retrieval_rank": 5
+        }
+      ],
+      "matched_evidence": [],
+      "missing_required_evidence": [],
+      "metrics": {
+        "hit_at_1": null,
+        "hit_at_3": null,
+        "hit_at_5": null,
+        "recall_at_5": null,
+        "recall_at_10": null,
+        "mrr_at_10": null,
+        "ndcg_at_5": null,
+        "ndcg_at_10": null,
+        "negative_empty_result_rate": 0.0,
+        "negative_retrieval_rate": 1.0
+      },
+      "latency": {
+        "embedding_ms": 4352.0,
+        "qdrant_ms": 8.0,
+        "fusion_ms": 0.0,
+        "rerank_ms": 0.0,
+        "total_ms": 4382.244299980812
+      },
+      "dense_candidate_count": 0,
+      "sparse_candidate_count": 13,
+      "context_chars": 397,
+      "error": null
+    }
+  ]
+}
+

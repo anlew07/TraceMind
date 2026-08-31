@@ -1,0 +1,53 @@
+service: lumendesk-search
+schema_version: 3
+
+embedding:
+  model: Qwen/Qwen3-Embedding-0.6B
+  dimension: 1024
+  query_device: auto
+  batch_size: 16
+
+chunking:
+  strategy: deterministic-single-level
+  max_chars: 1800
+  overlap_chars: 200
+  exclude_heading_chunks: true
+
+retrieval:
+  mode: hybrid
+  output_limit: 5
+  semantic_score_threshold: 0.50
+  dense_prefetch_limit: 20
+  sparse_prefetch_limit: 20
+  fusion: application-deterministic-rrf
+  rrf_constant: 60
+
+reranker:
+  enabled: false
+  model: Qwen/Qwen3-Reranker-0.6B
+  candidate_limit: 10
+  maximum_candidates: 20
+  timeout_seconds: 12
+  fallback: hybrid
+
+query_rewrite:
+  enabled_for_conversation_history: true
+  maximum_history_turns: 6
+  timeout_seconds: 8
+  maximum_query_chars: 500
+  fallback: original-query
+
+evidence:
+  max_context_chars: 12000
+  require_real_source_id: true
+  allow_generated_citations: false
+
+release:
+  index_publication: generation-switch
+  source_of_truth:
+    - postgresql
+    - original-files
+  derived_state:
+    - document-chunks
+    - qdrant-index
+    - task-state
