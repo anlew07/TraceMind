@@ -47,6 +47,13 @@ class HybridSearchBatch:
 
 
 @dataclass(frozen=True)
+class BranchSearchBatch:
+    hits: list[VectorSearchHit]
+    qdrant_latency_ms: int
+    candidate_count: int
+
+
+@dataclass(frozen=True)
 class QdrantAuditPoint:
     point_id: str
     payload: dict[str, Any]
@@ -417,6 +424,84 @@ class QdrantGateway:
             ]
         except Exception as exc:
             raise VectorIndexError("Semantic search is unavailable") from exc
+
+    async def dense_search_with_diagnostics(
+        self,
+        vector: list[float],
+        *,
+        knowledge_base_id: UUID,
+        generations: list[UUID],
+        limit: int,
+        language: str | None,
+        document_id: UUID | None,
+        score_threshold: float,
+        excluded_chunk_types: Collection[str],
+    ) -> BranchSearchBatch:
+        query_filter = self._search_filter(
+            knowledge_base_id,
+            generations,
+            language=language,
+            document_id=document_id,
+            excluded_chunk_types=excluded_chunk_types,
+        )
+        try:
+            started_at = perf_counter()
+            response = await self.client.query_points(
+                self.collection_name,
+                query=vector,
+                using=self.vector_name,
+                query_filter=query_filter,
+                limit=limit,
+                score_threshold=score_threshold,
+                with_payload=True,
+                with_vectors=False,
+            )
+            latency_ms = round((perf_counter() - started_at) * 1_000)
+            hits = [
+                VectorSearchHit(float(point.score), dict(point.payload or {}))
+                for point in response.points
+            ]
+            return BranchSearchBatch(hits, latency_ms, len(hits))
+        except Exception as exc:
+            raise VectorIndexError("Dense search is unavailable") from exc
+
+    async def sparse_search_with_diagnostics(
+        self,
+        query: str,
+        *,
+        knowledge_base_id: UUID,
+        generations: list[UUID],
+        limit: int,
+        language: str | None,
+        document_id: UUID | None,
+        excluded_chunk_types: Collection[str],
+    ) -> BranchSearchBatch:
+        query_filter = self._search_filter(
+            knowledge_base_id,
+            generations,
+            language=language,
+            document_id=document_id,
+            excluded_chunk_types=excluded_chunk_types,
+        )
+        try:
+            started_at = perf_counter()
+            response = await self.client.query_points(
+                self.collection_name,
+                query=self._bm25_document(query),
+                using=self.sparse_vector_name,
+                query_filter=query_filter,
+                limit=limit,
+                with_payload=True,
+                with_vectors=False,
+            )
+            latency_ms = round((perf_counter() - started_at) * 1_000)
+            hits = [
+                VectorSearchHit(float(point.score), dict(point.payload or {}))
+                for point in response.points
+            ]
+            return BranchSearchBatch(hits, latency_ms, len(hits))
+        except Exception as exc:
+            raise VectorIndexError("Sparse search is unavailable") from exc
 
     async def hybrid_search(
         self,

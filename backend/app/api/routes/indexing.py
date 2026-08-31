@@ -203,7 +203,7 @@ async def semantic_search(
     response_model=SemanticSearchResponse,
     response_model_exclude_defaults=True,
     summary="Dense + BM25 RRF hybrid search",
-    description="Returns Qdrant RRF ranking scores, not cosine similarity.",
+    description="Returns application-side deterministic RRF scores, not cosine similarity.",
 )
 async def hybrid_search(
     knowledge_base_id: UUID,

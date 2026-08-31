@@ -559,6 +559,38 @@ async def test_search_returns_empty_and_converts_client_errors() -> None:
     assert "private" not in str(caught.value)
 
 
+async def test_dense_and_sparse_diagnostic_searches_use_real_branch_vectors() -> None:
+    client = AsyncMock(spec=AsyncQdrantClient)
+    point = hybrid_point("point-a", 0.8, line=10, content="result")
+    client.query_points.return_value = SimpleNamespace(points=[point])
+    target = gateway(client)
+    shared = {
+        "knowledge_base_id": uuid4(),
+        "generations": [uuid4()],
+        "limit": 7,
+        "language": None,
+        "document_id": None,
+        "excluded_chunk_types": ("heading",),
+    }
+
+    dense = await target.dense_search_with_diagnostics(
+        [1.0, 0.0, 0.0],
+        score_threshold=0.5,
+        **shared,
+    )
+    dense_call = client.query_points.await_args.kwargs
+    assert dense_call["using"] == "dense_v1"
+    assert dense_call["score_threshold"] == 0.5
+    assert dense.candidate_count == 1
+
+    sparse = await target.sparse_search_with_diagnostics("RetryBudget", **shared)
+    sparse_call = client.query_points.await_args.kwargs
+    assert sparse_call["using"] == "bm25_v1"
+    assert sparse_call["query"].text == "RetryBudget"
+    assert sparse_call.get("score_threshold") is None
+    assert sparse.candidate_count == 1
+
+
 async def test_incompatible_payload_index_type_is_rejected_without_rebuild() -> None:
     client = AsyncMock(spec=AsyncQdrantClient)
     client.collection_exists.return_value = True
