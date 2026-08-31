@@ -12,6 +12,11 @@
 - `backend/evals/retrieval/datasets/synthetic_retrieval_v1.jsonl`：机器可读 Gold Dataset。
 - `backend/evals/retrieval/datasets/synthetic_corpus_manifest_v1.json`：语料哈希和检索配置快照。
 - `synthetic_retrieval_checklist_v1.md`：由 JSONL 自动生成的人工检查表。
+- `backend/evals/retrieval/corpora/synthetic_v1_1/`：v1.1 多文档合成语料，只由隔离 Runner 导入。
+- `backend/evals/retrieval/datasets/synthetic_retrieval_v1_1.jsonl`：v1.1 Synthetic dev / holdout Gold Dataset。
+- `backend/evals/retrieval/datasets/project_acceptance_v1_1.jsonl`：公开 TraceMind 源码与当前文档组成的工程验收集。
+- `backend/evals/retrieval/datasets/conversation_rewrite_v1_1.jsonl`：独立的 Query Rewrite 小型数据集。
+- [`v1.1-results.md`](v1.1-results.md)：v1.1 实际实验结果、失败分析与最终配置结论。
 - `backend/evals/retrieval/reports/`：本地评测输出目录，不上传到知识库。
 - `backend/evals/retrieval/baselines/`：人工确认后的回归基线，不上传到知识库。
 
@@ -22,6 +27,64 @@
 固定数据集共有 24 条问题，其中 dev 18 条、test 6 条。dev 可用于理解失败原因和有限调参；test 只用于最终复测，不应根据 test 的逐题结果反复调整检索参数。本 README 不公开 test split 的逐题预期结果。
 
 Gold Evidence 使用文档名、Markdown 章节、真实行号和连续原文锚点标识，不把 `chunk_id` 当作唯一证据 ID。Chunking 参数变化后，Chunk ID 和边界可能变化，但原始文档事实仍可通过行号区间、章节和原文锚点稳定匹配。
+
+v1.1 是向后兼容的独立 Schema，不修改 v1 Dataset、Manifest、Runner CLI 或 `hybrid_v1.json`。Synthetic v1.1 共有 48 条问题，其中 dev 32 条、holdout 16 条；Project Acceptance 另有 12 条，只在 Final Candidate 锁定后运行，不参与参数选择。由于样本较小，任何指标差异都必须同时报告 query count 与 improved / worsened / unchanged queries，不能把 0.01～0.02 的变化解释成超出样本分辨率的稳定统计结论。
+
+## v1.1 隔离 Runner
+
+v1.1 Runner 直接复用当前解析、Embedding、Qdrant、应用层 Deterministic RRF、Reranker 和 Query Rewrite 实现。它不改 `.env`，而是为每次运行创建带 `tracemind_retrieval_eval_v1_1_` 前缀的专用 Knowledge Base 和独立 Qdrant Collection；清理命令只接受状态文件中由 Runner 创建的资源。
+
+准备 Synthetic fixture：
+
+```powershell
+cd backend
+
+$run = "20260829-synthetic"
+$state = "evals/retrieval/reports/v1_1/$run/state.json"
+$collection = "tracemind_retrieval_eval_v1_1_20260829_synthetic"
+
+uv run --no-sync python -m evals.retrieval.experiment prepare `
+  --state $state `
+  --collection $collection
+```
+
+运行单组或固定小矩阵：
+
+```powershell
+uv run --no-sync python -m evals.retrieval.experiment run `
+  --state $state `
+  --mode hybrid `
+  --split dev `
+  --output evals/retrieval/reports/v1_1/$run/baseline-v1
+
+uv run --no-sync python -m evals.retrieval.experiment matrix `
+  --state $state `
+  --plan evals/retrieval/configs/dev_core_v1_1.json `
+  --output evals/retrieval/reports/v1_1/$run/dev
+```
+
+`run` 支持 `dense`、`bm25`、`hybrid` 和 `hybrid-reranker`，并可覆盖 TopK、Dense threshold、Dense / Sparse prefetch、Reranker candidate limit 与重复次数。大量 query-level JSON、Markdown Summary 和稳定性数据保存在 Git 忽略的 reports 目录。
+
+Query Rewrite 会调用当前配置的 ChatModel；只允许使用 `conversation_rewrite_v1_1.jsonl` 中的合成历史：
+
+```powershell
+uv run --no-sync python -m evals.retrieval.experiment rewrite `
+  --state $state `
+  --split dev `
+  --output evals/retrieval/reports/v1_1/$run/rewrite-dev
+```
+
+回归比较会保存每项指标的 query count，以及 improved / worsened / unchanged queries：
+
+```powershell
+uv run --no-sync python -m evals.retrieval.experiment compare `
+  --baseline evals/retrieval/baselines/hybrid_v1_1.json `
+  --current evals/retrieval/reports/v1_1/current/summary.json `
+  --output evals/retrieval/reports/v1_1/current/regression.json `
+  --fail-on-regression
+```
+
+评测结束后可执行 `cleanup --state $state`。该命令拒绝默认 Collection、非评测前缀或状态文件之外的资源。
 
 ## 获取 knowledge_base_id 和 document_id
 
@@ -166,6 +229,8 @@ uv run --no-sync python -m evals.retrieval.runner ^
 ## 无答案 Case
 
 当前两个无答案问题只输出 `returned_count`、Top1 score、文档、章节和内容预览，并标记为 `observational`。Hybrid RRF 分数不是跨查询校准后的相关性概率，第一版没有可靠阈值，因此无答案 Case 不参与默认 Recall、MRR、nDCG 或回归失败判断。
+
+v1.1 Retrieval-only 负样本使用两个明确指标：`Negative Empty-Result Rate` 表示返回零条结果的负样本比例，`Negative Retrieval Rate` 表示返回任意结果的负样本比例。它们不命名为 No-Answer Accuracy，因为 Retrieval 返回候选不等于完整回答链路已经判定可回答。真正的 No-Answer Accuracy 只能在完整 RAG Pipeline 上，根据 `terminal_status=no_answer` 单独评测。
 
 ## 自动评测不能替代的人工检查
 

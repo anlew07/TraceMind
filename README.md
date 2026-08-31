@@ -624,20 +624,55 @@ Retrieval 只查询 PostgreSQL 中声明为 Active 的 Generation，因此失败
 
 ## 检索评测
 
-当前仓库保留 v1.0 固定检索集上的历史 Hybrid Retrieval Baseline：
+TraceMind 使用固定 Retrieval Benchmark 对 Dense、BM25、Hybrid、Reranker、Top-K 和检索阈值进行回归验证，并使用独立 Holdout 与 Project Acceptance Set 检查实验结论是否能够迁移到更接近真实工程的查询场景。
 
-| 指标           |   结果 |
-| -------------- | -----: |
-| Recall@5       | 84.09% |
-| MRR@5          | 73.64% |
-| nDCG@5         | 65.72% |
-| All-required@5 | 81.82% |
-| Hit@5          |   100% |
-| P95 Latency    | 375 ms |
+### Retrieval Evaluation v1.1
 
-> 该结果来自固定 synthetic corpus 与 24 个 Case，仅用于同一评测设置下的 Retrieval Regression 对比，不代表真实知识库上的通用效果。v1.1.0 尚未重新生成新的正式 Benchmark。
+Synthetic dev 共 32 条 Query，其中 30 条可回答、2 条负样本：
 
-详细评测说明见 [Retrieval Evaluation](docs/retrieval-evaluation/README.md)。
+| Retrieval         | Hit@1     | Hit@5     | Recall@10 | MRR@10     |
+| ----------------- | --------- | --------- | --------- | ---------- |
+| Dense             | 19/30     | 29/30     | 96.67%    | 80.00%     |
+| BM25              | 20/30     | 29/30     | 96.67%    | 79.72%     |
+| **Hybrid**        | **23/30** | **30/30** | **100%**  | **86.39%** |
+| Hybrid + Reranker | 26/30     | 30/30     | 100%      | 91.94%     |
+
+固定评测结果支持当前默认检索配置：
+
+```text
+Dense + BM25
+      ↓
+Application-side Deterministic RRF
+      ↓
+   Top-K = 5
+```
+
+当前主要结论：
+
+- **Hybrid Retrieval**：Dense 与 BM25 各自存在独有的 Top-5 漏召回，Hybrid 在 dev 上达到 `30/30 Hit@5`，因此继续保留双路召回与 RRF 融合。
+- **Reranker**：在 dev 上改善了部分 Top Rank，但收益没有在 Holdout 上稳定复现，同时增加明显的尾延迟，因此当前仍默认关闭。
+- **Top-K**：`TopK=3` 出现额外漏召回；`TopK=10` 没有进一步质量收益，但平均候选内容规模从约 `770` chars 增长到约 `1359` chars，因此保持 `TopK=5`。
+- **Semantic Threshold**：降低至 `0.40/0.45` 主要增加候选，高至 `0.55/0.60` 会损失部分 Top-1 结果，因此保持 `0.50`。
+- **Prefetch**：当前 `20/20` 下 Hybrid dev `Recall@10=100%`，暂无数据支持继续扩大候选池。
+
+当前默认 Retrieval 配置：
+
+```text
+TopK = 5
+Semantic threshold = 0.50
+Dense prefetch = 20
+Sparse prefetch = 20
+Reranker = disabled
+```
+
+除固定 synthetic benchmark 外，v1.1 还使用 12 条基于 TraceMind 真实代码与文档构造的 Project Acceptance Query 进行独立验证，当前 Hybrid `Hit@5 = 8/12`。实现细节、精确代码定位和相似内容干扰仍是后续 Retrieval 优化的重点，因此 synthetic benchmark 的高分不被视为真实知识库质量上限。
+
+> 评测数据主要用于同一数据集、索引配置和运行环境下的 Retrieval Regression 与工程选型比较。当前数据集规模有限，不代表真实知识库上的通用准确率；本地延迟数据也不作为生产环境 SLA。
+
+完整实验配置、Dataset、Holdout、Reranker / Top-K / Threshold 对比、Failure Analysis 和 Query Rewrite 结果见：
+
+- [Retrieval Evaluation 说明](docs/retrieval-evaluation/README.md)
+- [Retrieval Evaluation v1.1 完整结果](docs/retrieval-evaluation/v1.1-results.md)
 
 ## 文档
 
