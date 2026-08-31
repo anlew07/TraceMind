@@ -342,6 +342,8 @@ CPU / CUDA、模型离线缓存、dtype、batch size 与显存边界见 [Reranke
 - **双缓冲式索引发布**：采用 Active / Building Generation 隔离新旧索引，新索引完成向量化入库与 Point Count 完整性校验后再切换 Active；构建失败自动沿用旧 Generation，避免部分写入污染线上召回结果。
 - **Dense + BM25 双路混合检索**：Qwen3 Embedding 负责语义召回，Qdrant BM25 负责 API 名称、错误信息、代码标识符和专有名词的精确匹配，两路联合召回，兼顾语义理解与关键词命中。
 - **确定性 RRF 排序融合**：Dense 和 BM25 的候选结果在应用层通过 RRF（倒数排名融合）统一排序，并用稳定键消除同分抖动，确保混合检索结果可重复、可测试。
+- **数据驱动的 Retrieval Evaluation 与回归验证**：建立固定 Synthetic Benchmark、独立 Holdout 和基于 TraceMind 真实代码/文档构造的 Project Acceptance Set，对 Dense、BM25、Hybrid、Reranker、Top-K、Semantic Threshold 和候选池规模进行可重复评测。实验中 Dense 与 BM25 单独检索的 Hit@5 均为 `29/30`，Hybrid 提升至 `30/30`，验证了双路召回的互补性；Reranker 虽在 dev 上提升 Hit@1 与 MRR，但收益未在 Holdout 稳定复现且显著增加尾延迟，因此保持默认关闭。最终基于实验维持 `Hybrid + Deterministic RRF / TopK=5 / Threshold=0.50 / Prefetch=20/20`，并将固定数据集与 Baseline 用作后续 Retrieval Regression，避免依赖主观问答效果调参。
+
 - **Cross-Encoder 二阶段精排**：先由 Dense+BM25 和 RRF 扩大候选覆盖面，再用 Qwen3 Cross-Encoder 对 Query 与候选文档重新评分，筛选出 Top‑K Evidence，在召回率与最终证据相关性之间做到两阶段平衡。
 - **Reranker 自动降级**：Cross‑Encoder 独立部署为微服务，若连接失败、超时、OOM 或响应异常，自动回退到 Hybrid RRF 结果，精排异常不影响基础检索链路。
 - **Query 改写与 Scope 限定**：连续对话中按需将上下文相关问题重写为独立检索 Query；同时支持按文档或路径限定召回范围，适配追问、定向资料查询和代码检索场景。
